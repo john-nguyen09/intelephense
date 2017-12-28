@@ -14,7 +14,8 @@ export namespace PhpDocParser {
     const varPattern = /^(@var)\s+(\S+)(?:\s+(\$\S+))?\s*([^]*)$/;
     const returnPattern = /^(@return)\s+(\S+)\s*([^]*)$/;
     const methodPattern = /^(@method)\s+(?:(static)\s+)?(?:(\S+)\s+)?(\S+)\(\s*([^)]*)\s*\)\s*([^]*)$/;
-
+    const globalPattern = /^(@global)\s+(\S+)(?:\s+(\$\S+))?\s*([^]*)$/;
+    
     export function parse(input: string) {
 
         if (!input) {
@@ -78,6 +79,11 @@ export namespace PhpDocParser {
             case '@met':
                 if((match = text.match(methodPattern))){
                     return methodTag(match[1], match[2], match[3], match[4], methodParameters(match[5]), match[6]);
+                }
+                return null;
+            case '@glo':
+                if ((match) = text.match(globalPattern)) {
+                    return typeTag(match[1], match[2], match[3], match[4]);
                 }
                 return null;
             default:
@@ -180,6 +186,10 @@ export class PhpDoc {
         return this.tags.filter(PhpDoc.isVarTag);
     }
 
+    get globalTags() {
+        return this.tags.filter(PhpDoc.isGlobalTag);
+    }
+
     findParamTag(name: string) {
         let fn = (x) => {
             return x.tagName === '@param' && x.name === name;
@@ -193,6 +203,12 @@ export class PhpDoc {
             return x.tagName === '@var' && (!x.name || name === x.name);
         };
         return this.tags.find(fn);
+    }
+
+    findGlobalTag(name: string) {
+        return this.tags.find((tag) => {
+            return tag.tagName === '@global' && (!tag.name || name == tag.name);
+        });
     }
 
 }
@@ -213,6 +229,10 @@ export namespace PhpDoc {
 
     export function isVarTag(t:Tag){
         return t.tagName === '@var';
+    }
+
+    export function isGlobalTag(t: Tag) {
+        return t.tagName === '@global';
     }
 
 }

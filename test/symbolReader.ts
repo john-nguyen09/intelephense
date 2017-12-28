@@ -6,6 +6,8 @@ import { ParsedDocument } from '../src/parsedDocument';
 import * as util from '../src/util';
 import { assert } from 'chai';
 import 'mocha';
+import * as fs from 'fs';
+import * as path from 'path';
 
 function symbolReaderOutput(src: string) {
 
@@ -146,5 +148,37 @@ describe('SymbolReader', () => {
         assert.deepEqual(output.children[1], expect);
         //console.log(JSON.stringify(output, null, 4));
 
+    });
+
+    it('@global tag', () => {
+        let src = fs.readFileSync(path.join(__dirname, '/fixtures/global-variables.php')).toString();
+        let symbols = symbolReaderOutput(src);
+
+        let globalSymbol = symbols.children[0];
+        console.log(globalSymbol.location);
+
+        assert.deepEqual(globalSymbol, <PhpSymbol>{
+            kind: SymbolKind.GlobalVariable,
+            name: '$DB',
+            location: {
+                uriHash: util.hash32('test'),
+                range: {
+                    start: {
+                        line: 7,
+                        character: 0
+                    },
+                    end: {
+                        line: 7,
+                        character: 11
+                    }
+                }
+            },
+            associated: [],
+            children: [],
+            doc: {
+                description: 'Database connection. Used for all access to the database.',
+                type: 'database'
+            }
+        });
     });
 });

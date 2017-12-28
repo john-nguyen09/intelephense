@@ -13,6 +13,7 @@ export declare class ReferenceReader implements TreeVisitor<Phrase | Token> {
     private _classStack;
     private _scopeStack;
     private _symbols;
+    private _globalVariables;
     private _symbolFilter;
     private _lastVarTypehints;
     private _symbolTable;

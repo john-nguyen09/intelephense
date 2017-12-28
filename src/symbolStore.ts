@@ -288,6 +288,10 @@ export class SymbolStore {
         return symbols;
     }
 
+    filter(filter: Predicate<PhpSymbol>) {
+        return this._symbolIndex.filter(filter);
+    }
+
     /**
      * matches indexed symbols where symbol keys begin with text.
      * Case insensitive

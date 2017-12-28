@@ -132,6 +132,7 @@ export declare class NameIndex<T> {
      * @param text
      */
     find(text: string): T[];
+    filter(filter: Predicate<T>): T[];
     toJSON(): NameIndexNode<T>[];
     fromJSON(data: NameIndexNode<T>[]): void;
     private _nodeMatch(lcText);

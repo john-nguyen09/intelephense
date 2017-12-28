@@ -48,6 +48,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
     private _classStack: TypeAggregate[];
     private _scopeStack: Scope[];
     private _symbols: PhpSymbol[];
+    private _globalVariables: PhpSymbol[];
     private _symbolFilter: Predicate<PhpSymbol> = (x) => {
         const mask = SymbolKind.Namespace | SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Method | SymbolKind.Function | SymbolKind.File;
         return (x.kind & mask) > 0 && !(x.modifiers & SymbolModifier.Magic);
@@ -66,6 +67,18 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         this._symbolTable = this.symbolStore.getSymbolTable(this.doc.uri);
         this._symbols = this._symbolTable.filter(this._symbolFilter);
         this._scopeStack = [Scope.create(lsp.Location.create(this.doc.uri, util.cloneRange(this._symbols.shift().location.range)))]; //file/root node
+
+        let globalVariables = this.symbolStore.filter((symbol) => {
+            return symbol.kind === SymbolKind.GlobalVariable;
+        });
+
+        for (let globalVariable of globalVariables) {
+            if (!globalVariable.type && globalVariable.doc) {
+                globalVariable.type = TypeString.nameResolve(globalVariable.doc.type, this.nameResolver);
+            }
+
+            this._variableTable.setVariable(Variable.create(globalVariable.name, globalVariable.type));
+        }
     }
 
     get refTable() {
@@ -253,7 +266,20 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
                 break;
 
             case PhraseType.SimpleVariable:
-                this._transformStack.push(new SimpleVariableTransform(this.doc.nodeLocation(node), this._variableTable));
+                let isGlobal = false;
+
+                for (let i = spine.length - 1; i >= 0; i--) {
+                    if ((<Phrase>spine[i]).phraseType == PhraseType.GlobalDeclaration) {
+                        isGlobal = true;
+                        break;
+                    }
+                }
+                
+                if (!isGlobal) {
+                    this._transformStack.push(new SimpleVariableTransform(this.doc.nodeLocation(node), this._variableTable));
+                } else {
+                    this._transformStack.push(new GlobalVariableTransform(this.doc.nodeLocation(node), this._variableTable));
+                }
                 break;
 
             case PhraseType.ListIntrinsic:
@@ -462,6 +488,10 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
             case PhraseType.RelativeScope:
                 if (scope && transform) {
                     let ref = (<ReferenceNodeTransform>transform).reference;
+
+                    if (transform instanceof GlobalVariableTransform) {
+                        this._variableTable.setVariable(Variable.create(ref.name, ref.type));
+                    }
 
                     if (ref) {
                         scope.children.push(ref);
@@ -1305,6 +1335,32 @@ class SimpleVariableTransform implements TypeNodeTransform, ReferenceNodeTransfo
 
 }
 
+class GlobalVariableTransform implements TypeNodeTransform, ReferenceNodeTransform {
+
+    phraseType = PhraseType.SimpleVariable;
+    reference: Reference;
+    
+    constructor(loc: lsp.Location, private varTable: VariableTable) {
+        this.reference = Reference.create(SymbolKind.GlobalVariable, '', loc);
+    }
+
+    push(transform: NodeTransform) {
+        if (transform.tokenType === TokenType.VariableName) {
+            this.reference.name = (<TokenTransform>transform).text;
+            
+            let topLevelScope = this.varTable.getScope(0);
+
+            this.reference.type = this.reference.name in topLevelScope.variables ?
+                topLevelScope.variables[this.reference.name].type : '';
+        }
+    }
+
+    get type() {
+        return this.reference.type;
+    }
+
+}
+
 class FullyQualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
     phraseType = PhraseType.FullyQualifiedName;
@@ -1670,6 +1726,7 @@ class VariableTable {
 
         for (let n = this._typeVariableSetStack.length - 1; n >= 0; --n) {
             typeSet = this._typeVariableSetStack[n];
+
             if (typeSet.variables[varName]) {
                 return typeSet.variables[varName].type;
             }
@@ -1681,6 +1738,10 @@ class VariableTable {
 
         return '';
 
+    }
+
+    getScope(level: number) {
+        return this._typeVariableSetStack[level];
     }
 
     private _mergeSets(a: VariableSet, b: VariableSet) {

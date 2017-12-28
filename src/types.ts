@@ -640,6 +640,20 @@ export class NameIndex<T> {
         return node ? node.items.slice(0) : [];
     }
 
+    filter(filter: Predicate<T>) {
+        let matches: T[] = [];
+
+        for (let node of this._nodeArray) {
+            for (let item of node.items) {
+                if (filter(item)) {
+                    matches.push(item);
+                }
+            }
+        }
+
+        return matches;
+    }
+
     toJSON() {
         return this._nodeArray;
     }

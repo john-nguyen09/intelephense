@@ -7,6 +7,8 @@ import 'mocha';
 import { ReferenceReader } from '../src/referenceReader';
 import {ReferenceStore} from '../src/reference';
 import {MemoryCache} from '../src/cache';
+import * as fs from 'fs';
+import * as path from 'path';
 
 var noCompletions: lsp.CompletionList = {
     items: [],
@@ -349,6 +351,7 @@ function setup(src: string | string[]) {
         let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
         refStore.add(refTable);
     }
+
     return completionProvider;
 }
 
@@ -1037,6 +1040,49 @@ describe('CompletionProvider', () => {
             var completions = completionProvider.provideCompletions('test', { line: 1, character: 11 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
+        });
+
+    });
+
+    describe('Global variable', () => {
+
+        let completionProvider: CompletionProvider;
+        before(function () {
+            let files = [
+                path.join(__dirname, '/fixtures/global-variables.php'),
+                path.join(__dirname, '/fixtures/completions.php')
+            ];
+            let filesContent: string[] = [];
+
+            for (let file of files) {
+                filesContent.push(fs.readFileSync(file).toString());
+            }
+
+            completionProvider = setup(filesContent);
+        });
+
+        it('Member access', function () {
+            let completions = completionProvider.provideCompletions('test2', { line: 5, character: 9 });
+            let exptectedItems = [
+                {
+                    kind: lsp.CompletionItemKind.Method,
+                    label: 'read_records',
+                    detail: 'read_records()',
+                    sortText: 'read_records',
+                    insertText: 'read_records()'
+                }, {
+                    kind: lsp.CompletionItemKind.Method,
+                    label: 'write_records',
+                    detail: 'write_records()',
+                    sortText: 'write_records',
+                    insertText: 'write_records()'
+                }
+            ];
+            
+            assert.deepEqual(completions.items, exptectedItems);
+
+            completions = completionProvider.provideCompletions('test2', { line: 8, character: 5 });
+            assert.deepEqual(completions.items, exptectedItems);
         });
 
     });

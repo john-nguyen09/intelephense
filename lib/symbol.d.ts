@@ -14,6 +14,7 @@ export declare const enum SymbolKind {
     ClassConstant = 1024,
     Constructor = 2048,
     File = 4096,
+    GlobalVariable = 8192,
 }
 export declare const enum SymbolModifier {
     None = 0,

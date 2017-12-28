@@ -333,6 +333,12 @@ export class SymbolReader implements TreeVisitor<Phrase | Token> {
                     this._transformStack.push(null);
                 }
                 break;
+            
+            case PhraseType.GlobalDeclaration:
+                this._transformStack.push(new GlobalVariableTransform(
+                    this.nameResolver, this.document.nodeHashedLocation(node), this.lastPhpDoc, this.lastPhpDocLocation
+                ));
+                break;
 
             case undefined:
                 //tokens
@@ -407,6 +413,7 @@ export class SymbolReader implements TreeVisitor<Phrase | Token> {
             case PhraseType.MethodDeclarationHeader:
             case PhraseType.TraitDeclarationHeader:
             case PhraseType.AnonymousFunctionHeader:
+            case PhraseType.GlobalDeclaration:
                 this.lastPhpDoc = null;
                 this.lastPhpDocLocation = null;
                 break;
@@ -1583,6 +1590,15 @@ export namespace SymbolReader {
                 }
                 Array.prototype.push.apply(s.children, phpDocMembers(doc, docLocation, nameResolver));
                 break;
+            
+            case SymbolKind.GlobalVariable:
+                tag = doc.findGlobalTag(s.name);
+
+                if (tag) {
+                    s.doc = PhpSymbolDoc.create(doc.text, TypeString.nameResolve(tag.typeString, nameResolver));
+                }
+
+                break;
 
             default:
                 break;
@@ -1795,6 +1811,31 @@ class NamespaceAliasingClause implements TextNodeTransform {
             this.text = (<TokenTransform>transform).text;
             this.location = (<TokenTransform>transform).location;
         }
+    }
+
+}
+
+class GlobalVariableTransform implements NodeTransform {
+
+    symbol: PhpSymbol;
+
+    constructor(
+        private nameResolver: NameResolver,
+        location: HashedLocation,
+        private doc: PhpDoc,
+        private docLocation: HashedLocation
+    ) {
+        this.symbol = PhpSymbol.create(SymbolKind.GlobalVariable, '', location);
+        this.symbol.children = [];
+        this.symbol.associated = [];
+    }
+
+    push(transform: NodeTransform) {
+        if (transform instanceof SimpleVariableTransform) {
+            this.symbol.name = (<SimpleVariableTransform>transform).symbol.name;
+            SymbolReader.assignPhpDocInfoToSymbol(this.symbol, this.doc, this.docLocation, this.nameResolver);
+        }
+
     }
 
 }

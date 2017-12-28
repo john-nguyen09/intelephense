@@ -57,6 +57,7 @@ export declare class SymbolStore {
      * @param filter
      */
     find(text: string, filter?: Predicate<PhpSymbol>): PhpSymbol[];
+    filter(filter: Predicate<PhpSymbol>): PhpSymbol[];
     /**
      * matches indexed symbols where symbol keys begin with text.
      * Case insensitive
