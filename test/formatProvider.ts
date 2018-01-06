@@ -126,6 +126,12 @@ echo 'hi';
 
 `;
 
+let strictNotEqual =
+`<?php
+$a!==$b;
+
+`;
+
 describe('provideDocumentFormattingEdits', ()=>{
 
 
@@ -357,6 +363,42 @@ describe('provideDocumentFormattingEdits', ()=>{
         let edits = provider.provideDocumentFormattingEdits({uri: 'test'}, {tabSize:4, insertSpaces:true});
         //console.log(JSON.stringify(edits, null, 4));
         assert.isEmpty(edits);
+    });
+
+    it('!== bug', ()=>{
+        let provider = setup(strictNotEqual);
+        let edits = provider.provideDocumentFormattingEdits({uri: 'test'}, {tabSize:4, insertSpaces:true});
+        
+        let expected = [
+            {
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 5
+                    },
+                    "end": {
+                        "line": 1,
+                        "character": 5
+                    }
+                },
+                "newText": " "
+            },
+            {
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 2
+                    },
+                    "end": {
+                        "line": 1,
+                        "character": 2
+                    }
+                },
+                "newText": " "
+            }
+        ];
+        //console.log(JSON.stringify(edits, null, 4));
+        assert.deepEqual(edits, expected);
     });
 
 });

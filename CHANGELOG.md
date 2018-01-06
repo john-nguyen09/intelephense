@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.8.5] - 2018-01-06
+#### Fixed
+* crash on merge conflict markers
+* !== format bug
+
 ## [0.8.4] - 2017-12-17
 dependency fix
 
