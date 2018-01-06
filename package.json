@@ -1,6 +1,6 @@
 {
   "name": "intelephense",
-  "version": "0.8.4",
+  "version": "0.8.5",
   "description": "Intellisense for PHP",
   "main": "./lib/intelephense.js",
   "types": "./lib/intelephense.d.ts",
