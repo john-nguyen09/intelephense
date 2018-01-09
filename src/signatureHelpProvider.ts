@@ -92,21 +92,11 @@ export class SignatureHelpProvider {
         let nRequiredParams = params.length - nOptionalParams;
         let signatures: lsp.SignatureInformation[] = [];
 
-        if (nRequiredParams > 0) {
-            signatures.push(this._signatureInfo(fn, params.slice(0, nRequiredParams)));
-        }
-
-        for (let n = 1; n <= nOptionalParams; ++n) {
-            signatures.push(this._signatureInfo(fn, params.slice(0, nRequiredParams + n)));
-        }
-
-        let activeSig = signatures.findIndex((v) => {
-            return v.parameters.length > argNumber;
-        });
+        signatures.push(this._signatureInfo(fn, params));
 
         return <lsp.SignatureHelp>{
             activeParameter: argNumber,
-            activeSignature: activeSig,
+            activeSignature: 0,
             signatures: signatures
         };
     }

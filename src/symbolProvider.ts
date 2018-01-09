@@ -15,6 +15,15 @@ const namespacedSymbolMask =
     SymbolKind.Constant |
     SymbolKind.Function;
 
+const symbolsDisplayMask = 
+    SymbolKind.Interface |
+    SymbolKind.Class |
+    SymbolKind.Trait |
+    SymbolKind.Constant |
+    SymbolKind.ClassConstant |
+    SymbolKind.Function |
+    SymbolKind.Method;
+
 export class SymbolProvider {
 
     constructor(public symbolStore: SymbolStore) { }
@@ -27,12 +36,11 @@ export class SymbolProvider {
         let symbolTable = this.symbolStore.getSymbolTable(uri);
         let symbols = symbolTable ? symbolTable.symbols : [];
         let symbolInformationList: SymbolInformation[] = [];
-        let s: PhpSymbol;
 
         for (let n = 0, l = symbols.length; n < l; ++n) {
-            s = symbols[n];
-            if (s.location) {
-                symbolInformationList.push(this.toSymbolInformation(s));
+
+            if (symbols[n].location && (symbols[n].kind & symbolsDisplayMask)) {
+                symbolInformationList.push(this.toSymbolInformation(symbols[n]));
             }
         }
 

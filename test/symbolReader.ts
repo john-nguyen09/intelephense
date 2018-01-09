@@ -155,7 +155,6 @@ describe('SymbolReader', () => {
         let symbols = symbolReaderOutput(src);
 
         let globalSymbol = symbols.children[0];
-        console.log(globalSymbol.location);
 
         assert.deepEqual(globalSymbol, <PhpSymbol>{
             kind: SymbolKind.GlobalVariable,

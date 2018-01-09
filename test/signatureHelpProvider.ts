@@ -189,12 +189,10 @@ describe('SignatureHelpProvider', function () {
 
             let provider = setup(defaultParamSrc);
             let help = provider.provideSignatureHelp('test', {line: 2, character:10});
-            //console.log(JSON.stringify(help, null, 4));
-            assert.equal(help.signatures.length, 2);
-            assert.equal(help.signatures[0].label, 'fn($p1)');
-            assert.equal(help.signatures[1].label, 'fn($p1, $p2 = 1)');
+            assert.equal(help.signatures.length, 1);
+            assert.equal(help.signatures[0].label, 'fn($p1, $p2 = 1)');
             assert.equal(help.activeParameter, 1);
-            assert.equal(help.activeSignature, 1);
+            assert.equal(help.activeSignature, 0);
 
         });
 
