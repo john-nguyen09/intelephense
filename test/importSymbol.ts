@@ -5,8 +5,49 @@ import { ParsedDocument, ParsedDocumentStore } from '../src/parsedDocument';
 import { SymbolStore, SymbolTable } from '../src/symbolStore';
 import { NameTextEditProvider } from '../src/commands';
 import {ReferenceReader} from '../src/referenceReader';
-import {ReferenceStore} from '../src/reference';
+import {ReferenceStore, ReferenceTable} from '../src/reference';
 import {MemoryCache} from '../src/cache';
+
+function setup(srcArray:string[]) {
+
+    let docStore = new ParsedDocumentStore();
+    let refStore = new ReferenceStore(new MemoryCache());
+    let symbolStore = new SymbolStore();
+
+    let doc:ParsedDocument;
+    let src:string;
+    let symbolTable:SymbolTable;
+    let refTable:ReferenceTable;
+
+    for(let n = 0; n < srcArray.length; ++n) {
+        src = srcArray[n];
+        doc = new ParsedDocument('doc' + n, src);
+        docStore.add(doc);
+        symbolTable = SymbolTable.create(doc);
+        symbolStore.add(symbolTable);
+    }
+
+    for(let n = 0; n < srcArray.length; ++n) {
+        refTable = ReferenceReader.discoverReferences(docStore.find('doc' + n), symbolStore);
+        refStore.add(refTable);
+    }
+
+    return new NameTextEditProvider(symbolStore, docStore, refStore);
+
+}
+
+let dontEditUseDecl1 = `
+<?php
+namespace Foo;
+class Bar {}
+`;
+
+let dontEditUseDecl2 = 
+`<?php
+use Foo\\Bar;
+$bar = new \\Foo\\Bar;
+`;
+
 
 describe('importSymbol', () => {
 
@@ -74,6 +115,31 @@ describe('importSymbol', () => {
         let edits = provider.provideContractFqnTextEdits('doc2', { line: 2, character: 27 });
         //console.log(JSON.stringify(edits, null, 4));
         assert.deepEqual(edits, expected);
+    });
+
+    it('should not replace use decl reference', () => {
+
+        let expected = [
+            {
+                "range": {
+                    "start": {
+                        "line": 2,
+                        "character": 11
+                    },
+                    "end": {
+                        "line": 2,
+                        "character": 19
+                    }
+                },
+                "newText": "Bar"
+            }
+        ];
+
+        let provider = setup([dontEditUseDecl1, dontEditUseDecl2]);
+        let edits = provider.provideContractFqnTextEdits('doc1', {line:2, character:16});
+        //console.log(JSON.stringify(edits, null, 4));
+        assert.deepEqual(edits, expected);
+
     });
 
 });

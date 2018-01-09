@@ -659,7 +659,7 @@ class FormatVisitor implements TreeVisitor<Phrase | Token> {
                 let tagText = this.doc.tokenText(<Token>node);
                 if (tagText.length > 2) {
                     if (FormatVisitor.countNewlines(tagText) > 0) {
-                        this._nextFormatRule = FormatVisitor.indentBefore;
+                        this._nextFormatRule = FormatVisitor.indentOrNewLineIndentBefore;
                     } else {
                         this._nextFormatRule = FormatVisitor.noSpaceOrNewlineIndentBefore;
                     }

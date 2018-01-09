@@ -1,6 +1,14 @@
 # Change Log
 
-## [0.8.3] - 2017-12-09
+## [0.8.5] - 2018-01-06
+#### Fixed
+* crash on merge conflict markers
+* !== format bug
+
+## [0.8.4] - 2017-12-17
+dependency fix
+
+## [0.8.3] - 2017-12-17
 #### Added
 * @method static support
 
@@ -8,12 +16,14 @@
 * Dont use snippet or trigger param hints in completion if function/method/constructor has no params
 * Use DocumentHighlightKind.read for highlights
 * Make private members workspace searchable
+* Allow utf8 names
 
 #### Fixed
 * Various PSR2 formatting fixes
 * Various keyword completions in class header and body
 * Completion item sortText
 * Crash relating to anon functions used without assignment
+* Import symbol edits existing use decl
 
 ## [0.8.2] - 2017-11-18
 #### Added

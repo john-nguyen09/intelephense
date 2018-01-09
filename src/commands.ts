@@ -61,7 +61,11 @@ export class NameTextEditProvider {
         let lcName = ref.name.toLowerCase();
 
         let fn = (r:Reference) => {
-            return (r.kind & kindMask) > 0 && lcName === r.name.toLowerCase();
+            return (r.kind & kindMask) > 0 && 
+                lcName === r.name.toLowerCase() && 
+                (!fqnUseSymbol || 
+                    (util.isInRange(r.location.range.start, fqnUseSymbol.location.range) !== 0 &&
+                    util.isInRange(r.location.range.end, fqnUseSymbol.location.range) !== 0));
         };
 
         let references = refTable.references(fn);
