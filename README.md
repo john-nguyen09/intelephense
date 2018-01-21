@@ -2,6 +2,8 @@
 
 A PHP static code analysis library implemented in Typescript.
 
+### [Support on Patreon](https://www.patreon.com/bmewburn)
+
 ## Design Goals
 
 * Support features defined by the Language Server Protocol.
