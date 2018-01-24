@@ -8,7 +8,7 @@ import { ParsedDocumentStore } from './parsedDocument';
 import { SymbolStore } from './symbolStore';
 import { SymbolKind, PhpSymbol, SymbolModifier } from './symbol';
 import { ReferenceStore } from './reference';
-import { Position, Hover } from 'vscode-languageserver-types';
+import { Position, Hover, MarkedString } from 'vscode-languageserver-types';
 import { MemberMergeStrategy } from './typeAggregate';
 
 export class HoverProvider {
@@ -44,8 +44,20 @@ export class HoverProvider {
 
             case SymbolKind.Function:
             case SymbolKind.Method:
+                let symbolDeclaration = '<?php\n' + [
+                    this.modifiersToString(symbol.modifiers),
+                    symbol.name + PhpSymbol.signatureString(symbol),
+                ].join(' ').trim();
+                let hoverTexts: MarkedString[] = [];
+
+                hoverTexts.push({language: 'php', value: symbolDeclaration});
+
+                if (symbol.doc && symbol.doc.description) {
+                    hoverTexts.push(symbol.doc.description);
+                }
+
                 return {
-                    contents: [this.modifiersToString(symbol.modifiers), symbol.name + PhpSymbol.signatureString(symbol)].join(' ').trim(),
+                    contents: hoverTexts,
                     range: ref.location.range
                 };
 
