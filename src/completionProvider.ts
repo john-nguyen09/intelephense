@@ -986,21 +986,22 @@ class ObjectAccessCompletion extends MemberAccessCompletion {
 
     protected _createMemberPredicate(scopeName: string, word: string, classContext: TypeAggregate): Predicate<PhpSymbol> {
 
+        //php allows static methods to be accessed with ->
         if (classContext && scopeName.toLowerCase() === classContext.name.toLowerCase()) {
             //public, protected, private
             return (x) => {
-                return !(x.modifiers & SymbolModifier.Static) && util.ciStringContains(word, x.name);
+                return util.ciStringContains(word, x.name);
             };
         } else if (classContext && classContext.isAssociated(scopeName)) {
             //public, protected
-            const mask = SymbolModifier.Static | SymbolModifier.Private;
+            const mask = SymbolModifier.Private;
             return (x) => {
                 return !(x.modifiers & mask) && util.ciStringContains(word, x.name);
             };
 
         } else {
             //public
-            const mask = SymbolModifier.Static | SymbolModifier.Protected | SymbolModifier.Private;
+            const mask = SymbolModifier.Protected | SymbolModifier.Private;
             return (x) => {
                 return !(x.modifiers & mask) && util.ciStringContains(word, x.name);
             };
