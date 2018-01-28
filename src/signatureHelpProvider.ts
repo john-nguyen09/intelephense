@@ -31,13 +31,8 @@ export class SignatureHelpProvider {
 
         let traverser = new ParseTreeTraverser(doc, table, refTable);
         let token = traverser.position(position);
-
-        if(!this._shouldTrigger(traverser.clone())) {
-            return null;
-        }
-
         let callableExpr = traverser.ancestor(this._isCallablePhrase) as Phrase;
-        if (!callableExpr) {
+        if (!callableExpr || !token || token.tokenType === TokenType.CloseParenthesis) {
             return null;
         }
 
@@ -48,26 +43,6 @@ export class SignatureHelpProvider {
         let argNumber = ParsedDocument.filterChildren(<Phrase>ParsedDocument.findChild(callableExpr, this._isArgExprList), delimFilterFn).length;
 
         return symbol ? this._createSignatureHelp(symbol, argNumber) : null;
-
-    }
-
-    private _shouldTrigger(traverser:ParseTreeTraverser) {
-
-        let t = traverser.node as Token;
-        if(!t) {
-            return false;
-        }
-
-        if(t.tokenType === TokenType.OpenParenthesis) {
-            return this._isCallablePhrase(traverser.parent());
-        }
-
-        if(t.tokenType === TokenType.Comma) {
-            return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.ArgumentExpressionList]) &&
-                this._isCallablePhrase(traverser.parent());
-        }
-
-        return false;
 
     }
 
@@ -205,11 +180,6 @@ export class SignatureHelpProvider {
     }
 
     private _isNamePhrase(node:Phrase|Token) {
-
-        if(!node) {
-            return false;
-        }
-
         switch((<Phrase>node).phraseType) {
             case PhraseType.FullyQualifiedName:
             case PhraseType.RelativeQualifiedName:

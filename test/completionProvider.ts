@@ -464,11 +464,12 @@ describe('CompletionProvider', () => {
         it('->', function () {
             let completions = completionProvider.provideCompletions('test', { line: 9, character: 10 });
             //console.log(JSON.stringify(completions, null, 4));
-            assert.equal(completions.items.length, 2);
+            assert.equal(completions.items.length, 3);
             completions.items.forEach((x) => {
                 assert.isTrue(
                     isEqual(x, 'foo', lsp.CompletionItemKind.Property) ||
-                    isEqual(x, 'bar', lsp.CompletionItemKind.Method)
+                    isEqual(x, 'bar', lsp.CompletionItemKind.Method) ||
+                    isEqual(x, 'foo', lsp.CompletionItemKind.Method)
                 );
             });
 

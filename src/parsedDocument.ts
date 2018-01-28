@@ -97,7 +97,11 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
 
         for (let n = 0, l = contentChanges.length; n < l; ++n) {
             change = contentChanges[n];
-            this._textDocument.applyEdit(change.range.start, change.range.end, change.text);
+            if(!change.range) {
+                this._textDocument.text = change.text;
+            } else {
+                this._textDocument.applyEdit(change.range.start, change.range.end, change.text);
+            }
         }
 
         this._debounce.handle(null);

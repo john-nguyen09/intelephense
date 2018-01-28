@@ -8,7 +8,6 @@ export declare class SignatureHelpProvider {
     refStore: ReferenceStore;
     constructor(symbolStore: SymbolStore, docStore: ParsedDocumentStore, refStore: ReferenceStore);
     provideSignatureHelp(uri: string, position: lsp.Position): lsp.SignatureHelp;
-    private _shouldTrigger(traverser);
     private _createSignatureHelp(fn, argNumber);
     private _signatureInfo(fn, params);
     private _parameterInfoArray(params);
