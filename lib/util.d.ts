@@ -18,3 +18,4 @@ export declare function hash32(text: string): number;
 export declare function filter<T>(items: T[], fn: Predicate<T>): T[];
 export declare function find<T>(items: T[], fn: Predicate<T>): T;
 export declare function cloneRange(range: Range): Range;
+export declare function pathToUri(filePath: string): string;

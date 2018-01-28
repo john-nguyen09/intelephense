@@ -173,3 +173,20 @@ export function cloneRange(range: Range): Range {
         range.end.character
     );
 }
+
+export function pathToUri(filePath: string): string {
+    filePath = filePath.replace('\\', '/').trim();
+    let parts = filePath.split('/');
+    // Don't %-encode the colon after a Windows drive letter
+    let first = parts.shift();
+    if (first.substr(-1) !== ':') {
+        first = encodeURIComponent(first);
+    }
+    parts = parts.map((part) => {
+        return encodeURIComponent(part);
+    });
+    parts.unshift(first);
+    filePath = parts.join('/');
+    
+    return 'file:///' + filePath;
+}

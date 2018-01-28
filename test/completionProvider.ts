@@ -68,6 +68,7 @@ var nameSrc =
     class Foo {}
     class Bar {}
     b
+    function bar() {}
 `;
 
 var nsUse =
@@ -560,7 +561,7 @@ describe('CompletionProvider', () => {
                     isEqual(x, 'abstract', lsp.CompletionItemKind.Keyword) ||
                     isEqual(x, 'break', lsp.CompletionItemKind.Keyword) ||
                     isEqual(x, 'global', lsp.CompletionItemKind.Keyword) ||
-                    isEqual(x, 'Bar', lsp.CompletionItemKind.Class)
+                    isEqual(x, 'bar', lsp.CompletionItemKind.Function)
                 );
             });
 
@@ -749,7 +750,6 @@ describe('CompletionProvider', () => {
             let fnNames = ['fnA', 'fnB', 'fnC'];
             assert.oneOf(completions.items[0].label, fnNames);
             assert.oneOf(completions.items[1].label, fnNames);
-            assert.oneOf(completions.items[2].label, fnNames);
         });
 
         it('all methods internal', function () {
@@ -759,7 +759,6 @@ describe('CompletionProvider', () => {
             let fnNames = ['fnA', 'fnB', 'fnC'];
             assert.oneOf(completions.items[0].label, fnNames);
             assert.oneOf(completions.items[1].label, fnNames);
-            assert.oneOf(completions.items[2].label, fnNames);
         });
 
 

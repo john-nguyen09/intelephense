@@ -50,10 +50,7 @@ describe('PhpSymbol', () => {
             }
 
             let expected = [
-                'foo\\myfooclass',
-                'myfooclass',
-                'fooclass',
-                'class'
+                'Foo\\MyFooClass'
             ];
 
             assert.deepEqual(PhpSymbol.keys(s), expected);
@@ -67,8 +64,6 @@ describe('PhpSymbol', () => {
 
             let expected = [
                 '_my_function',
-                'my_function',
-                'function'
             ];
 
             assert.deepEqual(PhpSymbol.keys(s), expected);
@@ -81,9 +76,7 @@ describe('PhpSymbol', () => {
             } 
 
             let expected = [
-                '$myproperty',
-                'myproperty',
-                'property'
+                '$myProperty',
             ];
 
             assert.deepEqual(PhpSymbol.keys(s), expected);
@@ -96,10 +89,7 @@ describe('PhpSymbol', () => {
             } 
 
             let expected = [
-                'this_is_a_constant',
-                'is_a_constant',
-                'a_constant',
-                'constant'
+                'THIS_IS_A_CONSTANT',
             ];
 
             assert.deepEqual(PhpSymbol.keys(s), expected);

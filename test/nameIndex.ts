@@ -27,6 +27,10 @@ let symbols: PhpSymbol[] = [
     {
         kind:SymbolKind.Function,
         name: 'zoo'
+    },
+    {
+        kind: SymbolKind.Class,
+        name: 'Foo\\myFoo'
     }
 ];
 
@@ -47,14 +51,14 @@ describe('SymbolIndex', () => {
         });
 
         it('Should return correct array of matching items when given a non unique string that exists', () => {
-            let match = index.match('myfoo');
+            let match = index.match('myFoo');
             assert.isArray(match);
             assert.equal(match.length, 2);
-            assert.deepEqual(match, [symbols[0], symbols[2]]);
+            assert.deepEqual(match, [symbols[2], symbols[6]]);
         });
 
         it('Should return empty array on no matches', ()=>{
-            let match = index.match('aa');
+            let match = index.match('jdslkfjl');
             assert.isArray(match);
             assert.lengthOf(match, 0);
         });

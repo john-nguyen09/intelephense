@@ -54,6 +54,10 @@ export interface SymbolIdentifier {
     scope?: string;
 }
 export declare namespace PhpSymbol {
+    /**
+     *
+     * @param s Symbol to get keys identifier
+     */
     function keys(s: PhpSymbol): string[];
     function isClassLike(s: PhpSymbol): boolean;
     function signatureString(s: PhpSymbol): string;

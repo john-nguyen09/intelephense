@@ -5,6 +5,7 @@
 'use strict';
 
 import { Range } from 'vscode-languageserver-types';
+import * as fuzzysearch from 'fuzzysearch';
 
 export interface Predicate<T> {
     (t: T): boolean;
@@ -544,33 +545,26 @@ export type KeysDelegate<T> = (t: T) => string[];
 export class NameIndex<T> {
 
     private _keysDelegate: KeysDelegate<T>;
-    private _nodeArray: NameIndexNode<T>[];
-    private _binarySearch: BinarySearch<NameIndexNode<T>>;
     private _collator: Intl.Collator;
+    private _nameIndex: Map<string, T[]>;
 
     constructor(keysDelegate: KeysDelegate<T>) {
+        this._nameIndex = new Map<string, T[]>();
         this._keysDelegate = keysDelegate;
-        this._nodeArray = [];
-        this._binarySearch = new BinarySearch<NameIndexNode<T>>(this._nodeArray);
         this._collator = new Intl.Collator('en');
     }
 
     add(item: T) {
-
         let suffixes = this._keysDelegate(item);
-        let node: NameIndexNode<T>;
 
         for (let n = 0; n < suffixes.length; ++n) {
-
-            node = this._nodeFind(suffixes[n]);
-
-            if (node) {
-                node.items.push(item);
+            if (!this._nameIndex.has(suffixes[n])) {
+                this._nameIndex.set(suffixes[n], [item]);
             } else {
-                this._insertNode({ key: suffixes[n], items: [item] });
+                this._nameIndex.get(suffixes[n]).push(item);
             }
-        }
 
+        }
     }
 
     addMany(items: T[]) {
@@ -580,31 +574,14 @@ export class NameIndex<T> {
     }
 
     remove(item: T) {
-
         let suffixes = this._keysDelegate(item);
-        let node: NameIndexNode<T>;
-        let i: number;
 
         for (let n = 0; n < suffixes.length; ++n) {
+            let items = this._nameIndex.get(suffixes[n]);
+            let index = items.indexOf(item);
 
-            node = this._nodeFind(suffixes[n]);
-            if (!node) {
-                continue;
-            }
-
-            i = node.items.indexOf(item);
-
-            if (i > -1) {
-                node.items.splice(i, 1);
-                /* uneccessary? save a lookup and splice
-                if (!node.items.length) {
-                    this._deleteNode(node);
-                }
-                */
-            }
-
+            items.splice(index, 1);
         }
-
     }
 
     removeMany(items: T[]) {
@@ -614,21 +591,19 @@ export class NameIndex<T> {
     }
 
     /**
-     * Matches all items that are prefixed with text
+     * Matches all items that contain (fuzzy) text
      * @param text 
      */
     match(text: string) {
+        let matches = new Set<T>();
 
-        text = text.toLowerCase();
-        let nodes = this._nodeMatch(text);
-        let matches: T[] = [];
-
-        for (let n = 0; n < nodes.length; ++n) {
-            Array.prototype.push.apply(matches, nodes[n].items);
+        for (let key of this._nameIndex.keys()) {
+            if (fuzzysearch(text, key)) {
+                Set.prototype.add.apply(matches, this._nameIndex.get(key));
+            }
         }
 
-        return Array.from(new Set<T>(matches));
-
+        return Array.from(matches);
     }
 
     /**
@@ -636,15 +611,22 @@ export class NameIndex<T> {
      * @param text 
      */
     find(text: string) {
-        let node = this._nodeFind(text.toLowerCase());
-        return node ? node.items.slice(0) : [];
+        let results = this._nameIndex.get(text);
+
+        if (!results) {
+            return [];
+        }
+
+        return results;
     }
 
     filter(filter: Predicate<T>) {
         let matches: T[] = [];
 
-        for (let node of this._nodeArray) {
-            for (let item of node.items) {
+        for (let key of this._nameIndex.keys()) {
+            let items = this._nameIndex.get(key);
+
+            for (let item of items) {
                 if (filter(item)) {
                     matches.push(item);
                 }
@@ -655,63 +637,12 @@ export class NameIndex<T> {
     }
 
     toJSON() {
-        return this._nodeArray;
+        return this._nameIndex;
     }
 
-    fromJSON(data:NameIndexNode<T>[]) {
-        this._nodeArray = data;
-        this._binarySearch = new BinarySearch<NameIndexNode<T>>(this._nodeArray);
+    fromJSON(data: Map<string, T[]>) {
+        this._nameIndex = data;
     }
-
-    private _nodeMatch(lcText: string) {
-
-        let collator = this._collator;
-        let compareLowerFn = (n: NameIndexNode<T>) => {
-            return collator.compare(n.key, lcText);
-        };
-        let compareUpperFn = (n: NameIndexNode<T>) => {
-            return n.key.slice(0, lcText.length) === lcText ? -1 : 1;
-        }
-
-        return this._binarySearch.range(compareLowerFn, compareUpperFn);
-
-    }
-
-    private _nodeFind(lcText: string) {
-
-        let collator = this._collator;
-        let compareFn = (n: NameIndexNode<T>) => {
-            return collator.compare(n.key, lcText);
-        }
-
-        return this._binarySearch.find(compareFn);
-
-    }
-
-    private _insertNode(node: NameIndexNode<T>) {
-
-        let collator = this._collator;
-        let rank = this._binarySearch.rank((n) => {
-            return collator.compare(n.key, node.key);
-        });
-
-        this._nodeArray.splice(rank, 0, node);
-
-    }
-
-    private _deleteNode(node: NameIndexNode<T>) {
-
-        let collator = this._collator;
-        let rank = this._binarySearch.rank((n) => {
-            return collator.compare(n.key, node.key);
-        });
-
-        if (this._nodeArray[rank] === node) {
-            this._nodeArray.splice(rank, 1);
-        }
-
-    }
-
 }
 
 export type Comparer<T> = (a: T, b: T) => number;

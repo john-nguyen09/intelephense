@@ -62,7 +62,6 @@ export class ReferenceProvider {
     provideReferences(symbols: PhpSymbol[], table: ReferenceTable, includeDeclaration: boolean): Promise<Reference[]> {
 
         let refs: Reference[] = [];
-        symbols = symbols.slice();
         let provideRefsFn = this._provideReferences;
 
         return new Promise<Reference[]>((resolve, reject) => {

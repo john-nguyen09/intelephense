@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { Predicate, TreeVisitor, TreeTraverser, NameIndex, Traversable, SortedList, NameIndexNode } from './types';
+import { Predicate, TreeVisitor, TreeTraverser, NameIndex, Traversable, SortedList } from './types';
 import { SymbolIdentifier, SymbolKind } from './symbol';
 import { Range, Location, Position } from 'vscode-languageserver-types';
 import * as util from './util';
@@ -394,14 +394,14 @@ class ReferenceTableSummaryVisitor implements TreeVisitor<Scope | Reference> {
 
     preorder(node: Scope | Reference, spine: (Scope | Reference)[]) {
         if (this._shouldIndex(node)) {
-            let lcName = (<Reference>node).name.toLowerCase();
+            let name = (<Reference>node).name;
             let altName = (<Reference>node).altName;
-            if (lcName) {
-                this.identifiers.add(lcName);
+            if (name) {
+                this.identifiers.add(name);
             }
             if (altName) {
                 let lcAltName = altName.toLowerCase();
-                if (lcAltName !== lcName && lcAltName !== 'static' && lcAltName !== 'self' && lcAltName !== 'parent') {
+                if (lcAltName !== name && lcAltName !== 'static' && lcAltName !== 'self' && lcAltName !== 'parent') {
                     this.identifiers.add(lcAltName);
                 }
             }

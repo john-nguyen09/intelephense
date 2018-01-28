@@ -114,16 +114,15 @@ export interface NameIndexNode<T> {
 export declare type KeysDelegate<T> = (t: T) => string[];
 export declare class NameIndex<T> {
     private _keysDelegate;
-    private _nodeArray;
-    private _binarySearch;
     private _collator;
+    private _nameIndex;
     constructor(keysDelegate: KeysDelegate<T>);
     add(item: T): void;
     addMany(items: T[]): void;
     remove(item: T): void;
     removeMany(items: T[]): void;
     /**
-     * Matches all items that are prefixed with text
+     * Matches all items that contain (fuzzy) text
      * @param text
      */
     match(text: string): T[];
@@ -133,12 +132,8 @@ export declare class NameIndex<T> {
      */
     find(text: string): T[];
     filter(filter: Predicate<T>): T[];
-    toJSON(): NameIndexNode<T>[];
-    fromJSON(data: NameIndexNode<T>[]): void;
-    private _nodeMatch(lcText);
-    private _nodeFind(lcText);
-    private _insertNode(node);
-    private _deleteNode(node);
+    toJSON(): Map<string, T[]>;
+    fromJSON(data: Map<string, T[]>): void;
 }
 export declare type Comparer<T> = (a: T, b: T) => number;
 export declare class SortedList<T> {

@@ -77,38 +77,16 @@ export interface SymbolIdentifier {
 
 export namespace PhpSymbol {
 
+    /**
+     * 
+     * @param s Symbol to get keys identifier
+     */
     export function keys(s: PhpSymbol) {
         if (!s.name) {
             return [];
         }
 
-        let text = notFqn(s.name);
-        let lcText = text.toLowerCase();
-        let suffixes = [s.name.toLowerCase()];
-        if (text !== s.name) {
-            suffixes.push(lcText);
-        }
-        let n = 0;
-        let c: string;
-        let l = text.length;
-
-        while (n < l) {
-
-            c = text[n];
-
-            if ((c === '$' || c === '_') && n + 1 < l && text[n + 1] !== '_') {
-                ++n;
-                suffixes.push(lcText.slice(n));
-            } else if (n > 0 && c !== lcText[n] && text[n - 1] === lcText[n - 1]) {
-                //uppercase
-                suffixes.push(lcText.slice(n));
-            }
-
-            ++n;
-
-        }
-
-        return suffixes;
+        return [s.name];
     }
 
     function isParameter(s: PhpSymbol) {
