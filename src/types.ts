@@ -51,14 +51,14 @@ export class Event<T> {
 }
 
 export interface HashedLocation {
-    uriHash: number;
+    uri: string;
     range: Range;
 }
 
 export namespace HashedLocation {
-    export function create(uriHash: number, range: Range) {
+    export function create(uri: string, range: Range) {
         return <HashedLocation>{
-            uriHash: uriHash,
+            uri: uri,
             range: range
         };
     }

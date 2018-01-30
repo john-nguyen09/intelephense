@@ -80,9 +80,8 @@ export declare class SymbolStore {
     private _symbolKeys(s);
 }
 export declare class SymbolTableIndex {
-    private _tables;
-    private _search;
     private _count;
+    private _tables;
     constructor();
     count(): number;
     tables(): IterableIterator<SymbolTable>;
@@ -91,12 +90,10 @@ export declare class SymbolTableIndex {
     find(uri: string): SymbolTable;
     findBySymbol(s: PhpSymbol): SymbolTable;
     toJSON(): {
-        _tables: SymbolTableIndexNode[];
+        _tables: Map<string, SymbolTable>;
         _count: number;
     };
     fromJSON(data: any): void;
-    private _createCompareFn(uri);
-    private _createUriFindFn(uri);
 }
 export interface SymbolTableIndexNode {
     hash: number;

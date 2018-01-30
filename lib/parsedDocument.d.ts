@@ -13,7 +13,6 @@ export declare class ParsedDocument implements Traversable<Phrase | Token> {
     version: number;
     private static _wordRegex;
     private _textDocument;
-    private _uriHash;
     private _parseTree;
     private _changeEvent;
     private _debounce;

@@ -18,11 +18,11 @@ export declare class Event<T> {
     trigger(args: T): void;
 }
 export interface HashedLocation {
-    uriHash: number;
+    uri: string;
     range: Range;
 }
 export declare namespace HashedLocation {
-    function create(uriHash: number, range: Range): HashedLocation;
+    function create(uri: string, range: Range): HashedLocation;
 }
 export interface TreeLike {
     [index: string]: any;
