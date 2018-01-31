@@ -15,6 +15,7 @@ export declare function whitespace(n: number): string;
  * http://stackoverflow.com/a/7616484
  */
 export declare function hash32(text: string): number;
+export declare function md5(text: string): string;
 export declare function filter<T>(items: T[], fn: Predicate<T>): T[];
 export declare function find<T>(items: T[], fn: Predicate<T>): T;
 export declare function cloneRange(range: Range): Range;

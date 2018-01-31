@@ -10,7 +10,6 @@ export declare class SymbolReader implements TreeVisitor<Phrase | Token> {
     lastPhpDoc: PhpDoc;
     lastPhpDocLocation: HashedLocation;
     private _transformStack;
-    private _uriHash;
     constructor(document: ParsedDocument, nameResolver: NameResolver);
     readonly symbol: PhpSymbol;
     preorder(node: Phrase | Token, spine: (Phrase | Token)[]): boolean;

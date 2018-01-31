@@ -623,10 +623,8 @@ export class NameIndex<T> {
     filter(filter: Predicate<T>) {
         let matches: T[] = [];
 
-        for (let key of this._nameIndex.keys()) {
-            let items = this._nameIndex.get(key);
-
-            for (let item of items) {
+        for (let entry of this._nameIndex.entries()) {
+            for (let item of entry[1]) {
                 if (filter(item)) {
                     matches.push(item);
                 }

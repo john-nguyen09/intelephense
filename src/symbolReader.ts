@@ -19,14 +19,12 @@ export class SymbolReader implements TreeVisitor<Phrase | Token> {
     lastPhpDocLocation: HashedLocation;
 
     private _transformStack: NodeTransform[];
-    private _uriHash = 0;
 
     constructor(
         public document: ParsedDocument,
         public nameResolver: NameResolver
     ) {
         this._transformStack = [new FileTransform(this.document.uri, this.document.nodeHashedLocation(this.document.tree))];
-        this._uriHash = Math.abs(util.hash32(document.uri));
     }
 
     get symbol() {

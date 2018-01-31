@@ -8,11 +8,9 @@ import { MemberMergeStrategy } from './typeAggregate';
 export declare class SymbolTable implements Traversable<PhpSymbol> {
     private _uri;
     private _root;
-    private _hash;
-    constructor(uri: string, root: PhpSymbol, hash?: number);
+    constructor(uri: string, root: PhpSymbol);
     readonly uri: string;
     readonly root: PhpSymbol;
-    readonly hash: number;
     readonly symbols: PhpSymbol[];
     readonly symbolCount: number;
     pruneScopedVars(): void;

@@ -218,7 +218,7 @@ export namespace Intelephense {
             let onCacheRead = (data: any) => {
                 --count;
                 if (data) {
-                    symbolStore.add(new SymbolTable(data._uri, data._root, data._hash));
+                    symbolStore.add(new SymbolTable(data._uri, data._root));
                 }
 
                 let uri = keys.pop();

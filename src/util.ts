@@ -6,6 +6,7 @@
 
 import { Position, Range, Location } from 'vscode-languageserver-types';
 import { Predicate } from './types';
+import * as crypto from 'crypto';
 
 export function popMany<T>(array: T[], count: number) {
     let popped: T[] = [];
@@ -126,6 +127,10 @@ export function hash32(text: string) {
         hash |= 0; // Convert to 32bit integer
     }
     return hash;
+}
+
+export function md5(text: string) {
+    return crypto.createHash('md5').update(text).digest('hex');
 }
 
 export function filter<T>(items: T[], fn: Predicate<T>) {

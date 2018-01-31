@@ -48,7 +48,6 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
     private _classStack: TypeAggregate[];
     private _scopeStack: Scope[];
     private _symbols: PhpSymbol[];
-    private _globalVariables: PhpSymbol[];
     private _symbolFilter: Predicate<PhpSymbol> = (x) => {
         const mask = SymbolKind.Namespace | SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Method | SymbolKind.Function | SymbolKind.File;
         return (x.kind & mask) > 0 && !(x.modifiers & SymbolModifier.Magic);
@@ -583,9 +582,8 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         let symbol = this._symbols.shift();
 
         if (type && symbol) {
-            let lcName = symbol.name.toLowerCase();
             let fn = (x: PhpSymbol) => {
-                return x.kind === SymbolKind.Method && lcName === x.name.toLowerCase();
+                return x.kind === SymbolKind.Method && symbol.name === x.name;
             };
             //lookup method on aggregate to inherit doc
             symbol = type.members(MemberMergeStrategy.Documented, fn).shift();

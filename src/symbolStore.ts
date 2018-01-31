@@ -23,16 +23,10 @@ export class SymbolTable implements Traversable<PhpSymbol> {
 
     private _uri: string;
     private _root: PhpSymbol;
-    private _hash: number;
 
-    constructor(uri: string, root: PhpSymbol, hash?: number) {
+    constructor(uri: string, root: PhpSymbol) {
         this._uri = uri;
         this._root = root;
-        if (hash !== undefined) {
-            this._hash = hash;
-        } else {
-            this._hash = Math.abs(util.hash32(uri));
-        }
     }
 
     get uri() {
@@ -41,10 +35,6 @@ export class SymbolTable implements Traversable<PhpSymbol> {
 
     get root() {
         return this._root;
-    }
-
-    get hash() {
-        return this._hash;
     }
 
     get symbols() {
@@ -146,7 +136,7 @@ export class SymbolTable implements Traversable<PhpSymbol> {
     }
 
     static fromJSON(data: any) {
-        return new SymbolTable(data._uri, data._root, data._hash);
+        return new SymbolTable(data._uri, data._root);
     }
 
     static create(parsedDocument: ParsedDocument, externalOnly?: boolean) {

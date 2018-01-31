@@ -45,16 +45,10 @@ export class ReferenceTable implements Traversable<Scope | Reference> {
 
     private _uri: string;
     private _root: Scope;
-    private _hash: number;
 
-    constructor(uri: string, root: Scope, hash?: number) {
+    constructor(uri: string, root: Scope) {
         this._uri = uri;
         this._root = root;
-        if (hash) {
-            this._hash = hash;
-        } else {
-            this._hash = Math.abs(util.hash32(uri));
-        }
     }
 
     get uri() {
@@ -63,10 +57,6 @@ export class ReferenceTable implements Traversable<Scope | Reference> {
 
     get root() {
         return this._root;
-    }
-
-    get hash() {
-        return this._hash;
     }
 
     get referenceCount() {
@@ -107,7 +97,7 @@ export class ReferenceTable implements Traversable<Scope | Reference> {
     }
 
     static fromJSON(data: any) {
-        return new ReferenceTable(data._uri, data._root, data._hash);
+        return new ReferenceTable(data._uri, data._root);
     }
 }
 

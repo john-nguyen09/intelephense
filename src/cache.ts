@@ -205,7 +205,7 @@ export class FileCache implements Cache {
     }
 
     private _filePath(key: string) {
-        return path.join(this.path, Math.abs(util.hash32(key)).toString(16));
+        return path.join(this.path, util.md5(key));
     }
 
 }

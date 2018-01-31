@@ -20,11 +20,9 @@ export declare namespace Scope {
 export declare class ReferenceTable implements Traversable<Scope | Reference> {
     private _uri;
     private _root;
-    private _hash;
-    constructor(uri: string, root: Scope, hash?: number);
+    constructor(uri: string, root: Scope);
     readonly uri: string;
     readonly root: Scope;
-    readonly hash: number;
     readonly referenceCount: number;
     references(filter?: Predicate<Reference>): Reference[];
     referenceAtPosition(position: Position): Reference;
