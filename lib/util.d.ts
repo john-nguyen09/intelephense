@@ -20,3 +20,4 @@ export declare function filter<T>(items: T[], fn: Predicate<T>): T[];
 export declare function find<T>(items: T[], fn: Predicate<T>): T;
 export declare function cloneRange(range: Range): Range;
 export declare function pathToUri(filePath: string): string;
+export declare function uriToPath(uri: string): string;

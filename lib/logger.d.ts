@@ -4,7 +4,7 @@ export interface LogWriter {
     info(msg: string): any;
 }
 export declare namespace Log {
-    var writer: LogWriter;
+    var connection: any;
     function error(msg: string): void;
     function warn(msg: string): void;
     function info(msg: string): void;

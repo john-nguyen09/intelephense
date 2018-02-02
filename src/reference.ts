@@ -184,9 +184,9 @@ export class ReferenceStore {
 
     close(uri: string) {
         let table = this._tablesRemove(uri);
-        if (table) {
-            return this._cache.write(table.uri, table.root).catch((msg) => { Log.error(msg) });
-        }
+        // if (table) {
+        //     return this._cache.write(table.uri, table.root).catch((msg) => { Log.error(msg) });
+        // }
         return Promise.resolve();
     }
 

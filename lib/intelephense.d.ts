@@ -1,7 +1,7 @@
 import { LanguageRange } from './parsedDocument';
 import { PublishDiagnosticsEventArgs } from './diagnosticsProvider';
 import * as lsp from 'vscode-languageserver-types';
-import { LogWriter } from './logger';
+import { InitializeParams } from 'vscode-languageserver-protocol';
 export { LanguageRange } from './parsedDocument';
 export declare namespace Intelephense {
     function onPublishDiagnostics(fn: (args: PublishDiagnosticsEventArgs) => void): void;
@@ -23,7 +23,7 @@ export declare namespace Intelephense {
     function provideCompletions(textDocument: lsp.TextDocumentIdentifier, position: lsp.Position): lsp.CompletionList;
     function provideSignatureHelp(textDocument: lsp.TextDocumentIdentifier, position: lsp.Position): lsp.SignatureHelp;
     function provideDefinition(textDocument: lsp.TextDocumentIdentifier, position: lsp.Position): lsp.Location | lsp.Location[];
-    function discoverSymbols(textDocument: lsp.TextDocumentItem): number | Promise<number>;
+    function discoverSymbols(textDocument: lsp.TextDocumentItem): number;
     function discoverReferences(textDocument: lsp.TextDocumentItem): number;
     function forget(uri: string): void;
     function provideContractFqnTextEdits(uri: string, position: lsp.Position, alias?: string): lsp.TextEdit[];
@@ -51,10 +51,8 @@ export interface IntelephenseConfig {
         maxSize: number;
     };
 }
-export interface InitialisationOptions {
-    storagePath: string;
-    logWriter?: LogWriter;
-    clearCache?: boolean;
+export interface InitialisationOptions extends InitializeParams {
+    connection?: any;
 }
 export interface LanguageRangeList {
     version: number;

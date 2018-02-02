@@ -7,6 +7,7 @@
 import { Position, Range, Location } from 'vscode-languageserver-types';
 import { Predicate } from './types';
 import * as crypto from 'crypto';
+import { URL, parse as parse_url } from 'url';
 
 export function popMany<T>(array: T[], count: number) {
     let popped: T[] = [];
@@ -194,4 +195,10 @@ export function pathToUri(filePath: string): string {
     filePath = parts.join('/');
     
     return 'file:///' + filePath;
+}
+
+export function uriToPath(uri: string)
+{
+    let url = parse_url(uri);
+    return decodeURIComponent(url.path);
 }
