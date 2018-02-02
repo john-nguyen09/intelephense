@@ -176,7 +176,7 @@ export class CompletionProvider {
 
         this._config = config ? config : CompletionProvider._defaultConfig;
         this._strategies = [
-            new ClassTypeDesignatorCompletion(this._config, this.symbolStore),
+            new ObjectCreationExpressionCompletion(this._config, this.symbolStore),
             new ScopedAccessCompletion(this._config, this.symbolStore),
             new ObjectAccessCompletion(this._config, this.symbolStore),
             new SimpleVariableCompletion(this._config, this.symbolStore),
@@ -324,7 +324,12 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         return imported;
     }
 
-    protected _toCompletionItem(s: PhpSymbol, namespaceName: string, namePhraseType: PhraseType, useDeclarationHelper: UseDeclarationHelper): lsp.CompletionItem {
+    protected _toCompletionItem(
+        s: PhpSymbol, 
+        namespaceName: string, 
+        namePhraseType: PhraseType, 
+        useDeclarationHelper: UseDeclarationHelper
+    ): lsp.CompletionItem {
 
         let item = <lsp.CompletionItem>{
             kind: lsp.CompletionItemKind.Class,
@@ -472,7 +477,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
 }
 
-class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
+class ObjectCreationExpressionCompletion extends AbstractNameCompletion {
 
     private static _keywords = [
         'class', 'static', 'namespace'
@@ -483,7 +488,8 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
             ParsedDocument.isPhrase(traverser.parent(),
                 [PhraseType.FullyQualifiedName, PhraseType.QualifiedName, PhraseType.RelativeQualifiedName]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseType.ClassTypeDesignator]);
+            ParsedDocument.isPhrase(traverser.parent(), [PhraseType.ClassTypeDesignator]) &&
+            ParsedDocument.isPhrase(traverser.parent(), [PhraseType.ObjectCreationExpression]);
 
     }
 
@@ -495,7 +501,7 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
     protected _getKeywords(traverser: ParseTreeTraverser) {
 
         if (traverser.ancestor(this._isQualifiedName)) {
-            return ClassTypeDesignatorCompletion._keywords;
+            return ObjectCreationExpressionCompletion._keywords;
         }
         return [];
     }
@@ -516,7 +522,7 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
     }
 
     private _isConstructor(s:PhpSymbol) {
-        return s.kind === SymbolKind.Constructor;
+        return s.kind === SymbolKind.Method && s.name.toLowerCase() === '__construct';
     }
 
     private _isQualifiedName(node: Phrase | Token) {
