@@ -7,6 +7,7 @@ import 'mocha';
 import { ReferenceReader } from '../src/referenceReader';
 import {ReferenceStore} from '../src/reference';
 import {MemoryCache} from '../src/cache';
+import { CompletionItem } from 'vscode-languageserver-types';
 
 var noCompletions: lsp.CompletionList = {
     items: [],
@@ -329,6 +330,13 @@ class Foo {
 var extendsImplementsSrc =
 `<?php
 class Foo i
+`;
+
+var classTypeDesignatorSrc = 
+`<?php
+interface Baz {}
+class Bar implements Baz {}
+$var instanceof B
 `;
 
 function setup(src: string | string[]) {
@@ -1036,6 +1044,36 @@ describe('CompletionProvider', () => {
 
         it('completions', function () {
             var completions = completionProvider.provideCompletions('test', { line: 1, character: 11 });
+            //console.log(JSON.stringify(completions, null, 4));
+            assert.deepEqual(completions.items, expected);
+        });
+
+    });
+
+    describe('classTypeDesignator', () => {
+
+        let completionProvider: CompletionProvider;
+        before(function () {
+            completionProvider = setup(classTypeDesignatorSrc);
+        });
+
+        let expected = <CompletionItem[]>[
+                {
+                    "kind": 7,
+                    "label": "Bar",
+                    "insertText": "Bar",
+                    "detail": "Bar"
+                },
+                {
+                    "kind": 8,
+                    "label": "Baz",
+                    "insertText": "Baz",
+                    "detail": "Baz"
+                }
+            ];
+
+        it('completions', function () {
+            var completions = completionProvider.provideCompletions('test', { line: 3, character: 17 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
         });
