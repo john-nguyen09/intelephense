@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /* Copyright (c) Ben Robert Mewburn 
  * Licensed under the ISC Licence.
  */

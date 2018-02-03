@@ -1,5 +1,18 @@
 import * as fs from 'fs';
+import * as path from 'path';
 
-fs.copyFile(__dirname + '../src/builtInSymbols.json', __dirname + '/builtInSymbols.json', (err) => {
+const stubFiles = [
+    'builtInSymbols.json'
+];
 
-});
+for (let file of stubFiles) {
+    fs.copyFile(
+        path.join(__dirname, '../src', file),
+        path.join(__dirname, file),
+        (err) => {
+            if (err) {
+                throw err;
+            }
+        }
+    );
+}
