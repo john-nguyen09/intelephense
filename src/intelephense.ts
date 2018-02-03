@@ -104,7 +104,7 @@ export namespace Intelephense {
             refStore.add(refTable);
         });
 
-        if (options.initializationOptions.clearCache) {
+        if (options.initializationOptions && options.initializationOptions.clearCache) {
             return clearCache().then(() => {
                 symbolStore.add(SymbolTable.readBuiltInSymbols());
             }).catch((msg) => {
