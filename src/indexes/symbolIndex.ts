@@ -86,7 +86,7 @@ export class SymbolIndexVisitor implements TreeVisitor<PhpSymbol> {
             this.nameIndexSymbols.push(node);
         }
 
-        if (SymbolIndexVisitor._isNamedSymbol(node)) {
+        if (SymbolIndexVisitor._isNamedSymbol(node) && node.location) {            
             this.namedSymbols.push(node);
         }
 
