@@ -16,6 +16,7 @@ import { NameResolver } from './nameResolver';
 import * as util from './util';
 import { TypeAggregate, MemberMergeStrategy } from './typeAggregate';
 import { ReferenceReader } from './referenceReader';
+import { SymbolIndex } from './indexes/symbolIndex';
 
 const builtInsymbolsUri = 'php';
 
@@ -184,12 +185,12 @@ class ScopedVariablePruneVisitor implements TreeVisitor<PhpSymbol> {
 export class SymbolStore {
 
     private _tableIndex: SymbolTableIndex;
-    private _symbolIndex: NameIndex<PhpSymbol>;
+    private _symbolIndex: SymbolIndex;
     private _symbolCount: number;
 
     constructor() {
         this._tableIndex = new SymbolTableIndex();
-        this._symbolIndex = new NameIndex<PhpSymbol>(this._symbolKeys);
+        this._symbolIndex = new SymbolIndex();
         this._symbolCount = 0;
     }
 
@@ -219,7 +220,7 @@ export class SymbolStore {
         //if table already exists replace it
         this.remove(symbolTable.uri);
         this._tableIndex.add(symbolTable);
-        this._symbolIndex.addMany(this._indexSymbols(symbolTable.root));
+        this._symbolIndex.index(symbolTable.root);
         this._symbolCount += symbolTable.symbolCount;
     }
 
@@ -228,7 +229,7 @@ export class SymbolStore {
         if (!symbolTable) {
             return;
         }
-        this._symbolIndex.removeMany(this._indexSymbols(symbolTable.root));
+        this._symbolIndex.removeMany(uri);
         this._symbolCount -= symbolTable.symbolCount;
     }
 
@@ -243,7 +244,7 @@ export class SymbolStore {
         this._symbolCount = data._symbolCount;
         this._tableIndex.fromJSON(data._tableIndex);
         for (let t of this._tableIndex.tables()) {
-            this._symbolIndex.addMany(this._indexSymbols(t.root));
+            this._symbolIndex.index(t.root);
         }
     }
 
@@ -260,7 +261,6 @@ export class SymbolStore {
             return [];
         }
 
-        let lcText = text.toLowerCase();
         let kindMask = SymbolKind.Constant | SymbolKind.Variable;
         let result = this._symbolIndex.find(text);
         let symbols: PhpSymbol[] = [];
@@ -270,12 +270,20 @@ export class SymbolStore {
             s = result[n];
             if ((!filter || filter(s)) &&
                 (((s.kind & kindMask) > 0 && s.name === text) ||
-                    (!(s.kind & kindMask) && s.name.toLowerCase() === lcText))) {
+                    (!(s.kind & kindMask) && s.name === text))) {
                 symbols.push(s);
             }
         }
 
         return symbols;
+    }
+
+    getNamedSymbol(uri: string) {
+        return this._symbolIndex.getNamedSymbol(uri);
+    }
+
+    getGlobalVariables() {
+        return this._symbolIndex.getGlobalVariables();
     }
 
     filter(filter: Predicate<PhpSymbol>) {
@@ -343,9 +351,8 @@ export class SymbolStore {
                 break;
 
             case SymbolKind.Method:
-                lcName = ref.name.toLowerCase();
                 fn = (x) => {
-                    return x.kind === SymbolKind.Method && x.name.toLowerCase() === lcName;
+                    return x.kind === SymbolKind.Method && x.name === ref.name;
                 };
                 symbols = this.findMembers(ref.scope, memberMergeStrategy || MemberMergeStrategy.None, fn);
                 break;
@@ -427,9 +434,8 @@ export class SymbolStore {
         let fn: Predicate<PhpSymbol>;
 
         if (symbol.kind === SymbolKind.Method) {
-            let name = symbol.name.toLowerCase();
             fn = (s: PhpSymbol) => {
-                return s.kind === symbol.kind && s.modifiers === symbol.modifiers && name === s.name.toLowerCase();
+                return s.kind === symbol.kind && s.modifiers === symbol.modifiers && symbol.name === s.name;
             };
         } else {
             fn = (s: PhpSymbol) => {
@@ -523,13 +529,12 @@ export class SymbolStore {
         let s: PhpSymbol;
         let name: string;
         let val: number;
-        query = query.toLowerCase();
 
         for (let n = 0, l = matches.length; n < l; ++n) {
             s = matches[n];
             name = s.name;
             if (map[name] === undefined) {
-                val = (PhpSymbol.notFqn(s.name).toLowerCase().indexOf(query) + 1) * 10;
+                val = (PhpSymbol.notFqn(s.name).indexOf(query) + 1) * 10;
                 if (val > 0) {
                     val = 1000 - val;
                 }
@@ -556,38 +561,6 @@ export class SymbolStore {
     private _classInterfaceTraitFilter(s: PhpSymbol) {
         return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait)) > 0;
     }
-
-    private _indexSymbols(root: PhpSymbol) {
-
-        let traverser = new TreeTraverser([root]);
-        return traverser.filter(this._indexFilter);
-
-    }
-
-    /**
-     * No vars, params or symbols with use modifier
-     * @param s 
-     */
-    private _indexFilter(s: PhpSymbol) {
-        return !(s.kind & (SymbolKind.Parameter | SymbolKind.File)) && //no params or files
-            !(s.modifiers & SymbolModifier.Use) && //no use
-            !(s.kind === SymbolKind.Variable && s.location) && //no variables that have a location (in built globals have no loc)
-            s.name.length > 0;
-    }
-
-    private _symbolKeys(s: PhpSymbol) {
-
-        if (s.kind === SymbolKind.Namespace) {
-            let lcName = s.name.toLowerCase();
-            let keys = new Set<string>();
-            keys.add(lcName);
-            Set.prototype.add.apply(keys, lcName.split('\\').filter((s) => { return s.length > 0 }));
-            return Array.from(keys);
-        }
-
-        return PhpSymbol.keys(s);
-    }
-
 }
 
 class NameResolverVisitor implements TreeVisitor<PhpSymbol> {

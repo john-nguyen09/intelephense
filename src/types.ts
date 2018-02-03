@@ -545,13 +545,11 @@ export type KeysDelegate<T> = (t: T) => string[];
 export class NameIndex<T> {
 
     private _keysDelegate: KeysDelegate<T>;
-    private _collator: Intl.Collator;
     private _nameIndex: Map<string, T[]>;
 
     constructor(keysDelegate: KeysDelegate<T>) {
         this._nameIndex = new Map<string, T[]>();
         this._keysDelegate = keysDelegate;
-        this._collator = new Intl.Collator('en');
     }
 
     add(item: T) {
@@ -588,6 +586,10 @@ export class NameIndex<T> {
         for (let n = 0; n < items.length; ++n) {
             this.remove(items[n]);
         }
+    }
+
+    removeFromKey(key: string) {
+        this._nameIndex.delete(key);
     }
 
     /**

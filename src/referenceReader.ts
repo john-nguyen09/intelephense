@@ -53,7 +53,6 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         return (x.kind & mask) > 0 && !(x.modifiers & SymbolModifier.Magic);
     };
     private _lastVarTypehints: Tag[];
-    private _symbolTable: SymbolTable;
 
     constructor(
         public doc: ParsedDocument,
@@ -63,13 +62,10 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         this._transformStack = [];
         this._variableTable = new VariableTable();
         this._classStack = [];
-        this._symbolTable = this.symbolStore.getSymbolTable(this.doc.uri);
-        this._symbols = this._symbolTable.filter(this._symbolFilter);
+        this._symbols = this.symbolStore.getNamedSymbol(doc.uri);
         this._scopeStack = [Scope.create(lsp.Location.create(this.doc.uri, util.cloneRange(this._symbols.shift().location.range)))]; //file/root node
 
-        let globalVariables = this.symbolStore.filter((symbol) => {
-            return symbol.kind === SymbolKind.GlobalVariable;
-        });
+        const globalVariables = this.symbolStore.getGlobalVariables();
 
         for (let globalVariable of globalVariables) {
             if (!globalVariable.type && globalVariable.doc) {

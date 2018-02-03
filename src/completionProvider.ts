@@ -760,7 +760,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
         for (let n = 0, l = typeNames.length; n < l; ++n) {
             typeName = typeNames[n];
-            if (classAggregateType && classAggregateType.name.toLowerCase() === typeName.toLowerCase()) {
+            if (classAggregateType && classAggregateType.name === typeName) {
                 typeAggregate = classAggregateType;
             } else {
                 typeAggregate = TypeAggregate.create(this.symbolStore, typeName);
@@ -940,7 +940,7 @@ class ScopedAccessCompletion extends MemberAccessCompletion {
     }
 
     protected _createMemberPredicate(scopeName: string, word: string, classContext: TypeAggregate): Predicate<PhpSymbol> {
-        if (classContext && scopeName.toLowerCase() === classContext.name.toLowerCase()) {
+        if (classContext && scopeName === classContext.name) {
             //public, protected, private
             return (x) => {
                 return (x.modifiers & SymbolModifier.Static) > 0 && util.ciStringContains(word, x.name);
@@ -987,7 +987,7 @@ class ObjectAccessCompletion extends MemberAccessCompletion {
     protected _createMemberPredicate(scopeName: string, word: string, classContext: TypeAggregate): Predicate<PhpSymbol> {
 
         //php allows static methods to be accessed with ->
-        if (classContext && scopeName.toLowerCase() === classContext.name.toLowerCase()) {
+        if (classContext && scopeName === classContext.name) {
             //public, protected, private
             return (x) => {
                 return util.ciStringContains(word, x.name);
@@ -1254,11 +1254,11 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
         }
 
         if (traverser.child(this._isNamespaceName)) {
-            prefix = traverser.text.toLowerCase();
+            prefix = traverser.text;
         }
 
         let pred = (x: PhpSymbol) => {
-            return (x.kind & kind) > 0 && !(x.modifiers & SymbolModifier.Use) && (!prefix || x.name.toLowerCase().indexOf(prefix) === 0);
+            return (x.kind & kind) > 0 && !(x.modifiers & SymbolModifier.Use) && (!prefix || x.name.indexOf(prefix) === 0);
         };
 
         let matches = this.symbolStore.match(word, pred);
@@ -1479,7 +1479,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
     }
 
     private _toName(s: PhpSymbol) {
-        return s.name.toLowerCase();
+        return s.name;
     }
 
     private _isParameter(s: PhpSymbol) {

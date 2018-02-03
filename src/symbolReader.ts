@@ -333,9 +333,16 @@ export class SymbolReader implements TreeVisitor<Phrase | Token> {
                 break;
             
             case PhraseType.GlobalDeclaration:
-                this._transformStack.push(new GlobalVariableTransform(
-                    this.nameResolver, this.document.nodeHashedLocation(node), this.lastPhpDoc, this.lastPhpDocLocation
-                ));
+                if (this.lastPhpDoc) {
+                    this._transformStack.push(new GlobalVariableTransform(
+                        this.nameResolver,
+                        this.document.nodeHashedLocation(node),
+                        this.lastPhpDoc,
+                        this.lastPhpDocLocation
+                    ));
+                } else {
+                    this._transformStack.push(null);
+                }
                 break;
 
             case undefined:
