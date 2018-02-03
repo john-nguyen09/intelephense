@@ -6,6 +6,8 @@
 
 import { Position, Range, Location } from 'vscode-languageserver-types';
 import { Predicate } from './types';
+import * as crypto from 'crypto';
+import { URL, parse as parse_url } from 'url';
 
 export function popMany<T>(array: T[], count: number) {
     let popped: T[] = [];
@@ -128,6 +130,10 @@ export function hash32(text: string) {
     return hash;
 }
 
+export function md5(text: string) {
+    return crypto.createHash('md5').update(text).digest('hex');
+}
+
 export function filter<T>(items: T[], fn: Predicate<T>) {
 
     let filtered: T[] = [];
@@ -189,4 +195,10 @@ export function pathToUri(filePath: string): string {
     filePath = parts.join('/');
     
     return 'file:///' + filePath;
+}
+
+export function uriToPath(uri: string)
+{
+    let url = parse_url(uri);
+    return decodeURIComponent(url.path);
 }

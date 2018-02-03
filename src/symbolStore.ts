@@ -23,16 +23,10 @@ export class SymbolTable implements Traversable<PhpSymbol> {
 
     private _uri: string;
     private _root: PhpSymbol;
-    private _hash: number;
 
-    constructor(uri: string, root: PhpSymbol, hash?: number) {
+    constructor(uri: string, root: PhpSymbol) {
         this._uri = uri;
         this._root = root;
-        if (hash !== undefined) {
-            this._hash = hash;
-        } else {
-            this._hash = Math.abs(util.hash32(uri));
-        }
     }
 
     get uri() {
@@ -41,10 +35,6 @@ export class SymbolTable implements Traversable<PhpSymbol> {
 
     get root() {
         return this._root;
-    }
-
-    get hash() {
-        return this._hash;
     }
 
     get symbols() {
@@ -146,7 +136,7 @@ export class SymbolTable implements Traversable<PhpSymbol> {
     }
 
     static fromJSON(data: any) {
-        return new SymbolTable(data._uri, data._root, data._hash);
+        return new SymbolTable(data._uri, data._root);
     }
 
     static create(parsedDocument: ParsedDocument, externalOnly?: boolean) {
@@ -713,13 +703,11 @@ class ContainsVisitor implements TreeVisitor<PhpSymbol> {
 
 export class SymbolTableIndex {
 
-    private _tables: SymbolTableIndexNode[];
-    private _search: BinarySearch<SymbolTableIndexNode>;
     private _count = 0;
+    private _tables: Map<string, SymbolTable>;
 
     constructor() {
-        this._tables = [];
-        this._search = new BinarySearch<SymbolTableIndexNode>(this._tables);
+        this._tables = new Map<string, SymbolTable>();
     }
 
     count() {
@@ -727,48 +715,34 @@ export class SymbolTableIndex {
     }
 
     *tables() {
-        let node: SymbolTableIndexNode;
-        for (let n = 0, nl = this._tables.length; n < nl; ++n) {
-            node = this._tables[n];
-            for (let k = 0, tl = node.tables.length; k < tl; ++k) {
-                yield node.tables[k];
-            }
+        for (let key of this._tables.keys()) {
+            yield this._tables.get(key);
         }
     }
 
     add(table: SymbolTable) {
-        let fn = this._createCompareFn(table.uri);
-        let search = this._search.search(fn);
-        if (search.isExactMatch) {
-            let node = this._tables[search.rank];
-            if (node.tables.find(this._createUriFindFn(table.uri))) {
-                --this._count;
-                throw new Error(`Duplicate key ${table.uri}`);
-            }
-            node.tables.push(table);
-        } else {
-            let node = <SymbolTableIndexNode>{ hash: table.hash, tables: [table] };
-            this._tables.splice(search.rank, 0, node);
+        if (this._tables.has(table.uri)) {
+            throw new Error(`Duplicate key ${table.uri}`);
         }
+
+        this._tables.set(table.uri, table);
         ++this._count;
     }
 
     remove(uri: string) {
-        let fn = this._createCompareFn(uri);
-        let node = this._search.find(fn);
-        if (node) {
-            let i = node.tables.findIndex(this._createUriFindFn(uri));
-            if (i > -1) {
-                --this._count;
-                return node.tables.splice(i, 1).pop();
-            }
+        if (!this._tables.has(uri)) {
+            return undefined;
         }
+
+        let table = this._tables.get(uri);
+        this._tables.delete(uri);
+        --this._count;
+
+        return table;
     }
 
     find(uri: string) {
-        let fn = this._createCompareFn(uri);
-        let node = this._search.find(fn);
-        return node ? node.tables.find(this._createUriFindFn(uri)) : null;
+        return this._tables.get(uri);
     }
 
     findBySymbol(s: PhpSymbol) {
@@ -776,25 +750,7 @@ export class SymbolTableIndex {
             return undefined;
         }
 
-        let node = this._search.find((x) => {
-            return x.hash - s.location.uriHash;
-        });
-
-        if (!node || !node.tables.length) {
-            return undefined;
-        } else if (node.tables.length === 1) {
-            return node.tables[0];
-        } else {
-            let table: SymbolTable;
-            for (let n = 0; n < node.tables.length; ++n) {
-                table = node.tables[n];
-                if (table.contains(s)) {
-                    return table;
-                }
-            }
-        }
-
-        return undefined;
+        return this.find(s.location.uri);
     }
 
     toJSON() {
@@ -806,36 +762,8 @@ export class SymbolTableIndex {
 
     fromJSON(data: any) {
         this._count = data._count;
-        this._tables = [];
-        let node: any;
-        let newNode: SymbolTableIndexNode;
-        for (let n = 0; n < data._tables.length; ++n) {
-            node = data._tables[n];
-            newNode = {
-                hash: node.hash,
-                tables: []
-            }
-            for (let k = 0; k < node.tables.length; ++k) {
-                newNode.tables.push(SymbolTable.fromJSON(node.tables[k]));
-            }
-            this._tables.push(newNode);
-        }
-        this._search = new BinarySearch<SymbolTableIndexNode>(this._tables);
+        this._tables = data._tables;
     }
-
-    private _createCompareFn(uri: string) {
-        let hash = Math.abs(util.hash32(uri));
-        return (x: SymbolTableIndexNode) => {
-            return x.hash - hash;
-        };
-    }
-
-    private _createUriFindFn(uri: string) {
-        return (x: SymbolTable) => {
-            return x.uri === uri;
-        };
-    }
-
 }
 
 export interface SymbolTableIndexNode {

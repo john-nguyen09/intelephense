@@ -123,14 +123,14 @@ describe('SymbolReader', () => {
         <?php
             $c = new class {};
         `;
-        let uriHash = util.hash32('test');
+        let uri = 'test';
         let output = symbolReaderOutput(src);
         let expect = <PhpSymbol>{
             kind: 1,
             name: "#anon#test#36",
             modifiers: 512,
             location: {
-                uriHash: uriHash,
+                uri: uri,
                 range: {
                     start: {
                         line: 2,
@@ -160,7 +160,7 @@ describe('SymbolReader', () => {
             kind: SymbolKind.GlobalVariable,
             name: '$DB',
             location: {
-                uriHash: util.hash32('test'),
+                uri: 'test',
                 range: {
                     start: {
                         line: 7,

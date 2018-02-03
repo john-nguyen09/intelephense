@@ -8,10 +8,7 @@ describe('intelephense', function(){
 
         it('Built in symbols', function(){
 
-            Intelephense.initialise({
-                storagePath:'/tmp/intelephense',
-                logWriter:undefined
-            });
+            Intelephense.initialise(null);
             assert.isAbove(Intelephense.numberSymbolsKnown(), 1);
 
             let src = 
@@ -38,10 +35,7 @@ describe('intelephense', function(){
 
     it('undefined storagePath', () =>{
 
-        return Intelephense.initialise({
-            storagePath:undefined,
-            logWriter:undefined
-        }).then(()=>{
+        return Intelephense.initialise(null).then(()=>{
 
         });
 

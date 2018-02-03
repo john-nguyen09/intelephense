@@ -11,23 +11,23 @@ export interface LogWriter {
 }
 
 export namespace Log {
-    export var writer:LogWriter;
+    export var connection: any;
 
     export function error(msg:string) {
-        if(writer && msg) {
-            writer.error(msg);
+        if(connection && msg) {
+            connection.console.error(msg);
         }
     }
 
     export function warn(msg:string) {
-        if(writer && msg) {
-            writer.warn(msg);
+        if(connection && msg) {
+            connection.console.warn(msg);
         }
     }
 
     export function info(msg:string) {
-        if(writer && msg) {
-            writer.info(msg);
+        if(connection && msg) {
+            connection.console.info(msg);
         }
     }
 }
