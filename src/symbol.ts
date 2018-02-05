@@ -118,14 +118,14 @@ export namespace PhpSymbol {
         return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait)) > 0;
     }
 
-    export function signatureString(s: PhpSymbol) {
+    export function signatureString(s: PhpSymbol, excludeTypeInfo?: boolean) {
 
         if (!s || !(s.kind & (SymbolKind.Function | SymbolKind.Method))) {
             return '';
         }
 
-        let params = s.children ? s.children.filter(isParameter) : [];
-        let paramStrings: String[] = [];
+        const params = s.children ? s.children.filter(isParameter) : [];
+        const paramStrings: String[] = [];
         let param: PhpSymbol;
         let parts: string[];
         let paramType: string;
@@ -139,15 +139,17 @@ export namespace PhpSymbol {
                 parts.push(',');
             }
 
-            paramType = PhpSymbol.type(param);
-            if (paramType) {
-                parts.push(paramType);
+            if (!excludeTypeInfo) {
+                paramType = PhpSymbol.type(param);
+                if (paramType) {
+                    parts.push(paramType);
+                }
             }
 
             parts.push(param.name);
 
             if (param.value) {
-                let space = n ? ' ' : '';
+                const space = n ? ' ' : '';
                 paramStrings.push(`${space}[${parts.join(' ')}`);
                 closeBrackets += ']';
             } else {
@@ -157,10 +159,14 @@ export namespace PhpSymbol {
         }
 
         let sig = `(${paramStrings.join('')}${closeBrackets})`;
-        let sType = PhpSymbol.type(s);
-        if (sType) {
-            sig += `: ${sType}`;
+
+        if (!excludeTypeInfo) {
+            const sType = PhpSymbol.type(s);
+            if (sType) {
+                sig += `: ${sType}`;
+            }
         }
+
         return sig;
 
     }
@@ -177,8 +183,8 @@ export namespace PhpSymbol {
         return text.slice(pos);
     }
 
-    export function namespace(fqn:string) {
-        if(!fqn) {
+    export function namespace(fqn: string) {
+        if (!fqn) {
             return '';
         }
 

@@ -317,6 +317,22 @@ export class SymbolStore {
         return filtered;
     }
 
+    *matchIterator(text:string, filter?: Predicate<PhpSymbol>) {
+
+        if (!text) {
+            return;
+        }
+
+        let indexMatchIterator = this._symbolIndex.matchIterator(text);
+
+        for(let s of indexMatchIterator){
+            if(!filter || filter(s)) {
+                yield s;
+            }
+        }
+
+    }
+
     findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): PhpSymbol[] {
         if (!ref) {
             return [];

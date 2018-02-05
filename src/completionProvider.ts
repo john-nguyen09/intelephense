@@ -63,9 +63,12 @@ function symbolKindToLspSymbolKind(kind: SymbolKind) {
 
     switch (kind) {
         case SymbolKind.Class:
+        case SymbolKind.Trait:
             return lsp.CompletionItemKind.Class;
         case SymbolKind.Function:
             return lsp.CompletionItemKind.Function;
+        case SymbolKind.Method:
+            return lsp.CompletionItemKind.Method;
         case SymbolKind.Constant:
         case SymbolKind.ClassConstant:
             return lsp.CompletionItemKind.Value;
@@ -73,6 +76,15 @@ function symbolKindToLspSymbolKind(kind: SymbolKind) {
             return lsp.CompletionItemKind.Interface;
         case SymbolKind.Namespace:
             return lsp.CompletionItemKind.Module;
+        case SymbolKind.Constructor:
+            return lsp.CompletionItemKind.Constructor;
+        case SymbolKind.Property:
+            return lsp.CompletionItemKind.Property;
+        case SymbolKind.Parameter:
+        case SymbolKind.Variable:
+            return lsp.CompletionItemKind.Variable;
+        case SymbolKind.File:
+            return lsp.CompletionItemKind.File;
         default:
             return lsp.SymbolKind.String;
     }
@@ -98,14 +110,14 @@ function toMethodCompletionItem(s: PhpSymbol) {
         item.sortText = item.label;
     }
 
-    if(PhpSymbol.hasParameters(s)) {
+    if (PhpSymbol.hasParameters(s)) {
         item.insertText = item.label + '($0)';
         item.insertTextFormat = lsp.InsertTextFormat.Snippet;
         item.command = triggerParameterHintsCommand;
     } else {
         item.insertText = item.label + '()';
     }
-    
+
 
     return item;
 }
@@ -183,7 +195,7 @@ export class CompletionProvider {
             new TypeDeclarationCompletion(this._config, this.symbolStore),
             new ClassBaseClauseCompletion(this._config, this.symbolStore),
             new InterfaceClauseCompletion(this._config, this.symbolStore),
-            new TraitUseClauseCompletion(this._config, this.symbolStore), 
+            new TraitUseClauseCompletion(this._config, this.symbolStore),
             new NamespaceDefinitionCompletion(this._config, this.symbolStore),
             new NamespaceUseClauseCompletion(this._config, this.symbolStore),
             new NamespaceUseGroupClauseCompletion(this._config, this.symbolStore),
@@ -217,7 +229,7 @@ export class CompletionProvider {
 
         //return early if not in <?php ?>
         let t = traverser.node as Token;
-        if(!t || t.tokenType === TokenType.Text) {
+        if (!t || t.tokenType === TokenType.Text) {
             return noCompletionResponse;
         }
 
@@ -261,30 +273,82 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         }
 
         let pred = this._symbolFilter;
-        if (namePhrase && namePhrase.phraseType === PhraseType.RelativeQualifiedName) {
-            //symbols share current namespace
-            word = word.slice(10); //namespace\
-            let ns = nameResolver.namespaceName;
-            let sf = this._symbolFilter;
-            pred = (x) => {
-                return sf(x) && x.name.indexOf(ns) === 0;
+        let addUseDeclarationEnabled = this.config.addUseDeclaration;
+        let fqnOffset = 0;
+        let isUnqualified = false;
+        const useDeclarationHelper = new UseDeclarationHelper(traverser.document, traverser.symbolTable, traverser.range.start);
+        const importMap: { [index: string]: PhpSymbol } = {};
+
+        if (
+            namePhrase.phraseType === PhraseType.RelativeQualifiedName ||
+            namePhrase.phraseType === PhraseType.FullyQualifiedName ||
+            word.indexOf('\\') > -1
+        ) {
+
+            //If the user has started typing a RelativeQualifiedName, FullyQualifiedName,
+            //or a QualifiedName with an ns separator then it is asumed they must 
+            //intend to have an expanded name with no use declaration.
+            //Allow namespaces in this case to enable progresive discovery of symbols.
+            //Expand word to match start of symbol fqn
+
+            if (namePhrase.phraseType === PhraseType.RelativeQualifiedName) {
+                //symbols share current namespace
+                word = nameResolver.resolveRelative(word.slice(10)); //namespace\
+            } else if (namePhrase.phraseType === PhraseType.QualifiedName) {
+                word = nameResolver.resolveNotFullyQualified(word);
+            }
+
+            addUseDeclarationEnabled = false;
+            const lastBackslashPos = word.lastIndexOf('\\');
+            if (lastBackslashPos > -1) {
+                fqnOffset = lastBackslashPos;
+            }
+
+        } else {
+
+            //QualifiedName with no ns separator (unqualified)
+            //It is assumed that the user is wanting to match the non fqn name,  
+            //a keyword, or an existing use declaration.
+            //Only allow namespace if in global namespace.
+
+            isUnqualified = true;
+            const sf = pred;
+            const isGlobalNs = nameResolver.namespaceName.length > 0;
+            pred = x => {
+                return sf(x) &&
+                    (isGlobalNs || x.kind !== SymbolKind.Namespace) &&
+                    (x.kind === SymbolKind.Namespace || util.ciStringContains(word, PhpSymbol.notFqn(x.name)));
             };
-        }
 
-        let matches = this.symbolStore.match(word, pred);
-        if (namePhrase && namePhrase.phraseType === PhraseType.QualifiedName) {
-            //keywords and imports
             Array.prototype.push.apply(items, keywordCompletionItems(this._getKeywords(traverser.clone()), word));
-            let imports = this._importedSymbols(nameResolver.rules, pred, word);
-            matches = this._mergeSymbols(matches, imports);
+            const imports = this._importedSymbols(nameResolver.rules, this._symbolFilter, word);
+            let imported: PhpSymbol;
+
+            for (let n = 0; n < imports.length; ++n) {
+                imported = imports[n];
+                if (imported.associated && imported.associated.length) {
+                    importMap[imported.associated[0].name] = imported;
+                }
+                items.push(this._toCompletionItem(imports[n], useDeclarationHelper, nameResolver.namespaceName, isUnqualified, fqnOffset));
+            }
+
         }
 
-        let limit = Math.min(matches.length, this.config.maxItems - items.length);
-        let isIncomplete = matches.length > this.config.maxItems - items.length;
-        let useDeclarationHelper = new UseDeclarationHelper(traverser.document, traverser.symbolTable, traverser.range.start);
+        const iterator = this.symbolStore.matchIterator(word, pred);
+        let limit = this.config.maxItems;
+        let isIncomplete = false;
 
-        for (let n = 0; n < limit; ++n) {
-            items.push(this._toCompletionItem(matches[n], nameResolver.namespaceName, namePhrase.phraseType, useDeclarationHelper));
+        for (let s of iterator) {
+            if(importMap[s.name]) {
+                continue;
+            }
+
+            items.push(this._toCompletionItem(s, useDeclarationHelper, nameResolver.namespaceName, isUnqualified, fqnOffset));
+            
+            if(items.length >= limit) {
+                isIncomplete = true;
+                break;
+            }
         }
 
         return <lsp.CompletionList>{
@@ -307,7 +371,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             }
         }
 
-        //lookup associated symbol
+        //lookup associated symbol for extra info
         let s: PhpSymbol;
         let merged: PhpSymbol;
         let imported: PhpSymbol[] = [];
@@ -320,106 +384,108 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
                 merged.modifiers |= SymbolModifier.Use;
                 merged.name = r.name;
                 imported.push(merged);
+            } else {
+                //not found but suggest it anyway as a namespace
+                merged = PhpSymbol.clone(r);
+                merged.kind = SymbolKind.Namespace;
+                imported.push(merged);
             }
         }
         return imported;
     }
 
     protected _toCompletionItem(
-        s: PhpSymbol, 
-        namespaceName: string, 
-        namePhraseType: PhraseType, 
-        useDeclarationHelper: UseDeclarationHelper
-    ): lsp.CompletionItem {
+        s: PhpSymbol,
+        useDeclarationHelper: UseDeclarationHelper,
+        namespaceName: string,
+        isUnqualified: boolean,
+        fqnOffset: number
+    ) {
 
-        let item = <lsp.CompletionItem>{
-            kind: lsp.CompletionItemKind.Class,
-            label: PhpSymbol.notFqn(s.name),
+        const item = <lsp.CompletionItem>{
+            kind: symbolKindToLspSymbolKind(s.kind),
+            label: isUnqualified ? PhpSymbol.notFqn(s.name) : s.name.slice(fqnOffset)
         }
 
-        this._setInsertText(item, s, namespaceName, namePhraseType, useDeclarationHelper);
-
+        //todo remove this and use resolve provider
         if (s.doc && s.doc.description) {
             item.documentation = s.doc.description;
         }
 
-        switch (s.kind) {
-
-            case SymbolKind.Interface:
-                item.kind = lsp.CompletionItemKind.Interface;
-            //fall though
-            case SymbolKind.Class:
-            case SymbolKind.Trait:
-                if ((s.modifiers & SymbolModifier.Use) > 0 && s.associated && s.associated.length) {
-                    item.detail = s.associated[0].name;
-                } else {
-                    item.detail = s.name;
-                }
-                break;
-
-            case SymbolKind.Constant:
-                item.kind = lsp.CompletionItemKind.Value;
-                if (s.value) {
-                    item.detail = s.value;
-                }
-                break;
-
-            case SymbolKind.Function:
-                item.kind = lsp.CompletionItemKind.Function;
-                item.detail = s.name + PhpSymbol.signatureString(s);
-                if(PhpSymbol.hasParameters(s)) {
-                    item.insertText += '($0)';
-                    item.insertTextFormat = lsp.InsertTextFormat.Snippet;
-                    item.command = triggerParameterHintsCommand;
-                } else {
-                    item.insertText += '()';
-                }
-                
-                break;
-
-            case SymbolKind.Namespace:
-                return <lsp.CompletionItem>{
-                    label: s.name,
-                    kind: lsp.CompletionItemKind.Module
-                }
-
-            default:
-                throw new Error('Invalid Argument');
-
+        //unqualified namespaces always complete to fqn
+        //should only get an ns symbol here if in global ns
+        if (isUnqualified && s.kind === SymbolKind.Namespace) {
+            item.label = s.name;
+            item.insertText = s.name;
+            return item;
         }
 
-        return item;
+        const symbolNamespace = PhpSymbol.namespace(s.name);
+        let labelExtra = '';
 
-    }
-
-    protected _setInsertText(item: lsp.CompletionItem, s: PhpSymbol, namespaceName: string, namePhraseType: PhraseType, useDeclarationHelper: UseDeclarationHelper) {
-        const kindMask = SymbolKind.Constant | SymbolKind.Function;
-        let notFqn = PhpSymbol.notFqn(s.name);
-
-        if (
-            (s.modifiers & SymbolModifier.Use) > 0 ||
-            (s.kind === SymbolKind.Constant && this._isMagicConstant(s.name)) ||
-            ((s.kind & kindMask) > 0 && notFqn === s.name && (!this.config.backslashPrefix || !namespaceName))
-        ) {
-            item.insertText = s.name;
-
-        } else if (this.config.addUseDeclaration && notFqn !== s.name && !useDeclarationHelper.findUseSymbolByName(notFqn) && namespaceName !== PhpSymbol.namespace(s.name)) {
-            item.insertText = notFqn;
+        if (!isUnqualified) {
+            item.insertText = item.label;
+        } else if ((s.modifiers & SymbolModifier.Use) > 0) {
+            //symbol is use decl
+            //show the use decl fqn
+            labelExtra = `[use ${s.associated[0].name}]`;
+            item.insertText = item.label;
+        } else if ((!namespaceName && !symbolNamespace) || (s.kind === SymbolKind.Constant && this._isMagicConstant(s.name))) {
+            //no additional info needed
+            item.insertText = item.label;
+        } else if (namespaceName === symbolNamespace) {
+            //symbol shares same namespace 
+            //show the current namespace
+            labelExtra = `[namespace ${namespaceName}]`;
+            item.insertText = item.label;
+        } else if (namespaceName && !symbolNamespace) {
+            //symbol is in global namespace but the current namespace is not global
+            //prefix with backslash
+            //functions and const dont need prefix unless set in config
+            if ((s.kind !== SymbolKind.Constant && s.kind !== SymbolKind.Function) || this.config.backslashPrefix) {
+                item.insertText = '\\' + s.name;
+            } else {
+                item.insertText = s.name;
+            }
+        } else if (this.config.addUseDeclaration && !useDeclarationHelper.findUseSymbolByName(item.label)) {
+            //add a use decl as additional text
+            item.insertText = item.label;
             item.additionalTextEdits = [useDeclarationHelper.insertDeclarationTextEdit(s)];
+            labelExtra = `[use ${s.name}]`;
+        } else {
+            //insert fqn
+            item.insertText = '\\' + s.name;
+            labelExtra = `[${s.name}]`;
+        }
 
-        } else if (namespaceName && s.name.indexOf(namespaceName) === 0 && s.name.length > namespaceName.length + 1) {
-            item.insertText = s.name.slice(namespaceName.length + 1);
-            if (namePhraseType === PhraseType.RelativeQualifiedName) {
-                item.insertText = 'namespace\\' + item.insertText;
+        if (s.kind === SymbolKind.Function) {
+            //add a short representation of the signature
+            //and configure to invoke parameter hints
+            item.label += PhpSymbol.signatureString(s, true);
+            if (PhpSymbol.hasParameters(s)) {
+                item.insertText += '($0)';
+                item.insertTextFormat = lsp.InsertTextFormat.Snippet;
+                item.command = triggerParameterHintsCommand;
+            } else {
+                item.insertText += '()';
             }
 
-        } else if (namespaceName && namePhraseType !== PhraseType.FullyQualifiedName && (!(s.kind & kindMask) || this.config.backslashPrefix)) {
-            item.insertText = '\\' + s.name;
+        } else if (s.kind === SymbolKind.Constant) {
+
+            if (s.value) {
+                item.detail = `${s.name} = ${s.value}`;
+            }
+
         } else {
-            item.insertText = s.name;
+            //class, interface, trait
+        }
+
+        if (labelExtra) {
+            item.label += ' ' + labelExtra;
         }
 
         return item;
+
     }
 
     private _isMagicConstant(text: string) {
@@ -449,6 +515,10 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         }
     }
 
+    /**
+     * Caller determines whether namespaces should be included.
+     * @param s 
+     */
     protected abstract _symbolFilter(s: PhpSymbol): boolean;
 
     protected _mergeSymbols(matches: PhpSymbol[], imports: PhpSymbol[]) {
@@ -525,13 +595,29 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         return [];
     }
 
-    protected _toCompletionItem(s: PhpSymbol, namespaceName: string, namePhraseType: PhraseType, useDeclarationHelper: UseDeclarationHelper) {
+    protected _toCompletionItem(
+        s: PhpSymbol,
+        useDeclarationHelper: UseDeclarationHelper,
+        namespaceName: string,
+        isUnqualified: boolean,
+        fqnOffset: number
+    ) {
 
-        let item = super._toCompletionItem(s, namespaceName, namePhraseType, useDeclarationHelper);
+        let item = super._toCompletionItem(s, useDeclarationHelper, namespaceName, isUnqualified, fqnOffset);
         let aggregate = new TypeAggregate(this.symbolStore, s);
         let constructor = aggregate.firstMember(this._isConstructor);
         item.kind = lsp.CompletionItemKind.Constructor;
-        if(constructor && PhpSymbol.hasParameters(constructor)){
+        if (constructor && PhpSymbol.hasParameters(constructor)) {
+
+            //label may have extra info
+            let labelExtraPos = item.label.indexOf(' ');
+            let labelExtra = '';
+            if(labelExtraPos > -1) {
+                labelExtra = item.label.slice(labelExtraPos);
+                item.label = item.label.slice(0, labelExtraPos);
+            }
+
+            item.label += PhpSymbol.signatureString(constructor, true) + labelExtra;
             item.insertText += '($0)';
             item.insertTextFormat = lsp.InsertTextFormat.Snippet;
             item.command = triggerParameterHintsCommand;
@@ -540,8 +626,8 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
 
     }
 
-    private _isConstructor(s:PhpSymbol) {
-        return s.kind === SymbolKind.Method && s.name.toLowerCase() === '__construct';
+    private _isConstructor(s: PhpSymbol) {
+        return s.kind === SymbolKind.Constructor || (s.kind === SymbolKind.Method && s.name.toLowerCase() === '__construct');
     }
 
     private _isQualifiedName(node: Phrase | Token) {
@@ -611,11 +697,11 @@ class SimpleVariableCompletion implements CompletionStrategy {
 
         let map: { [index: string]: string } = {};
 
-        if(!s || !s.children) {
+        if (!s || !s.children) {
             return {};
         }
-        
-        let ref:Reference;
+
+        let ref: Reference;
         for (let n = 0, l = s.children.length; n < l; ++n) {
             ref = s.children[n] as Reference;
             if (ref.kind === SymbolKind.Variable || ref.kind === SymbolKind.Parameter) {
@@ -1368,7 +1454,7 @@ class DeclarationBodyCompletion implements CompletionStrategy {
 
     canSuggest(traverser: ParseTreeTraverser) {
         return ParsedDocument.isPhrase(traverser.parent(), DeclarationBodyCompletion._phraseTypes) ||
-            (ParsedDocument.isPhrase(traverser.node, [PhraseType.Error]) &&  ParsedDocument.isPhrase(traverser.parent(), DeclarationBodyCompletion._phraseTypes));
+            (ParsedDocument.isPhrase(traverser.node, [PhraseType.Error]) && ParsedDocument.isPhrase(traverser.parent(), DeclarationBodyCompletion._phraseTypes));
     }
 
     completions(traverser: ParseTreeTraverser, word: string) {
