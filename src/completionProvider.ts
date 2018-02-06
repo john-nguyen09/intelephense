@@ -5,7 +5,7 @@
 'use strict';
 
 import { Token, TokenType, Phrase, PhraseType } from 'php7parser';
-import { PhpSymbol, SymbolKind, SymbolModifier } from './symbol';
+import { PhpSymbol, SymbolKind, SymbolModifier, UniqueSymbolSet } from './symbol';
 import { Reference, ReferenceStore, Scope } from './reference';
 import { SymbolStore, SymbolTable } from './symbolStore';
 import { SymbolReader } from './symbolReader';
@@ -299,10 +299,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             }
 
             addUseDeclarationEnabled = false;
-            const lastBackslashPos = word.lastIndexOf('\\');
-            if (lastBackslashPos > -1) {
-                fqnOffset = lastBackslashPos;
-            }
+            const fqnOffset = word.lastIndexOf('\\') + 1
 
         } else {
 
@@ -1216,13 +1213,34 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
 
     completions(traverser: ParseTreeTraverser, word: string) {
 
-        let items: lsp.CompletionItem[] = [];
-        let matches = PhpSymbol.unique(this.symbolStore.match(word, this._symbolFilter));
-        let limit = Math.min(matches.length, this.config.maxItems);
-        let isIncomplete = matches.length > this.config.maxItems;
+        const items:lsp.CompletionItem[] = [];
+        const uniqueSymbols = new UniqueSymbolSet();
+        //namespaces always match on fqn
+        const matches = this.symbolStore.matchIterator(word, this._symbolFilter);
+        let isIncomplete = false;
+        let n = this.config.maxItems;
+        //replace from the last \
+        const fqnOffset = word.lastIndexOf('\\') + 1;
 
-        for (let n = 0; n < limit; ++n) {
-            items.push(this._toNamespaceCompletionItem(matches[n]));
+        for(let s of matches) {
+
+            if(uniqueSymbols.has(s)) {
+                continue;
+            }
+
+            uniqueSymbols.add(s);
+            items.push({
+                label: s.name.slice(fqnOffset),
+                kind: lsp.CompletionItemKind.Module
+            });
+
+            --n;
+
+            if(n < 1) {
+                isIncomplete = true;
+                break;
+            }
+
         }
 
         return <lsp.CompletionList>{
@@ -1273,11 +1291,28 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             return (x.kind & kind) > 0 && !(x.modifiers & SymbolModifier.Use);
         }
 
-        let matches = PhpSymbol.unique(this.symbolStore.match(word, pred));
-        let isIncomplete = matches.length > this.config.maxItems;
-        let limit = Math.min(this.config.maxItems, matches.length);
-        for (let n = 0; n < limit; ++n) {
-            items.push(this._toCompletionItem(matches[n]));
+        let matches = this.symbolStore.matchIterator(word, pred);
+        let uniqueSymbols = new UniqueSymbolSet();
+        let n = this.config.maxItems;
+        let isIncomplete = false;
+
+        //may have matched on fqn or short name 
+        const fqnOffset = word.lastIndexOf('\\') + 1;
+
+        for(let s of matches) {
+
+            if(uniqueSymbols.has(s)) {
+                continue;
+            }
+
+            uniqueSymbols.add(s);
+            items.push(this._toCompletionItem(s, word, fqnOffset));
+
+            if(--n < 1) {
+                isIncomplete = true;
+                break;
+            }
+
         }
 
         return <lsp.CompletionList>{
@@ -1287,13 +1322,15 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
 
     }
 
-    private _toCompletionItem(s: PhpSymbol) {
-        let name = s.kind === SymbolKind.Namespace ? s.name : PhpSymbol.notFqn(s.name);
-        let item = lsp.CompletionItem.create(name);
-        item.insertText = s.name;
-        item.kind = symbolKindToLspSymbolKind(s.kind);
-        if (s.kind !== SymbolKind.Namespace && name !== s.name) {
-            item.detail = s.name;
+    private _toCompletionItem(s: PhpSymbol, lcWord:string, fqnOffset:number) { 
+        const didMatchOnFqn = s.name.slice(0, lcWord.length) === lcWord;
+        let item = <lsp.CompletionItem>{
+            kind: symbolKindToLspSymbolKind(s.kind),
+            label: didMatchOnFqn ? s.name.slice(fqnOffset) : PhpSymbol.notFqn(s.name)
+        }
+        item.insertText = item.label;
+        if (s.kind !== SymbolKind.Namespace && !didMatchOnFqn) {
+            item.label += ` [${s.name}]`;
         }
 
         if (s.doc && s.doc.description) {
@@ -1322,7 +1359,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             case TokenType.Const:
                 return SymbolKind.Constant;
             default:
-                return SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace;
+                return SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Namespace;
         }
     }
 

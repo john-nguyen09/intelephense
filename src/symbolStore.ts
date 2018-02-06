@@ -323,10 +323,12 @@ export class SymbolStore {
             return;
         }
 
-        let indexMatchIterator = this._symbolIndex.matchIterator(text);
+        const indexMatchIterator = this._symbolIndex.matchIterator(text);
+        const symbols = new Set<PhpSymbol>();
 
         for(let s of indexMatchIterator){
-            if(!filter || filter(s)) {
+            if((!filter || filter(s)) && !symbols.has(s)) {
+                symbols.add(s);
                 yield s;
             }
         }
