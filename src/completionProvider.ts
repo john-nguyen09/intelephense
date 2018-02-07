@@ -197,6 +197,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         let isUnqualified = false;
         const useDeclarationHelper = new UseDeclarationHelper(traverser.document, traverser.symbolTable, traverser.range.start);
         const importMap: { [index: string]: PhpSymbol } = {};
+        let qualifiedNameRule: PhpSymbol;
 
         if (
             namePhrase.phraseType === PhraseType.RelativeQualifiedName ||
@@ -215,6 +216,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
                 word = nameResolver.resolveRelative(word.slice(10)); //namespace\
             } else if (namePhrase.phraseType === PhraseType.QualifiedName) {
                 word = nameResolver.resolveNotFullyQualified(word);
+                qualifiedNameRule = nameResolver.matchImportedSymbol(word, SymbolKind.Class);
             }
 
             addUseDeclarationEnabled = false;
@@ -245,21 +247,38 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
                 if (imported.associated && imported.associated.length) {
                     importMap[imported.associated[0].name] = imported;
                 }
-                items.push(this._toCompletionItem(imports[n], useDeclarationHelper, nameResolver.namespaceName, isUnqualified, fqnOffset));
+                items.push(
+                    this._toCompletionItem(
+                        imports[n],
+                        useDeclarationHelper,
+                        nameResolver.namespaceName,
+                        isUnqualified,
+                        fqnOffset,
+                        qualifiedNameRule
+                    ));
             }
 
         }
 
+        const uniqueSymbols = new UniqueSymbolSet();
         const iterator = this.symbolStore.matchIterator(word, pred);
         let limit = this.config.maxItems;
         let isIncomplete = false;
 
         for (let s of iterator) {
-            if (importMap[s.name]) {
+            if (importMap[s.name] || uniqueSymbols.has(s)) {
                 continue;
             }
 
-            items.push(this._toCompletionItem(s, useDeclarationHelper, nameResolver.namespaceName, isUnqualified, fqnOffset));
+            uniqueSymbols.add(s);
+            items.push(this._toCompletionItem(
+                s,
+                useDeclarationHelper,
+                nameResolver.namespaceName,
+                isUnqualified,
+                fqnOffset,
+                qualifiedNameRule
+            ));
 
             if (items.length >= limit) {
                 isIncomplete = true;
@@ -272,6 +291,17 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             isIncomplete: isIncomplete
         }
 
+    }
+
+    protected _useSymbolToUseDeclaration(s: PhpSymbol) {
+        const fqn = s.associated[0].name;
+        let decl = `use ${fqn}`;
+        const slashPos = fqn.lastIndexOf('\\') + 1;
+        if (fqn.slice(-s.name.length) !== s.name) {
+            //aliased
+            decl += ` as ${s.name}`;
+        }
+        return decl;
     }
 
     protected abstract _getKeywords(traverser: ParseTreeTraverser): string[];
@@ -315,7 +345,8 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         useDeclarationHelper: UseDeclarationHelper,
         namespaceName: string,
         isUnqualified: boolean,
-        fqnOffset: number
+        fqnOffset: number,
+        qualifiedNameRule: PhpSymbol
     ) {
 
         const item = <lsp.CompletionItem>{
@@ -340,10 +371,13 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
         if (!isUnqualified) {
             item.label = s.name.slice(fqnOffset);
+            if (qualifiedNameRule) {
+                item.detail = this._useSymbolToUseDeclaration(qualifiedNameRule);
+            }
         } else if ((s.modifiers & SymbolModifier.Use) > 0) {
             //symbol is use decl
             //show the use decl fqn
-            item.detail = `use ${s.associated[0].name}`;
+            item.detail = this._useSymbolToUseDeclaration(s);
             item.label = PhpSymbol.notFqn(s.name);
         } else if ((!namespaceName && !symbolNamespace) || (s.kind === SymbolKind.Constant && this._isMagicConstant(s.name))) {
             //symbol not namespaced and in global namespace context
@@ -373,7 +407,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         }
 
         if (s.kind === SymbolKind.Function) {
-            if(!item.insertText) {
+            if (!item.insertText) {
                 item.insertText = item.label;
             }
             //add signature
@@ -512,15 +546,16 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         useDeclarationHelper: UseDeclarationHelper,
         namespaceName: string,
         isUnqualified: boolean,
-        fqnOffset: number
+        fqnOffset: number,
+        qualifiedNameRule: PhpSymbol
     ) {
 
-        let item = super._toCompletionItem(s, useDeclarationHelper, namespaceName, isUnqualified, fqnOffset);
+        let item = super._toCompletionItem(s, useDeclarationHelper, namespaceName, isUnqualified, fqnOffset, qualifiedNameRule);
         let aggregate = new TypeAggregate(this.symbolStore, s);
         let constructor = aggregate.firstMember(this._isConstructor);
         item.kind = lsp.CompletionItemKind.Constructor;
         if (constructor && PhpSymbol.hasParameters(constructor)) {
-            if(!item.insertText) {
+            if (!item.insertText) {
                 item.insertText = item.label;
             }
             item.insertText += '($0)';
