@@ -81,6 +81,10 @@ export namespace PhpSymbol {
             return [];
         }
 
+        if (s.kind === SymbolKind.Namespace) {
+            return [s.name.toLowerCase()];
+        }
+
         let text = notFqn(s.name);
         let lcText = text.toLowerCase();
         let suffixes = [s.name.toLowerCase()];

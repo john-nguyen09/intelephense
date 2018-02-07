@@ -199,7 +199,7 @@ export class SymbolStore {
 
     constructor() {
         this._tableIndex = new SymbolTableIndex();
-        this._symbolIndex = new NameIndex<PhpSymbol>(this._symbolKeys);
+        this._symbolIndex = new NameIndex<PhpSymbol>(PhpSymbol.keys);
         this._symbolCount = 0;
     }
 
@@ -597,19 +597,6 @@ export class SymbolStore {
             !(s.modifiers & SymbolModifier.Use) && //no use
             !(s.kind === SymbolKind.Variable && s.location) && //no variables that have a location (in built globals have no loc)
             s.name.length > 0;
-    }
-
-    private _symbolKeys(s: PhpSymbol) {
-
-        if (s.kind === SymbolKind.Namespace) {
-            let lcName = s.name.toLowerCase();
-            let keys = new Set<string>();
-            keys.add(lcName);
-            Set.prototype.add.apply(keys, lcName.split('\\').filter((s) => { return s.length > 0 }));
-            return Array.from(keys);
-        }
-
-        return PhpSymbol.keys(s);
     }
 
 }
