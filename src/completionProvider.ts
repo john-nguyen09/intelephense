@@ -1295,7 +1295,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
     }
 
     private _toCompletionItem(s: PhpSymbol, lcWord: string, fqnOffset: number) {
-        const didMatchOnFqn = s.name.slice(0, lcWord.length) === lcWord;
+        const didMatchOnFqn = s.name.slice(0, lcWord.length).toLowerCase() === lcWord;
         let item = <lsp.CompletionItem>{
             kind: symbolKindToLspSymbolKind(s.kind),
             label: didMatchOnFqn ? s.name.slice(fqnOffset) : PhpSymbol.notFqn(s.name)
