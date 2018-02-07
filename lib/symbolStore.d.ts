@@ -77,7 +77,6 @@ export declare class SymbolStore {
      * @param s
      */
     private _indexFilter(s);
-    private _symbolKeys(s);
 }
 export declare class SymbolTableIndex {
     private _tables;
