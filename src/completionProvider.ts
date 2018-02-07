@@ -320,7 +320,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
         const item = <lsp.CompletionItem>{
             kind: symbolKindToLspSymbolKind(s.kind),
-            label: isUnqualified ? PhpSymbol.notFqn(s.name) : s.name.slice(fqnOffset)
+            label: undefined
         }
 
         //todo remove this and use resolve provider
@@ -332,7 +332,6 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         //should only get an ns symbol here if in global ns
         if (isUnqualified && s.kind === SymbolKind.Namespace) {
             item.label = s.name;
-            item.insertText = s.name;
             return item;
         }
 
@@ -340,44 +339,46 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         let labelExtra = '';
 
         if (!isUnqualified) {
-            item.insertText = item.label;
+            item.label = s.name.slice(fqnOffset);
         } else if ((s.modifiers & SymbolModifier.Use) > 0) {
             //symbol is use decl
             //show the use decl fqn
-            labelExtra = `[use ${s.associated[0].name}]`;
-            item.insertText = item.label;
+            item.detail = `use ${s.associated[0].name}`;
+            item.label = PhpSymbol.notFqn(s.name);
         } else if ((!namespaceName && !symbolNamespace) || (s.kind === SymbolKind.Constant && this._isMagicConstant(s.name))) {
-            //no additional info needed
-            item.insertText = item.label;
+            //symbol not namespaced and in global namespace context
+            item.label = s.name;
         } else if (namespaceName === symbolNamespace) {
             //symbol shares same namespace 
             //show the current namespace
-            labelExtra = `[namespace ${namespaceName}]`;
-            item.insertText = item.label;
+            item.detail = `namespace ${namespaceName}`;
+            item.label = PhpSymbol.notFqn(s.name);
         } else if (namespaceName && !symbolNamespace) {
             //symbol is in global namespace but the current namespace is not global
             //prefix with backslash
             //functions and const dont need prefix unless set in config
+            item.label = s.name;
             if ((s.kind !== SymbolKind.Constant && s.kind !== SymbolKind.Function) || this.config.backslashPrefix) {
                 item.insertText = '\\' + s.name;
-            } else {
-                item.insertText = s.name;
             }
         } else if (this.config.addUseDeclaration && !useDeclarationHelper.findUseSymbolByName(item.label)) {
             //add a use decl as additional text
-            item.insertText = item.label;
+            item.label = PhpSymbol.notFqn(s.name);
+            item.detail = `use ${s.name}`;
             item.additionalTextEdits = [useDeclarationHelper.insertDeclarationTextEdit(s)];
-            labelExtra = `[use ${s.name}]`;
         } else {
             //insert fqn
             item.insertText = '\\' + s.name;
-            labelExtra = `[${s.name}]`;
+            item.detail = s.name;
         }
 
         if (s.kind === SymbolKind.Function) {
-            //add a short representation of the signature
+            if(!item.insertText) {
+                item.insertText = item.label;
+            }
+            //add signature
             //and configure to invoke parameter hints
-            item.label += PhpSymbol.signatureString(s, true);
+            item.detail = s.name + PhpSymbol.signatureString(s);
             if (PhpSymbol.hasParameters(s)) {
                 item.insertText += '($0)';
                 item.insertTextFormat = lsp.InsertTextFormat.Snippet;
@@ -396,12 +397,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             //class, interface, trait
         }
 
-        if (labelExtra) {
-            item.label += ' ' + labelExtra;
-        }
-
         return item;
-
     }
 
     private _isMagicConstant(text: string) {
@@ -475,7 +471,7 @@ class InstanceOfTypeDesignatorCompletion extends AbstractNameCompletion {
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return (s.kind & (SymbolKind.Class | SymbolKind.Interface)) > 0 && !(s.modifiers & (SymbolModifier.Anonymous));
+        return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace)) > 0 && !(s.modifiers & (SymbolModifier.Anonymous));
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser) {
@@ -499,7 +495,7 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return s.kind === SymbolKind.Class &&
+        return (s.kind & (SymbolKind.Class | SymbolKind.Namespace)) > 0 &&
             !(s.modifiers & (SymbolModifier.Anonymous | SymbolModifier.Abstract));
     }
 
@@ -524,17 +520,11 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         let constructor = aggregate.firstMember(this._isConstructor);
         item.kind = lsp.CompletionItemKind.Constructor;
         if (constructor && PhpSymbol.hasParameters(constructor)) {
-
-            //label may have extra info
-            let labelExtraPos = item.label.indexOf(' ');
-            let labelExtra = '';
-            if (labelExtraPos > -1) {
-                labelExtra = item.label.slice(labelExtraPos);
-                item.label = item.label.slice(0, labelExtraPos);
+            if(!item.insertText) {
+                item.insertText = item.label;
             }
-
-            item.label += PhpSymbol.signatureString(constructor, true) + labelExtra;
             item.insertText += '($0)';
+            item.detail = constructor.name + PhpSymbol.signatureString(constructor);
             item.insertTextFormat = lsp.InsertTextFormat.Snippet;
             item.command = triggerParameterHintsCommand;
         }
@@ -598,7 +588,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
         let item = <lsp.CompletionItem>{
             label: s.name.slice(1), //remove $
             kind: lsp.CompletionItemKind.Variable,
-            detail: varTable[s.name] ? varTable[s.name] : ''
+            detail: varTable[s.name] || ''
         }
 
         if (s.doc && s.doc.description) {
@@ -755,7 +745,7 @@ class NameCompletion extends AbstractNameCompletion {
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return (s.kind & (SymbolKind.Class | SymbolKind.Function | SymbolKind.Constant)) > 0 &&
+        return (s.kind & (SymbolKind.Class | SymbolKind.Function | SymbolKind.Constant | SymbolKind.Namespace)) > 0 &&
             !(s.modifiers & SymbolModifier.Anonymous);
     }
 
@@ -932,7 +922,8 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
         let item = <lsp.CompletionItem>{
             kind: lsp.CompletionItemKind.Method,
-            label: s.name + PhpSymbol.signatureString(s, true)
+            label: s.name,
+            detail: s.name + PhpSymbol.signatureString(s)
         };
 
         if (s.doc && s.doc.description) {
@@ -969,7 +960,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
         }
 
         if (s.value) {
-            item.detail = '= ' + s.value;
+            item.detail = `${s.name} = ${s.value}`;
         }
 
         return item;
@@ -1115,7 +1106,7 @@ class TypeDeclarationCompletion extends AbstractNameCompletion {
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return (s.kind & (SymbolKind.Class | SymbolKind.Interface)) > 0;
+        return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace)) > 0;
     }
 
     private _isTypeDeclaration(node: Phrase | Token) {
@@ -1135,7 +1126,7 @@ class ClassBaseClauseCompletion extends AbstractNameCompletion {
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return s.kind === SymbolKind.Class && !(s.modifiers & SymbolModifier.Final);
+        return (s.kind & (SymbolKind.Class | SymbolKind.Namespace)) > 0 && !(s.modifiers & SymbolModifier.Final);
     }
 
     private _isClassBaseClause(node: Phrase | Token) {
@@ -1156,7 +1147,7 @@ class InterfaceClauseCompletion extends AbstractNameCompletion {
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return s.kind === SymbolKind.Interface;
+        return s.kind === SymbolKind.Interface || s.kind === SymbolKind.Namespace;
     }
 
     private _isInterfaceClause(node: Phrase | Token) {
@@ -1179,7 +1170,7 @@ class TraitUseClauseCompletion extends AbstractNameCompletion {
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return s.kind === SymbolKind.Trait;
+        return s.kind === SymbolKind.Trait || s.kind === SymbolKind.Namespace;
     }
 
 }
@@ -1575,7 +1566,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
             label: s.name,
             insertText: insertText,
             insertTextFormat: lsp.InsertTextFormat.Snippet,
-            detail: s.scope
+            detail: `override ${s.scope}::${s.name}`
         };
 
         if (s.doc && s.doc.description) {
