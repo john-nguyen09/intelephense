@@ -1269,6 +1269,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
 
         //may have matched on fqn or short name 
         const fqnOffset = word.lastIndexOf('\\') + 1;
+        const lcWord = word.toLowerCase();
 
         for (let s of matches) {
 
@@ -1277,7 +1278,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             }
 
             uniqueSymbols.add(s);
-            items.push(this._toCompletionItem(s, word, fqnOffset));
+            items.push(this._toCompletionItem(s, lcWord, fqnOffset));
 
             if (--n < 1) {
                 isIncomplete = true;
@@ -1301,6 +1302,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
         }
         if (s.kind !== SymbolKind.Namespace && !didMatchOnFqn) {
             item.detail = s.name;
+            item.insertText = s.name;
         }
 
         if (s.doc && s.doc.description) {
