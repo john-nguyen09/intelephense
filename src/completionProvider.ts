@@ -359,15 +359,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             item.documentation = s.doc.description;
         }
 
-        //unqualified namespaces always complete to fqn
-        //should only get an ns symbol here if in global ns
-        if (isUnqualified && s.kind === SymbolKind.Namespace) {
-            item.label = s.name;
-            return item;
-        }
-
         const symbolNamespace = PhpSymbol.namespace(s.name);
-        let labelExtra = '';
 
         if (!isUnqualified) {
             item.label = s.name.slice(fqnOffset);
@@ -376,11 +368,14 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             }
         } else if ((s.modifiers & SymbolModifier.Use) > 0) {
             //symbol is use decl
-            //show the use decl fqn
+            //show the use decl as detail
             item.detail = this._useSymbolToUseDeclaration(s);
             item.label = PhpSymbol.notFqn(s.name);
-        } else if ((!namespaceName && !symbolNamespace) || (s.kind === SymbolKind.Constant && this._isMagicConstant(s.name))) {
-            //symbol not namespaced and in global namespace context
+        } else if (s.kind === SymbolKind.Namespace || (!namespaceName && !symbolNamespace) || (s.kind === SymbolKind.Constant && this._isMagicConstant(s.name))) {
+            //symbols not namespaced and in global namespace context
+            //and unqualified namespaces
+            //and php magic constants
+            //get fqn only
             item.label = s.name;
         } else if (namespaceName === symbolNamespace) {
             //symbol shares same namespace 
@@ -396,6 +391,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
                 item.insertText = '\\' + s.name;
             }
         } else if (this.config.addUseDeclaration && !useDeclarationHelper.findUseSymbolByName(s.name)) {
+            //match on short name
             //add a use decl as additional text
             item.label = PhpSymbol.notFqn(s.name);
             item.detail = `use ${s.name}`;
