@@ -215,8 +215,8 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
                 //symbols share current namespace
                 word = nameResolver.resolveRelative(word.slice(10)); //namespace\
             } else if (namePhrase.phraseType === PhraseType.QualifiedName) {
-                word = nameResolver.resolveNotFullyQualified(word);
                 qualifiedNameRule = nameResolver.matchImportedSymbol(word, SymbolKind.Class);
+                word = nameResolver.resolveNotFullyQualified(word);
             }
 
             addUseDeclarationEnabled = false;
