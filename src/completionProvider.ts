@@ -677,7 +677,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
     private _toVariableCompletionItem(s: PhpSymbol, varTable: { [index: string]: string }) {
 
         let item = <lsp.CompletionItem>{
-            label: s.name,
+            label: s.name.slice(1), //remove $
             kind: lsp.CompletionItemKind.Variable,
             detail: varTable[s.name] ? varTable[s.name] : ''
         }
