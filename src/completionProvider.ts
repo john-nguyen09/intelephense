@@ -1285,14 +1285,13 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             return noCompletionResponse;
         }
 
-        let kind = this._modifierToSymbolKind(<Token>traverser.child(this._isModifier));
-
-        let pred = (x: PhpSymbol) => {
-            return (x.kind & kind) > 0 && !(x.modifiers & SymbolModifier.Use);
+        const kindMask = this._modifierToSymbolKind(<Token>traverser.child(this._isModifier));
+        const pred = (x: PhpSymbol) => {
+            return (x.kind & kindMask) > 0 && !(x.modifiers & SymbolModifier.Use);
         }
 
-        let matches = this.symbolStore.matchIterator(word, pred);
-        let uniqueSymbols = new UniqueSymbolSet();
+        const matches = this.symbolStore.matchIterator(word, pred);
+        const uniqueSymbols = new UniqueSymbolSet();
         let n = this.config.maxItems;
         let isIncomplete = false;
 
@@ -1349,17 +1348,20 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
     }
 
     private _modifierToSymbolKind(token: Token) {
+
+        const defaultKindMask = SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Namespace;
+
         if (!token) {
-            return SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace;
+            return defaultKindMask;
         }
 
         switch (token.tokenType) {
             case TokenType.Function:
-                return SymbolKind.Function;
+                return SymbolKind.Function | SymbolKind.Namespace;
             case TokenType.Const:
-                return SymbolKind.Constant;
+                return SymbolKind.Constant | SymbolKind.Namespace;
             default:
-                return SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Namespace;
+                return defaultKindMask;
         }
     }
 
@@ -1395,25 +1397,41 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
         let nsUseGroupClauseModifier = traverser.child(this._isModifier) as Token;
         let nsUseDecl = traverser.ancestor(this._isNamespaceUseDeclaration) as Phrase;
         let nsUseDeclModifier = traverser.child(this._isModifier) as Token;
-        let kind = this._modifierToSymbolKind(nsUseGroupClauseModifier || nsUseDeclModifier);
+        let kindMask = this._modifierToSymbolKind(nsUseGroupClauseModifier || nsUseDeclModifier);
         let prefix = '';
         if (nsUseDeclModifier) {
             traverser.parent();
         }
 
         if (traverser.child(this._isNamespaceName)) {
-            prefix = traverser.text.toLowerCase();
+            prefix = traverser.text;
         }
 
+        word = prefix + '\\' + word;
+
         let pred = (x: PhpSymbol) => {
-            return (x.kind & kind) > 0 && !(x.modifiers & SymbolModifier.Use) && (!prefix || x.name.toLowerCase().indexOf(prefix) === 0);
+            return (x.kind & kindMask) > 0 && !(x.modifiers & SymbolModifier.Use);
         };
 
-        let matches = this.symbolStore.match(word, pred);
-        let isIncomplete = matches.length > this.config.maxItems;
-        let limit = Math.min(this.config.maxItems, matches.length);
-        for (let n = 0; n < limit; ++n) {
-            items.push(this._toCompletionItem(matches[n], matches[n].name.slice(prefix.length + 1))); //+1 for \
+        let matches = this.symbolStore.matchIterator(word, pred);
+        let uniqueSymbols = new UniqueSymbolSet();
+        let isIncomplete = false;
+        let n = this.config.maxItems;
+        const fqnOffset = word.lastIndexOf('\\') + 1;
+
+        for(let s of matches) {
+
+            if(uniqueSymbols.has(s)) {
+                continue;
+            }
+
+            uniqueSymbols.add(s);
+            items.push(this._toCompletionItem(s, fqnOffset));
+
+            if(--n < 1) {
+                isIncomplete = true;
+                break;
+            }
         }
 
         return <lsp.CompletionList>{
@@ -1423,12 +1441,13 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
 
     }
 
-    private _toCompletionItem(s: PhpSymbol, insertText: string) {
-        let item = lsp.CompletionItem.create(PhpSymbol.notFqn(s.name));
-        item.insertText = insertText;
-        item.kind = symbolKindToLspSymbolKind(s.kind);
-        item.detail = s.name;
+    private _toCompletionItem(s: PhpSymbol, fqnOffset:number) {
+        let item = <lsp.CompletionItem>{
+            kind: symbolKindToLspSymbolKind(s.kind),
+            label: s.name.slice(fqnOffset)
+        };
 
+        //todo remove and implement resolve provider
         if (s.doc && s.doc.description) {
             item.documentation = s.doc.description;
         }
@@ -1460,17 +1479,20 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
     }
 
     private _modifierToSymbolKind(modifier: Token) {
+        
+        const defaultKindMask = SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Namespace;
+        
         if (!modifier) {
-            return SymbolKind.Class;
+            return defaultKindMask;
         }
 
         switch (modifier.tokenType) {
             case TokenType.Function:
-                return SymbolKind.Function;
+                return SymbolKind.Function | SymbolKind.Namespace;
             case TokenType.Const:
-                return SymbolKind.Constant;
+                return SymbolKind.Constant | SymbolKind.Namespace;
             default:
-                return SymbolKind.Class;
+                return defaultKindMask;
         }
     }
 
