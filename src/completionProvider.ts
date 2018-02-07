@@ -75,70 +75,6 @@ function symbolKindToLspSymbolKind(kind: SymbolKind) {
     }
 }
 
-function toMethodCompletionItem(s: PhpSymbol) {
-
-    let item = <lsp.CompletionItem>{
-        kind: lsp.CompletionItemKind.Method,
-        label: s.name + PhpSymbol.signatureString(s, true)
-    };
-
-    if (s.doc && s.doc.description) {
-        item.documentation = s.doc.description;
-    }
-
-    if (s.name.slice(0, 2) === '__') {
-        //sort magic methods last
-        item.sortText = 'zzz';
-    } else {
-        //all items must have sortText for comparison to occur in vscode
-        item.sortText = item.label;
-    }
-
-    if (PhpSymbol.hasParameters(s)) {
-        item.insertText = s.name + '($0)';
-        item.insertTextFormat = lsp.InsertTextFormat.Snippet;
-        item.command = triggerParameterHintsCommand;
-    } else {
-        item.insertText = s.name + '()';
-    }
-
-    return item;
-}
-
-function toClassConstantCompletionItem(s: PhpSymbol) {
-    let item = <lsp.CompletionItem>{
-        kind: lsp.CompletionItemKind.Value, //@todo use Constant
-        label: s.name,
-    };
-
-    if (s.doc && s.doc.description) {
-        item.documentation = s.doc.description;
-    }
-
-    if (s.value) {
-        item.detail = '= ' + s.value;
-    }
-
-    return item;
-}
-
-
-function toPropertyCompletionItem(s: PhpSymbol) {
-    let item = <lsp.CompletionItem>{
-        kind: lsp.CompletionItemKind.Property,
-        label: s.name.slice(1), //remove $
-        detail: PhpSymbol.type(s)
-    }
-
-    if (s.doc && s.doc.description) {
-        item.documentation = s.doc.description;
-    }
-
-    return item;
-}
-
-
-
 export interface CompletionOptions {
     maxItems: number,
     addUseDeclaration: boolean,
@@ -319,13 +255,13 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         let isIncomplete = false;
 
         for (let s of iterator) {
-            if(importMap[s.name]) {
+            if (importMap[s.name]) {
                 continue;
             }
 
             items.push(this._toCompletionItem(s, useDeclarationHelper, nameResolver.namespaceName, isUnqualified, fqnOffset));
-            
-            if(items.length >= limit) {
+
+            if (items.length >= limit) {
                 isIncomplete = true;
                 break;
             }
@@ -592,7 +528,7 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
             //label may have extra info
             let labelExtraPos = item.label.indexOf(' ');
             let labelExtra = '';
-            if(labelExtraPos > -1) {
+            if (labelExtraPos > -1) {
                 labelExtra = item.label.slice(labelExtraPos);
                 item.label = item.label.slice(0, labelExtraPos);
             }
@@ -982,14 +918,76 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
     protected _toCompletionItem(s: PhpSymbol) {
         switch (s.kind) {
             case SymbolKind.ClassConstant:
-                return toClassConstantCompletionItem(s);
+                return this.toClassConstantCompletionItem(s);
             case SymbolKind.Method:
-                return toMethodCompletionItem(s);
+                return this.toMethodCompletionItem(s);
             case SymbolKind.Property:
-                return toPropertyCompletionItem(s);
+                return this.toPropertyCompletionItem(s);
             default:
                 throw Error('Invalid Argument');
         }
+    }
+
+    protected toMethodCompletionItem(s: PhpSymbol) {
+
+        let item = <lsp.CompletionItem>{
+            kind: lsp.CompletionItemKind.Method,
+            label: s.name + PhpSymbol.signatureString(s, true)
+        };
+
+        if (s.doc && s.doc.description) {
+            item.documentation = s.doc.description;
+        }
+
+        if (s.name.slice(0, 2) === '__') {
+            //sort magic methods last
+            item.sortText = 'zzz';
+        } else {
+            //all items must have sortText for comparison to occur in vscode
+            item.sortText = item.label;
+        }
+
+        if (PhpSymbol.hasParameters(s)) {
+            item.insertText = s.name + '($0)';
+            item.insertTextFormat = lsp.InsertTextFormat.Snippet;
+            item.command = triggerParameterHintsCommand;
+        } else {
+            item.insertText = s.name + '()';
+        }
+
+        return item;
+    }
+
+    protected toClassConstantCompletionItem(s: PhpSymbol) {
+        let item = <lsp.CompletionItem>{
+            kind: lsp.CompletionItemKind.Value, //@todo use Constant
+            label: s.name,
+        };
+
+        if (s.doc && s.doc.description) {
+            item.documentation = s.doc.description;
+        }
+
+        if (s.value) {
+            item.detail = '= ' + s.value;
+        }
+
+        return item;
+    }
+
+
+    protected toPropertyCompletionItem(s: PhpSymbol) {
+        let item = <lsp.CompletionItem>{
+            kind: lsp.CompletionItemKind.Property,
+            label: s.name.slice(1), //remove $
+            detail: PhpSymbol.type(s)
+        }
+
+        if (s.doc && s.doc.description) {
+            item.documentation = s.doc.description;
+        }
+
+        return item;
     }
 
     private _isMemberName(node: Phrase | Token) {
@@ -1196,7 +1194,7 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
 
     completions(traverser: ParseTreeTraverser, word: string) {
 
-        const items:lsp.CompletionItem[] = [];
+        const items: lsp.CompletionItem[] = [];
         const uniqueSymbols = new UniqueSymbolSet();
         //namespaces always match on fqn
         const matches = this.symbolStore.matchIterator(word, this._symbolFilter);
@@ -1205,9 +1203,9 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
         //replace from the last \
         const fqnOffset = word.lastIndexOf('\\') + 1;
 
-        for(let s of matches) {
+        for (let s of matches) {
 
-            if(uniqueSymbols.has(s)) {
+            if (uniqueSymbols.has(s)) {
                 continue;
             }
 
@@ -1219,7 +1217,7 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
 
             --n;
 
-            if(n < 1) {
+            if (n < 1) {
                 isIncomplete = true;
                 break;
             }
@@ -1281,16 +1279,16 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
         //may have matched on fqn or short name 
         const fqnOffset = word.lastIndexOf('\\') + 1;
 
-        for(let s of matches) {
+        for (let s of matches) {
 
-            if(uniqueSymbols.has(s)) {
+            if (uniqueSymbols.has(s)) {
                 continue;
             }
 
             uniqueSymbols.add(s);
             items.push(this._toCompletionItem(s, word, fqnOffset));
 
-            if(--n < 1) {
+            if (--n < 1) {
                 isIncomplete = true;
                 break;
             }
@@ -1304,7 +1302,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
 
     }
 
-    private _toCompletionItem(s: PhpSymbol, lcWord:string, fqnOffset:number) { 
+    private _toCompletionItem(s: PhpSymbol, lcWord: string, fqnOffset: number) {
         const didMatchOnFqn = s.name.slice(0, lcWord.length) === lcWord;
         let item = <lsp.CompletionItem>{
             kind: symbolKindToLspSymbolKind(s.kind),
@@ -1402,16 +1400,16 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
         let n = this.config.maxItems;
         const fqnOffset = word.lastIndexOf('\\') + 1;
 
-        for(let s of matches) {
+        for (let s of matches) {
 
-            if(uniqueSymbols.has(s)) {
+            if (uniqueSymbols.has(s)) {
                 continue;
             }
 
             uniqueSymbols.add(s);
             items.push(this._toCompletionItem(s, fqnOffset));
 
-            if(--n < 1) {
+            if (--n < 1) {
                 isIncomplete = true;
                 break;
             }
@@ -1424,7 +1422,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
 
     }
 
-    private _toCompletionItem(s: PhpSymbol, fqnOffset:number) {
+    private _toCompletionItem(s: PhpSymbol, fqnOffset: number) {
         let item = <lsp.CompletionItem>{
             kind: symbolKindToLspSymbolKind(s.kind),
             label: s.name.slice(fqnOffset)
@@ -1462,9 +1460,9 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
     }
 
     private _modifierToSymbolKind(modifier: Token) {
-        
+
         const defaultKindMask = SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Namespace;
-        
+
         if (!modifier) {
             return defaultKindMask;
         }
