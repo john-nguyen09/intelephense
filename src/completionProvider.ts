@@ -361,7 +361,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             if ((s.kind !== SymbolKind.Constant && s.kind !== SymbolKind.Function) || this.config.backslashPrefix) {
                 item.insertText = '\\' + s.name;
             }
-        } else if (this.config.addUseDeclaration && !useDeclarationHelper.findUseSymbolByName(item.label)) {
+        } else if (this.config.addUseDeclaration && !useDeclarationHelper.findUseSymbolByName(s.name)) {
             //add a use decl as additional text
             item.label = PhpSymbol.notFqn(s.name);
             item.detail = `use ${s.name}`;
