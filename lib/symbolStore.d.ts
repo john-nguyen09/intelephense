@@ -62,6 +62,7 @@ export declare class SymbolStore {
      * Case insensitive
      */
     match(text: string, filter?: Predicate<PhpSymbol>): PhpSymbol[];
+    matchIterator(text: string, filter?: Predicate<PhpSymbol>): IterableIterator<PhpSymbol>;
     findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): PhpSymbol[];
     findMembers(scope: string, memberMergeStrategy: MemberMergeStrategy, predicate?: Predicate<PhpSymbol>): PhpSymbol[];
     findBaseMember(symbol: PhpSymbol): PhpSymbol;

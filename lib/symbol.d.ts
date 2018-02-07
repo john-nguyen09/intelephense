@@ -55,7 +55,7 @@ export interface SymbolIdentifier {
 export declare namespace PhpSymbol {
     function keys(s: PhpSymbol): string[];
     function isClassLike(s: PhpSymbol): boolean;
-    function signatureString(s: PhpSymbol): string;
+    function signatureString(s: PhpSymbol, excludeTypeInfo?: boolean): string;
     function hasParameters(s: PhpSymbol): boolean;
     function notFqn(text: string): string;
     function namespace(fqn: string): string;
@@ -75,4 +75,15 @@ export declare namespace PhpSymbol {
      * @param symbol
      */
     function unique(symbols: PhpSymbol[]): PhpSymbol[];
+}
+/**
+ * uniqueness determined by name and symbol kind
+ */
+export declare class UniqueSymbolSet {
+    private _symbols;
+    private _map;
+    constructor();
+    add(s: PhpSymbol): void;
+    has(s: PhpSymbol): boolean;
+    toArray(): PhpSymbol[];
 }

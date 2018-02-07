@@ -127,6 +127,7 @@ export declare class NameIndex<T> {
      * @param text
      */
     match(text: string): T[];
+    matchIterator(text: string): IterableIterator<T>;
     /**
      * Finds all items that match (case insensitive) text exactly
      * @param text
