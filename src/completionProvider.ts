@@ -1299,9 +1299,8 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             kind: symbolKindToLspSymbolKind(s.kind),
             label: didMatchOnFqn ? s.name.slice(fqnOffset) : PhpSymbol.notFqn(s.name)
         }
-        item.insertText = item.label;
         if (s.kind !== SymbolKind.Namespace && !didMatchOnFqn) {
-            item.label += ` [${s.name}]`;
+            item.detail = s.name;
         }
 
         if (s.doc && s.doc.description) {
