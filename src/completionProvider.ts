@@ -94,8 +94,7 @@ function toMethodCompletionItem(s: PhpSymbol) {
 
     let item = <lsp.CompletionItem>{
         kind: lsp.CompletionItemKind.Method,
-        label: s.name,
-        detail: s.name + PhpSymbol.signatureString(s)
+        label: s.name + PhpSymbol.signatureString(s, true)
     };
 
     if (s.doc && s.doc.description) {
@@ -111,13 +110,12 @@ function toMethodCompletionItem(s: PhpSymbol) {
     }
 
     if (PhpSymbol.hasParameters(s)) {
-        item.insertText = item.label + '($0)';
+        item.insertText = s.name + '($0)';
         item.insertTextFormat = lsp.InsertTextFormat.Snippet;
         item.command = triggerParameterHintsCommand;
     } else {
-        item.insertText = item.label + '()';
+        item.insertText = s.name + '()';
     }
-
 
     return item;
 }
@@ -143,7 +141,7 @@ function toClassConstantCompletionItem(s: PhpSymbol) {
 function toPropertyCompletionItem(s: PhpSymbol) {
     let item = <lsp.CompletionItem>{
         kind: lsp.CompletionItemKind.Property,
-        label: !(s.modifiers & SymbolModifier.Static) ? s.name.slice(1) : s.name,
+        label: s.name.slice(1), //remove $
         detail: PhpSymbol.type(s)
     }
 
