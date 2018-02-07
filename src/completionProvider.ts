@@ -44,21 +44,6 @@ function keywordCompletionItems(keywords: string[], text: string) {
 
 }
 
-function createInsertText(s: PhpSymbol, nsName: string, namePhraseType: PhraseType) {
-    let insertText = s.name;
-
-    if (nsName && s.name.indexOf(nsName) === 0 && insertText.length > nsName.length + 1) {
-        insertText = insertText.slice(nsName.length + 1);
-        if (namePhraseType === PhraseType.RelativeQualifiedName) {
-            insertText = 'namespace\\' + insertText;
-        }
-
-    } else if (nsName && namePhraseType !== PhraseType.FullyQualifiedName && !(s.modifiers & SymbolModifier.Use)) {
-        insertText = '\\' + insertText;
-    }
-    return insertText;
-}
-
 function symbolKindToLspSymbolKind(kind: SymbolKind) {
 
     switch (kind) {
