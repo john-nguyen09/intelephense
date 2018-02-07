@@ -218,7 +218,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             }
 
             addUseDeclarationEnabled = false;
-            const fqnOffset = word.lastIndexOf('\\') + 1
+            fqnOffset = word.lastIndexOf('\\') + 1
 
         } else {
 
