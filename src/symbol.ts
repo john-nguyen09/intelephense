@@ -87,6 +87,9 @@ export namespace PhpSymbol {
         }
 
         return [s.name];
+            return [s.name.toLowerCase()];
+        }
+
     }
 
     function isParameter(s: PhpSymbol) {
@@ -97,14 +100,14 @@ export namespace PhpSymbol {
         return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait)) > 0;
     }
 
-    export function signatureString(s: PhpSymbol) {
+    export function signatureString(s: PhpSymbol, excludeTypeInfo?: boolean) {
 
         if (!s || !(s.kind & (SymbolKind.Function | SymbolKind.Method))) {
             return '';
         }
 
-        let params = s.children ? s.children.filter(isParameter) : [];
-        let paramStrings: String[] = [];
+        const params = s.children ? s.children.filter(isParameter) : [];
+        const paramStrings: String[] = [];
         let param: PhpSymbol;
         let parts: string[];
         let paramType: string;
@@ -117,9 +120,11 @@ export namespace PhpSymbol {
                 parts.push(',');
             }
 
-            paramType = PhpSymbol.type(param);
-            if (paramType) {
-                parts.push(paramType);
+            if (!excludeTypeInfo) {
+                paramType = PhpSymbol.type(param);
+                if (paramType) {
+                    parts.push(paramType);
+                }
             }
 
             parts.push(param.name);
@@ -133,10 +138,14 @@ export namespace PhpSymbol {
         }
 
         let sig = `(${paramStrings.join('')})`;
-        let sType = PhpSymbol.type(s);
-        if (sType) {
-            sig += `: ${sType}`;
+
+        if (!excludeTypeInfo) {
+            const sType = PhpSymbol.type(s);
+            if (sType) {
+                sig += `: ${sType}`;
+            }
         }
+
         return sig;
 
     }
@@ -153,8 +162,8 @@ export namespace PhpSymbol {
         return text.slice(pos);
     }
 
-    export function namespace(fqn:string) {
-        if(!fqn) {
+    export function namespace(fqn: string) {
+        if (!fqn) {
             return '';
         }
 
@@ -257,6 +266,35 @@ export namespace PhpSymbol {
         }
 
         return uniqueSymbols;
+    }
+
+}
+
+/**
+ * uniqueness determined by name and symbol kind
+ */
+export class UniqueSymbolSet {
+
+    private _symbols: PhpSymbol[];
+    private _map: { [index: string]: SymbolKind } = {};
+
+    constructor() {
+        this._symbols = [];
+    }
+
+    add(s: PhpSymbol) {
+        if (!this.has(s)) {
+            this._symbols.push(s);
+            this._map[s.name] |= s.kind;
+        }
+    }
+
+    has(s: PhpSymbol) {
+        return (this._map[s.name] & s.kind) === s.kind;
+    }
+
+    toArray() {
+        return this._symbols.slice(0);
     }
 
 }

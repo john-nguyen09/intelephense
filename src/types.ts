@@ -608,6 +608,20 @@ export class NameIndex<T> {
         return Array.from(matches);
     }
 
+    *matchIterator(text: string) {
+        text = text.toLowerCase();
+        const nodes = this._nodeMatch(text);
+        const matches = new Set<T>();
+        let node: NameIndexNode<T>;
+
+        for (let n = 0, l = nodes.length; n < l; ++n) {
+            node = nodes[n];
+            for (let k = 0, i = node.items.length; k < i; ++k) {
+                yield node.items[k];
+            }
+        }
+    }
+
     /**
      * Finds all items that match (case insensitive) text exactly
      * @param text 
@@ -652,7 +666,7 @@ export class SortedList<T> {
     protected _items: T[];
     protected _search: BinarySearch<T>;
 
-    constructor(protected compareFn: Comparer<T>, items?:T[]) {
+    constructor(protected compareFn: Comparer<T>, items?: T[]) {
         this._items = items || [];
         this._search = new BinarySearch<T>(this._items);
     }
@@ -668,7 +682,7 @@ export class SortedList<T> {
     add(item: T) {
         let cmpFn = this._createCompareClosure(item, this.compareFn);
         let result = this._search.search(cmpFn);
-        if(result.isExactMatch) {
+        if (result.isExactMatch) {
             throw new Error(`Duplicate key ${JSON.stringify(item)}`);
         }
         this._items.splice(result.rank, 0, item);
@@ -676,7 +690,7 @@ export class SortedList<T> {
 
     remove(compareFn: (t: T) => number) {
         let result = this._search.search(compareFn);
-        if(result.isExactMatch) {
+        if (result.isExactMatch) {
             return this._items.splice(result.rank, 1).shift();
         }
         return undefined;
