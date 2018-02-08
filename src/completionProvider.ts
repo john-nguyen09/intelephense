@@ -179,7 +179,18 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
-    abstract canSuggest(traverser: ParseTreeTraverser): boolean;
+    /**
+     * Child classes should override but call this first.
+     * It moves the traverser to previous token if the current token is a backslash.
+     * This corrects for errors when a name has a trailing backslash.
+     * @param traverser 
+     */
+    canSuggest(traverser: ParseTreeTraverser): boolean {
+        if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+            traverser.prevToken();
+        }
+        return true;
+    }
 
     completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
 
@@ -290,6 +301,28 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             items: items,
             isIncomplete: isIncomplete
         }
+
+    }
+
+    /**
+     * Not used for now because the parser will put this trailing backslash into
+     * a subsequent node
+     * 
+     * 
+     * If triggered on an incomplete name with a trailing backslash, 
+     * the backslash will not be present in the name node because of parse error.
+     * In this case, traverse to previous token and test if in name.
+     * @param traverser 
+     */
+    protected _isNameWithTrailingBackslash(traverser: ParseTreeTraverser) {
+        let node = traverser.node;
+        if(!ParsedDocument.isToken(node, [TokenType.Backslash])) {
+            return false;
+        }
+
+        traverser = traverser.clone();
+        return ParsedDocument.isToken(traverser.prevToken(), [TokenType.Name]) &&
+            traverser.ancestor(this._isNamePhrase);
 
     }
 
@@ -494,6 +527,8 @@ class InstanceOfTypeDesignatorCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
 
+        super.canSuggest(traverser);
+
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
             ParsedDocument.isPhrase(traverser.parent(),
                 [PhraseType.FullyQualifiedName, PhraseType.QualifiedName, PhraseType.RelativeQualifiedName]) &&
@@ -517,7 +552,7 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
     ];
 
     canSuggest(traverser: ParseTreeTraverser) {
-
+        super.canSuggest(traverser);
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
             ParsedDocument.isPhrase(traverser.parent(),
                 [PhraseType.FullyQualifiedName, PhraseType.QualifiedName, PhraseType.RelativeQualifiedName]) &&
@@ -735,9 +770,9 @@ class NameCompletion extends AbstractNameCompletion {
     private static _implementsRegex = /\bclass\s+[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*(?:\s+extends\s+[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)?\s+[a-z]+$/;
 
     canSuggest(traverser: ParseTreeTraverser) {
-
+        super.canSuggest(traverser);
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
-            traverser.ancestor(this._isNamePhrase) !== null;
+            traverser.ancestor(this._isNamePhrase) !== undefined;
     }
 
     completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
@@ -1128,6 +1163,7 @@ class TypeDeclarationCompletion extends AbstractNameCompletion {
     ];
 
     canSuggest(traverser: ParseTreeTraverser) {
+        super.canSuggest(traverser);
         return ParsedDocument.isToken(traverser.node, [TokenType.Name, TokenType.Backslash, TokenType.Array, TokenType.Callable]) &&
             traverser.ancestor(this._isTypeDeclaration) !== undefined;
     }
@@ -1149,6 +1185,7 @@ class TypeDeclarationCompletion extends AbstractNameCompletion {
 class ClassBaseClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
+        super.canSuggest(traverser);
         return traverser.ancestor(this._isClassBaseClause) !== undefined;
     }
 
@@ -1169,6 +1206,7 @@ class ClassBaseClauseCompletion extends AbstractNameCompletion {
 class InterfaceClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
+        super.canSuggest(traverser);
         return traverser.ancestor(this._isInterfaceClause) !== undefined;
 
     }
@@ -1191,6 +1229,7 @@ class InterfaceClauseCompletion extends AbstractNameCompletion {
 class TraitUseClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
+        super.canSuggest(traverser);
         return traverser.ancestor(this._isNamePhrase) &&
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.QualifiedNameList]) &&
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.TraitUseClause]);

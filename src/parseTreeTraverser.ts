@@ -94,16 +94,16 @@ export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
         const spine = this._spine.slice(0);
         let current:Phrase|Token;
         let parent:Phrase|Token;
-        let siblingIndex:number;
+        let prevSiblingIndex:number;
 
         while(spine.length > 1) {
 
             current = spine.pop();
             parent = spine[spine.length - 1] as Phrase;
-            siblingIndex = parent.children.indexOf(this.node) - 1;
+            prevSiblingIndex = parent.children.indexOf(this.node) - 1;
 
-            if(siblingIndex > -1) {
-                spine.push(parent.children[siblingIndex]);
+            if(prevSiblingIndex > -1) {
+                spine.push(parent.children[prevSiblingIndex]);
                 if(this._lastToken(spine)) {
                     //token found
                     this._spine = spine;
