@@ -89,6 +89,60 @@ export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
         return traverser;
     }
 
+    prevToken() {
+
+        const spine = this._spine.slice(0);
+        let current:Phrase|Token;
+        let parent:Phrase|Token;
+        let siblingIndex:number;
+
+        while(spine.length > 1) {
+
+            current = spine.pop();
+            parent = spine[spine.length - 1] as Phrase;
+            siblingIndex = parent.children.indexOf(this.node) - 1;
+
+            if(siblingIndex > -1) {
+                spine.push(parent.children[siblingIndex]);
+                if(this._lastToken(spine)) {
+                    //token found
+                    this._spine = spine;
+                    return this.node;
+                }
+            }
+
+            //go up
+
+        }
+
+        return undefined;
+
+    }
+
+    private _lastToken(spine:(Phrase|Token)[]) {
+
+        let node = spine[spine.length - 1];
+        if((<Token>node).tokenType !== undefined) {
+            return spine;
+        }
+
+        if(!(<Phrase>node).children) {
+            return undefined;
+        }
+
+        for(let n = (<Phrase>node).children.length - 1; n >= 0; --n) {
+            spine.push((<Phrase>node).children[n]);
+            if(this._lastToken(spine)) {
+                return spine;
+            } else {
+                spine.pop();
+            }
+        }
+
+        return undefined;
+
+    }
+
     /**
      * True if current node is the name part of a declaration
      */
