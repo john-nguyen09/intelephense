@@ -16,7 +16,9 @@ var noCompletions: lsp.CompletionList = {
 
 var objectCreationSrc =
     `<?php
-    class Foo {}
+    class Foo {
+        function __construct($p){}
+    }
     $var = new F
 `;
 
@@ -332,7 +334,7 @@ var extendsImplementsSrc =
 class Foo i
 `;
 
-var classTypeDesignatorSrc = 
+var instanceOfTypeDesignatorSrc = 
 `<?php
 interface Baz {}
 class Bar implements Baz {}
@@ -412,10 +414,11 @@ describe('CompletionProvider', () => {
         });
 
         it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 2, character: 16 });
+            var completions = completionProvider.provideCompletions('test', { line: 4, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'Foo');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Constructor);
+            assert.equal(completions.items[0].insertText, 'Foo($0)');
         });
 
     });
@@ -1065,11 +1068,11 @@ describe('CompletionProvider', () => {
 
     });
 
-    describe('classTypeDesignator', () => {
+    describe('instanceOfTypeDesignator', () => {
 
         let completionProvider: CompletionProvider;
         before(function () {
-            completionProvider = setup(classTypeDesignatorSrc);
+            completionProvider = setup(instanceOfTypeDesignatorSrc);
         });
 
         let expected = <CompletionItem[]>[

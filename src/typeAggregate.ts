@@ -64,9 +64,18 @@ export class TypeAggregate {
     }
 
     firstMember(predicate:Predicate<PhpSymbol>) {
+        let member:PhpSymbol;
+
+        let symbols = Array.isArray(this._symbol) ? this._symbol : [this._symbol];
+        for(let n = 0; n < symbols.length; ++n) {
+            if((member = PhpSymbol.findChild(symbols[n], predicate))) {
+                return member;
+            }
+        }
+
         for(let s of this._associatedIterator()) {
-            if(predicate(s)) {
-                return s;
+            if((member = PhpSymbol.findChild(s, predicate))) {
+                return member;
             }
         }
         return undefined;
