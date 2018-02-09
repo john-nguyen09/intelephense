@@ -652,7 +652,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
     private _toVariableCompletionItem(s: PhpSymbol, varTable: { [index: string]: string }) {
 
         let item = <lsp.CompletionItem>{
-            label: s.name.slice(1), //remove $
+            label: s.name,
             kind: lsp.CompletionItemKind.Variable,
             detail: varTable[s.name] || ''
         }
@@ -1036,7 +1036,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
     protected toPropertyCompletionItem(s: PhpSymbol) {
         let item = <lsp.CompletionItem>{
             kind: lsp.CompletionItemKind.Property,
-            label: s.name.slice(1), //remove $
+            label: (s.modifiers & SymbolModifier.Static) > 0 ? s.name : s.name.slice(1), //remove $
             detail: PhpSymbol.type(s)
         }
 
