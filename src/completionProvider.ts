@@ -1321,9 +1321,8 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
         if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
             traverser.prevToken();
         }
-        return traverser.ancestor(this._isNamespaceUseClause) !== undefined ||
-            (ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) && 
-                ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceUseDeclaration]));
+        return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
+            ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceUseDeclaration, PhraseType.NamespaceUseClause]);
     }
 
     completions(traverser: ParseTreeTraverser, word: string) {
@@ -1437,7 +1436,8 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
         if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
             traverser.prevToken();
         }
-        return traverser.ancestor(this._isNamespaceUseGroupClause) !== undefined;
+        return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
+            ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceUseGroupClause]);
     }
 
     completions(traverser: ParseTreeTraverser, word: string) {
