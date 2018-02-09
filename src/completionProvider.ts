@@ -1650,7 +1650,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
         let name:string;
         const items:lsp.CompletionItem[] = [];
         for(let n = 0; n < MethodDeclarationHeaderCompletion.MAGIC_METHODS.length; ++n) {
-
+            name = MethodDeclarationHeaderCompletion.MAGIC_METHODS[n];
             if(!util.ciStringContains(word, name) || excludeMap[name] !== undefined) {
                 continue;
             }
