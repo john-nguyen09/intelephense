@@ -1595,7 +1595,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
         let thisSymbol = nameResolver.class;
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.Identifier]) &&
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.MethodDeclarationHeader]) &&
-            thisSymbol !== undefined && thisSymbol.associated !== undefined && thisSymbol.associated.length > 0;
+            thisSymbol !== undefined;
     }
 
     completions(traverser: ParseTreeTraverser, word: string) {
