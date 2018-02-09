@@ -1321,7 +1321,9 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
         if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
             traverser.prevToken();
         }
-        return traverser.ancestor(this._isNamespaceUseClause) !== undefined;
+        return traverser.ancestor(this._isNamespaceUseClause) !== undefined ||
+            (ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) && 
+                ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceUseDeclaration]));
     }
 
     completions(traverser: ParseTreeTraverser, word: string) {
