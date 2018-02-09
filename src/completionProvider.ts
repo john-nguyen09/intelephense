@@ -1562,7 +1562,7 @@ class DeclarationBodyCompletion implements CompletionStrategy {
     ];
 
     private static _keywords = [
-        'var', 'public', 'private', 'protected', 'final', 'function', 'abstract', 'implements', 'extends'
+        'var', 'public', 'private', 'protected', 'final', 'function', 'abstract', 'use'
     ];
 
     canSuggest(traverser: ParseTreeTraverser) {
