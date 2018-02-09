@@ -100,7 +100,7 @@ export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
 
             current = spine.pop();
             parent = spine[spine.length - 1] as Phrase;
-            prevSiblingIndex = parent.children.indexOf(this.node) - 1;
+            prevSiblingIndex = parent.children.indexOf(current) - 1;
 
             if(prevSiblingIndex > -1) {
                 spine.push(parent.children[prevSiblingIndex]);

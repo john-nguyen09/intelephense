@@ -339,6 +339,14 @@ class Bar implements Baz {}
 $var instanceof B
 `;
 
+var backslashSrc = 
+`<?php
+namespace Foo;
+class Bar{}
+namespace Baz;
+\\Foo\\
+`;
+
 function setup(src: string | string[]) {
     let symbolStore = new SymbolStore();
     let parsedDocumentStore = new ParsedDocumentStore();
@@ -1074,6 +1082,28 @@ describe('CompletionProvider', () => {
 
         it('completions', function () {
             var completions = completionProvider.provideCompletions('test', { line: 3, character: 17 });
+            //console.log(JSON.stringify(completions, null, 4));
+            assert.deepEqual(completions.items, expected);
+        });
+
+    });
+
+    describe('trailing backslash', () => {
+
+        let completionProvider: CompletionProvider;
+        before(function () {
+            completionProvider = setup(backslashSrc);
+        });
+
+        let expected = <lsp.CompletionItem[]>[
+            {
+                "kind": 7,
+                "label": "Bar"
+            }
+        ];
+
+        it('completions', function () {
+            var completions = completionProvider.provideCompletions('test', { line: 4, character: 5 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
         });
