@@ -25,6 +25,8 @@ export declare class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
      */
     position(pos: Position): Token;
     clone(): ParseTreeTraverser;
+    prevToken(): Token | Phrase;
+    private _lastToken(spine);
     /**
      * True if current node is the name part of a declaration
      */
