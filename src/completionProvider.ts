@@ -1315,6 +1315,9 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
+        if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+            traverser.prevToken();
+        }
         return traverser.ancestor(this._isNamespaceUseClause) !== undefined;
     }
 
@@ -1426,6 +1429,9 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
+        if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+            traverser.prevToken();
+        }
         return traverser.ancestor(this._isNamespaceUseGroupClause) !== undefined;
     }
 
