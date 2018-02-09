@@ -584,7 +584,9 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         let item = super._toCompletionItem(s, useDeclarationHelper, namespaceName, isUnqualified, fqnOffset, qualifiedNameRule);
         let aggregate = new TypeAggregate(this.symbolStore, s);
         let constructor = aggregate.firstMember(this._isConstructor);
-        item.kind = lsp.CompletionItemKind.Constructor;
+        if(item.kind !== lsp.CompletionItemKind.Module) { //namespace
+            item.kind = lsp.CompletionItemKind.Constructor;
+        }
         if (constructor && PhpSymbol.hasParameters(constructor)) {
             if (!item.insertText) {
                 item.insertText = item.label;

@@ -658,13 +658,21 @@ describe('CompletionProvider', () => {
             completionProvider = setup(groupUseSrc);
         });
 
+        let expected = <lsp.CompletionItem[]>[
+            {
+                "kind": 9,
+                "label": "Bar"
+            },
+            {
+                "kind": 7,
+                "label": "Bar\\Baz"
+            }
+        ];
+
         it('completions', function () {
             var completions = completionProvider.provideCompletions('test', { line: 3, character: 9 });
             //console.log(JSON.stringify(completions, null, 4));
-            assert.equal(completions.items.length, 1);
-            assert.equal(completions.items[0].label, 'Baz');
-            assert.equal(completions.items[0].insertText, 'Bar\\Baz');
-            assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Class);
+            assert.deepEqual(completions.items, expected);
         });
 
     });
@@ -689,8 +697,11 @@ describe('CompletionProvider', () => {
                 {
                     "kind": 4,
                     "label": "Fuz",
-                    "insertText": "Fuz",
-                    "detail": "Foo\\Bar",
+                    "detail": "use Foo\\Bar as Fuz",
+                },
+                {
+                    kind: 9,
+                    label: 'Foo'
                 }
             ],
             "isIncomplete": false
@@ -999,10 +1010,6 @@ describe('CompletionProvider', () => {
                     {
                         label: "protected",
                         kind: 14
-                    },
-                    {
-                        label: "implements",
-                        kind: 14
                     }
                 ];
     
@@ -1068,15 +1075,11 @@ describe('CompletionProvider', () => {
         let expected = <CompletionItem[]>[
                 {
                     "kind": 7,
-                    "label": "Bar",
-                    "insertText": "Bar",
-                    "detail": "Bar"
+                    "label": "Bar"
                 },
                 {
                     "kind": 8,
-                    "label": "Baz",
-                    "insertText": "Baz",
-                    "detail": "Baz"
+                    "label": "Baz"
                 }
             ];
 
