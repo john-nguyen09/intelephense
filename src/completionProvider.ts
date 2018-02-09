@@ -186,7 +186,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
      * @param traverser 
      */
     canSuggest(traverser: ParseTreeTraverser): boolean {
-        if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+        if (ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
             traverser.prevToken();
         }
         return true;
@@ -316,7 +316,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
      */
     protected _isNameWithTrailingBackslash(traverser: ParseTreeTraverser) {
         let node = traverser.node;
-        if(!ParsedDocument.isToken(node, [TokenType.Backslash])) {
+        if (!ParsedDocument.isToken(node, [TokenType.Backslash])) {
             return false;
         }
 
@@ -584,7 +584,7 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         let item = super._toCompletionItem(s, useDeclarationHelper, namespaceName, isUnqualified, fqnOffset, qualifiedNameRule);
         let aggregate = new TypeAggregate(this.symbolStore, s);
         let constructor = aggregate.firstMember(this._isConstructor);
-        if(item.kind !== lsp.CompletionItemKind.Module) { //namespace
+        if (item.kind !== lsp.CompletionItemKind.Module) { //namespace
             item.kind = lsp.CompletionItemKind.Constructor;
         }
         if (constructor && PhpSymbol.hasParameters(constructor)) {
@@ -1252,7 +1252,7 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+        if (ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
             traverser.prevToken();
         }
         return traverser.ancestor(this._isNamespaceDefinition) !== undefined;
@@ -1320,7 +1320,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+        if (ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
             traverser.prevToken();
         }
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
@@ -1435,7 +1435,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        if(ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+        if (ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
             traverser.prevToken();
         }
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
@@ -1582,6 +1582,12 @@ class DeclarationBodyCompletion implements CompletionStrategy {
 
 class MethodDeclarationHeaderCompletion implements CompletionStrategy {
 
+    private static readonly MAGIC_METHODS: string[] = [
+        '__construct', '__destruct', '__call', '__callStatic', '__get', '__set',
+        '__isset', '__unset', '__sleep', '__wakeup', '__toString', '__invoke', '__set_state',
+        '__clone', '__debugInfo'
+    ];
+
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
@@ -1615,21 +1621,49 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
                 util.ciStringContains(word, x.name);
         }
 
-        let aggregate = new TypeAggregate(this.symbolStore, classSymbol, true);
-        let matches = aggregate.members(MemberMergeStrategy.Documented, fn);
+        const aggregate = new TypeAggregate(this.symbolStore, classSymbol, true);
+        const matches = aggregate.members(MemberMergeStrategy.Documented, fn);
         let isIncomplete = matches.length > this.config.maxItems;
-        let limit = Math.min(this.config.maxItems, matches.length);
-        let items: lsp.CompletionItem[] = [];
+        const limit = Math.min(this.config.maxItems, matches.length);
+        const items: lsp.CompletionItem[] = [];
+        const magicExcludeMap:{[name:string]:boolean} = {};
+        let s:PhpSymbol;
 
         for (let n = 0; n < limit; ++n) {
-            items.push(this._toCompletionItem(matches[n]));
+            s = matches[n];
+            if(s.name && s.name[0] === '_') {
+                magicExcludeMap[s.name] = true;
+            }
+            items.push(this._toCompletionItem(s));
         }
+
+        Array.prototype.push.apply(items, this._magicMethodCompletionItems(word, magicExcludeMap));
 
         return <lsp.CompletionList>{
             isIncomplete: isIncomplete,
             items: items
         }
 
+    }
+
+    private _magicMethodCompletionItems(word:string, excludeMap:{[name:string]:boolean}) {
+        let name:string;
+        const items:lsp.CompletionItem[] = [];
+        for(let n = 0; n < MethodDeclarationHeaderCompletion.MAGIC_METHODS.length; ++n) {
+
+            if(!util.ciStringContains(word, name) || excludeMap[name] !== undefined) {
+                continue;
+            }
+
+            items.push({
+                kind: lsp.CompletionItemKind.Method,
+                label: name,
+                insertText: `${name}()\n{\n\t$0\n\\}`,
+                insertTextFormat: lsp.InsertTextFormat.Snippet,
+            });
+            
+        }
+        return items;
     }
 
     private _toCompletionItem(s: PhpSymbol) {
@@ -1650,7 +1684,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
             label: s.name,
             insertText: insertText,
             insertTextFormat: lsp.InsertTextFormat.Snippet,
-            detail: `override ${s.scope}::${s.name}`
+            detail: `${s.scope}::${s.name}`
         };
 
         if (s.doc && s.doc.description) {
