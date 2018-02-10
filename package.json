@@ -6,7 +6,9 @@
   "types": "./lib/intelephense.d.ts",
   "scripts": {
     "test": "mocha -r ts-node/register test/*.ts",
-    "build": "rm -f ./lib/* && tsc && cp ./src/builtInSymbols.json ./lib/"
+    "build": "npm run clean && ./node_modules/.bin/tsc -p ./tsconfig.json && cp ./src/builtInSymbols.json ./lib/",
+    "clean": "rm -rf ./lib && mkdir ./lib",
+    "prepublish": "npm run build"
   },
   "author": "Ben Mewburn <ben@mewburn.id.au>",
   "license": "ISC",
