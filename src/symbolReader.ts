@@ -1327,7 +1327,7 @@ class TypeDeclarationTransform implements NodeTransform {
 
     phraseType = PhraseType.TypeDeclaration;
     type = '';
-    private static _scalarTypes = { 'int': 1, 'string': 1, 'bool': 1, 'float': 1, 'iterable': 1 };
+    private static _scalarTypes:{[name:string]:number} = { 'int': 1, 'string': 1, 'bool': 1, 'float': 1, 'iterable': 1 };
 
     push(transform: NodeTransform) {
 

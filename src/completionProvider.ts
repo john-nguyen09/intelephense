@@ -517,7 +517,7 @@ class InstanceOfTypeDesignatorCompletion extends AbstractNameCompletion {
         return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace)) > 0 && !(s.modifiers & (SymbolModifier.Anonymous));
     }
 
-    protected _getKeywords(traverser: ParseTreeTraverser) {
+    protected _getKeywords(traverser: ParseTreeTraverser):string[] {
         return [];
     }
 
@@ -801,7 +801,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
-    abstract canSuggest(traverser: ParseTreeTraverser);
+    abstract canSuggest(traverser: ParseTreeTraverser): boolean;
 
     completions(traverser: ParseTreeTraverser, word: string) {
 
@@ -1169,7 +1169,7 @@ class ClassBaseClauseCompletion extends AbstractNameCompletion {
         return traverser.ancestor(this._isClassBaseClause) !== undefined;
     }
 
-    protected _getKeywords(traverser: ParseTreeTraverser) {
+    protected _getKeywords(traverser: ParseTreeTraverser):string[] {
         return [];
     }
 
@@ -1191,7 +1191,7 @@ class InterfaceClauseCompletion extends AbstractNameCompletion {
 
     }
 
-    protected _getKeywords(traverser: ParseTreeTraverser) {
+    protected _getKeywords(traverser: ParseTreeTraverser):string[] {
         return [];
     }
 
@@ -1215,7 +1215,7 @@ class TraitUseClauseCompletion extends AbstractNameCompletion {
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.TraitUseClause]);
     }
 
-    protected _getKeywords(traverser: ParseTreeTraverser) {
+    protected _getKeywords(traverser: ParseTreeTraverser):string[] {
         return [];
     }
 
