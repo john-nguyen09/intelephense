@@ -304,28 +304,6 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
     }
 
-    /**
-     * Not used for now because the parser will put this trailing backslash into
-     * a subsequent node
-     * 
-     * 
-     * If triggered on an incomplete name with a trailing backslash, 
-     * the backslash will not be present in the name node because of parse error.
-     * In this case, traverse to previous token and test if in name.
-     * @param traverser 
-     */
-    protected _isNameWithTrailingBackslash(traverser: ParseTreeTraverser) {
-        let node = traverser.node;
-        if (!ParsedDocument.isToken(node, [TokenType.Backslash])) {
-            return false;
-        }
-
-        traverser = traverser.clone();
-        return ParsedDocument.isToken(traverser.prevToken(), [TokenType.Name]) &&
-            traverser.ancestor(this._isNamePhrase);
-
-    }
-
     protected _useSymbolToUseDeclaration(s: PhpSymbol) {
         const fqn = s.associated[0].name;
         let decl = `use ${fqn}`;
