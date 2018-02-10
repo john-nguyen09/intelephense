@@ -1582,11 +1582,23 @@ class DeclarationBodyCompletion implements CompletionStrategy {
 
 class MethodDeclarationHeaderCompletion implements CompletionStrategy {
 
-    private static readonly MAGIC_METHODS: string[] = [
-        '__construct', '__destruct', '__call', '__callStatic', '__get', '__set',
-        '__isset', '__unset', '__sleep', '__wakeup', '__toString', '__invoke', '__set_state',
-        '__clone', '__debugInfo'
-    ];
+    private static readonly MAGIC_METHODS: { [name: string]: string } = {
+        '__construct': `__construct($1)\n{\n\t$0\n\\}`,
+        '__destruct': `__destruct()\n{\n\t$0\n\\}`,
+        '__call': `__call(\\$name, \\$arguments)\n{\n\t$0\n\\}`,
+        '__callStatic': `__callStatic(\\$name, \\$arguments)\n{\n\t$0\n\\}`,
+        '__get': `__get(\\$name)\n{\n\t$0\n\\}`,
+        '__set': `__set(\\$name, \\$value)\n{\n\t$0\n\\}`,
+        '__isset': `__isset(\\$name)\n{\n\t$0\n\\}`,
+        '__unset': `__unset(\\$name)\n{\n\t$0\n\\}`,
+        '__sleep': `__sleep()\n{\n\t$0\n\\}`,
+        '__wakeup': `__wakeup()\n{\n\t$0\n\\}`,
+        '__toString': `__toString()\n{\n\t$0\n\\}`,
+        '__invoke': `__invoke($1)\n{\n\t$0\n\\}`,
+        '__set_state': `__set_state(\\$properties)\n{\n\t$0\n\\}`,
+        '__clone': `__clone()\n{\n\t$0\n\\}`,
+        '__debugInfo': `__debugInfo()\n{\n\t$0\n\\}`
+    };
 
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
@@ -1611,13 +1623,13 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
         let nameResolver = traverser.nameResolver;
         let classSymbol = nameResolver.class;
         let existingMethods = PhpSymbol.filterChildren(classSymbol, this._isMethod);
-        let existingMethodNames = existingMethods.map<string>(this._toName);
+        let existingMethodNames = new Set<string>(existingMethods.map<string>(this._toName));
 
         let fn = (x: PhpSymbol) => {
             return x.kind === SymbolKind.Method &&
                 (!modifiers || (x.modifiers & modifiers) > 0) &&
                 !(x.modifiers & (SymbolModifier.Final | SymbolModifier.Private)) &&
-                existingMethodNames.indexOf(x.name) < 0 &&
+                !existingMethodNames.has(x.name.toLowerCase()) &&
                 util.ciStringContains(word, x.name);
         }
 
@@ -1626,18 +1638,17 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
         let isIncomplete = matches.length > this.config.maxItems;
         const limit = Math.min(this.config.maxItems, matches.length);
         const items: lsp.CompletionItem[] = [];
-        const magicExcludeMap:{[name:string]:boolean} = {};
-        let s:PhpSymbol;
+        let s: PhpSymbol;
 
         for (let n = 0; n < limit; ++n) {
             s = matches[n];
-            if(s.name && s.name[0] === '_') {
-                magicExcludeMap[s.name] = true;
+            if (s.name && s.name[0] === '_') {
+                existingMethodNames.add(s.name);
             }
             items.push(this._toCompletionItem(s));
         }
 
-        Array.prototype.push.apply(items, this._magicMethodCompletionItems(word, magicExcludeMap));
+        Array.prototype.push.apply(items, this._magicMethodCompletionItems(word, existingMethodNames));
 
         return <lsp.CompletionList>{
             isIncomplete: isIncomplete,
@@ -1646,22 +1657,23 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
 
     }
 
-    private _magicMethodCompletionItems(word:string, excludeMap:{[name:string]:boolean}) {
-        let name:string;
-        const items:lsp.CompletionItem[] = [];
-        for(let n = 0; n < MethodDeclarationHeaderCompletion.MAGIC_METHODS.length; ++n) {
-            name = MethodDeclarationHeaderCompletion.MAGIC_METHODS[n];
-            if(!util.ciStringContains(word, name) || excludeMap[name] !== undefined) {
+    private _magicMethodCompletionItems(word: string, excludeSet: Set<string>) {
+        let name: string;
+        const items: lsp.CompletionItem[] = [];
+        const keys = Object.keys(MethodDeclarationHeaderCompletion.MAGIC_METHODS);
+        for (let n = 0; n < keys.length; ++n) {
+            name = keys[n];
+            if (!util.ciStringContains(word, name) || excludeSet.has(name)) {
                 continue;
             }
 
             items.push({
                 kind: lsp.CompletionItemKind.Method,
                 label: name,
-                insertText: `${name}()\n{\n\t$0\n\\}`,
+                insertText: MethodDeclarationHeaderCompletion.MAGIC_METHODS[name],
                 insertTextFormat: lsp.InsertTextFormat.Snippet,
             });
-            
+
         }
         return items;
     }
