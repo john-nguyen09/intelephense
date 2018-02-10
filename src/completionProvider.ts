@@ -570,7 +570,6 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
                 item.insertText = item.label;
             }
             item.insertText += '($0)';
-            item.detail = constructor.name + PhpSymbol.signatureString(constructor);
             item.insertTextFormat = lsp.InsertTextFormat.Snippet;
             item.command = triggerParameterHintsCommand;
         }
