@@ -1,7 +1,7 @@
 /* Copyright (c) Ben Robert Mewburn
  * Licensed under the ISC Licence.
  */
-
+///<reference path="./JSONStream.d.ts"/>
 'use strict';
 
 import * as fs from 'fs-extra';
@@ -218,7 +218,7 @@ export function writeArrayToDisk(items:any[], filePath:string) {
         let transformStream = jsonstream.stringify();
         let writeStream = fs.createWriteStream(filePath);
 
-        transformStream.on('error', (err) => {
+        transformStream.on('error', (err:any) => {
             Log.error(err.message);
             reject(err.message);
         });
@@ -227,7 +227,7 @@ export function writeArrayToDisk(items:any[], filePath:string) {
 
         writeStream.on('finish', () => {
             resolve();
-        }).on('error', (err) => {
+        }).on('error', (err:any) => {
             Log.error(err.message);
             reject(err.message);
         });
@@ -248,7 +248,7 @@ export function readArrayFromDisk(filePath: string) {
         let readStream = fs.createReadStream(filePath);
         let items: any[] = [];
 
-        readStream.on('error', (err)=>{
+        readStream.on('error', (err:any)=>{
             if (err && err.code !== 'ENOENT') {
                 Log.error(err.message);
                 reject(err.message);
@@ -257,11 +257,11 @@ export function readArrayFromDisk(filePath: string) {
             }
         });
 
-        readStream.pipe(transformStream).on('data', (item) => {
+        readStream.pipe(transformStream).on('data', (item:any) => {
             items.push(item);
         }).on('end', () => {
             resolve(items);
-        }).on('error', (err) => {
+        }).on('error', (err:any) => {
             Log.error(err.message);
             reject(err.message);
         });
