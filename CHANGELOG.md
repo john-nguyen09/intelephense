@@ -1,6 +1,6 @@
 # Change Log
 
-## TBA
+## [0.8.6] - 2018-02-11
 #### Changed
 * Improvements to completion suggestions - namespaces, method decl
 

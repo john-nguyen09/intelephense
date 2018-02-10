@@ -1,6 +1,6 @@
 {
   "name": "intelephense",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "description": "Intellisense for PHP",
   "main": "./lib/intelephense.js",
   "types": "./lib/intelephense.d.ts",
@@ -8,7 +8,7 @@
     "test": "mocha -r ts-node/register test/*.ts",
     "build": "npm run clean && ./node_modules/.bin/tsc -p ./tsconfig.json && cp ./src/builtInSymbols.json ./lib/",
     "clean": "rm -rf ./lib && mkdir ./lib",
-    "prepublish": "npm run build"
+    "prepublishOnly": "npm run build"
   },
   "author": "Ben Mewburn <ben@mewburn.id.au>",
   "license": "ISC",
