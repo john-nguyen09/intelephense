@@ -1,5 +1,17 @@
 # Change Log
 
+## TBA
+#### Changed
+* Improvements to completion suggestions - namespaces, method decl
+
+#### Fixed
+* Signature help not returning a result when in method
+* Incorrect parse error with <?= expression lists
+* Constructor completion
+* Handle undefined range in TextDocumentContentChangeEvent
+* lowercase true, false, null
+* -> static methods
+
 ## [0.8.5] - 2018-01-06
 #### Fixed
 * crash on merge conflict markers
