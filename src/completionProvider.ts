@@ -247,7 +247,18 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
-    abstract canSuggest(traverser: ParseTreeTraverser): boolean;
+    /**
+     * Child classes should override but call this first.
+     * It moves the traverser to previous token if the current token is a backslash.
+     * This corrects for errors when a name has a trailing backslash.
+     * @param traverser 
+     */
+    canSuggest(traverser: ParseTreeTraverser): boolean {
+        if (ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+            traverser.prevToken();
+        }
+        return true;
+    }
 
     completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
 
@@ -472,6 +483,9 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
 }
 
+        super.canSuggest(traverser);
+
+    protected _getKeywords(traverser: ParseTreeTraverser):string[] {
 class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
 
     private static _keywords = [
@@ -479,7 +493,7 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
     ];
 
     canSuggest(traverser: ParseTreeTraverser) {
-
+        super.canSuggest(traverser);
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
             ParsedDocument.isPhrase(traverser.parent(),
                 [PhraseType.FullyQualifiedName, PhraseType.QualifiedName, PhraseType.RelativeQualifiedName]) &&
@@ -505,7 +519,9 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         let item = super._toCompletionItem(s, namespaceName, namePhraseType, useDeclarationHelper);
         let aggregate = new TypeAggregate(this.symbolStore, s);
         let constructor = aggregate.firstMember(this._isConstructor);
-        item.kind = lsp.CompletionItemKind.Constructor;
+        if (item.kind !== lsp.CompletionItemKind.Module) { //namespace
+            item.kind = lsp.CompletionItemKind.Constructor;
+        }
         if(constructor && PhpSymbol.hasParameters(constructor)){
             item.insertText += '($0)';
             item.insertTextFormat = lsp.InsertTextFormat.Snippet;
@@ -687,9 +703,9 @@ class NameCompletion extends AbstractNameCompletion {
     private static _implementsRegex = /\bclass\s+[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*(?:\s+extends\s+[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*)?\s+[a-z]+$/;
 
     canSuggest(traverser: ParseTreeTraverser) {
-
+        super.canSuggest(traverser);
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
-            traverser.ancestor(this._isNamePhrase) !== null;
+            traverser.ancestor(this._isNamePhrase) !== undefined;
     }
 
     completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
@@ -738,7 +754,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
-    abstract canSuggest(traverser: ParseTreeTraverser);
+    abstract canSuggest(traverser: ParseTreeTraverser): boolean;
 
     completions(traverser: ParseTreeTraverser, word: string) {
 
@@ -901,6 +917,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
         }
     }
 
+            label: (s.modifiers & SymbolModifier.Static) > 0 ? s.name : s.name.slice(1), //remove $
     private _isMemberName(node: Phrase | Token) {
         return (<Phrase>node).phraseType === PhraseType.MemberName || (<Phrase>node).phraseType === PhraseType.ScopedMemberName;
     }
@@ -1017,6 +1034,7 @@ class TypeDeclarationCompletion extends AbstractNameCompletion {
     ];
 
     canSuggest(traverser: ParseTreeTraverser) {
+        super.canSuggest(traverser);
         return ParsedDocument.isToken(traverser.node, [TokenType.Name, TokenType.Backslash, TokenType.Array, TokenType.Callable]) &&
             traverser.ancestor(this._isTypeDeclaration) !== undefined;
     }
@@ -1038,10 +1056,11 @@ class TypeDeclarationCompletion extends AbstractNameCompletion {
 class ClassBaseClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
+        super.canSuggest(traverser);
         return traverser.ancestor(this._isClassBaseClause) !== undefined;
     }
 
-    protected _getKeywords(traverser: ParseTreeTraverser) {
+    protected _getKeywords(traverser: ParseTreeTraverser):string[] {
         return [];
     }
 
@@ -1058,11 +1077,12 @@ class ClassBaseClauseCompletion extends AbstractNameCompletion {
 class InterfaceClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
+        super.canSuggest(traverser);
         return traverser.ancestor(this._isInterfaceClause) !== undefined;
 
     }
 
-    protected _getKeywords(traverser: ParseTreeTraverser) {
+    protected _getKeywords(traverser: ParseTreeTraverser):string[] {
         return [];
     }
 
@@ -1080,12 +1100,13 @@ class InterfaceClauseCompletion extends AbstractNameCompletion {
 class TraitUseClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
+        super.canSuggest(traverser);
         return traverser.ancestor(this._isNamePhrase) &&
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.QualifiedNameList]) &&
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.TraitUseClause]);
     }
 
-    protected _getKeywords(traverser: ParseTreeTraverser) {
+    protected _getKeywords(traverser: ParseTreeTraverser):string[] {
         return [];
     }
 
@@ -1100,6 +1121,9 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
+        if (ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+            traverser.prevToken();
+        }
         return traverser.ancestor(this._isNamespaceDefinition) !== undefined;
     }
 
@@ -1144,7 +1168,11 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        return traverser.ancestor(this._isNamespaceUseClause) !== undefined;
+        if (ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+            traverser.prevToken();
+        }
+        return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
+            ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceUseDeclaration, PhraseType.NamespaceUseClause]);
     }
 
     completions(traverser: ParseTreeTraverser, word: string) {
@@ -1233,7 +1261,11 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        return traverser.ancestor(this._isNamespaceUseGroupClause) !== undefined;
+        if (ParsedDocument.isToken(traverser.node, [TokenType.Backslash])) {
+            traverser.prevToken();
+        }
+        return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceName]) &&
+            ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceUseGroupClause]);
     }
 
     completions(traverser: ParseTreeTraverser, word: string) {
@@ -1338,7 +1370,7 @@ class DeclarationBodyCompletion implements CompletionStrategy {
     ];
 
     private static _keywords = [
-        'var', 'public', 'private', 'protected', 'final', 'function', 'abstract', 'implements', 'extends'
+        'var', 'public', 'private', 'protected', 'final', 'function', 'abstract', 'use'
     ];
 
     canSuggest(traverser: ParseTreeTraverser) {
@@ -1356,6 +1388,24 @@ class DeclarationBodyCompletion implements CompletionStrategy {
 
 class MethodDeclarationHeaderCompletion implements CompletionStrategy {
 
+    private static readonly MAGIC_METHODS: { [name: string]: string } = {
+        '__construct': `__construct($1)\n{\n\t$0\n\\}`,
+        '__destruct': `__destruct()\n{\n\t$0\n\\}`,
+        '__call': `__call(\\$name, \\$arguments)\n{\n\t$0\n\\}`,
+        '__callStatic': `__callStatic(\\$name, \\$arguments)\n{\n\t$0\n\\}`,
+        '__get': `__get(\\$name)\n{\n\t$0\n\\}`,
+        '__set': `__set(\\$name, \\$value)\n{\n\t$0\n\\}`,
+        '__isset': `__isset(\\$name)\n{\n\t$0\n\\}`,
+        '__unset': `__unset(\\$name)\n{\n\t$0\n\\}`,
+        '__sleep': `__sleep()\n{\n\t$0\n\\}`,
+        '__wakeup': `__wakeup()\n{\n\t$0\n\\}`,
+        '__toString': `__toString()\n{\n\t$0\n\\}`,
+        '__invoke': `__invoke($1)\n{\n\t$0\n\\}`,
+        '__set_state': `__set_state(\\$properties)\n{\n\t$0\n\\}`,
+        '__clone': `__clone()\n{\n\t$0\n\\}`,
+        '__debugInfo': `__debugInfo()\n{\n\t$0\n\\}`
+    };
+
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
@@ -1363,7 +1413,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
         let thisSymbol = nameResolver.class;
         return ParsedDocument.isPhrase(traverser.parent(), [PhraseType.Identifier]) &&
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.MethodDeclarationHeader]) &&
-            thisSymbol !== undefined && thisSymbol.associated !== undefined && thisSymbol.associated.length > 0;
+            thisSymbol !== undefined;
     }
 
     completions(traverser: ParseTreeTraverser, word: string) {
@@ -1379,31 +1429,59 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
         let nameResolver = traverser.nameResolver;
         let classSymbol = nameResolver.class;
         let existingMethods = PhpSymbol.filterChildren(classSymbol, this._isMethod);
-        let existingMethodNames = existingMethods.map<string>(this._toName);
+        let existingMethodNames = new Set<string>(existingMethods.map<string>(this._toName));
 
         let fn = (x: PhpSymbol) => {
             return x.kind === SymbolKind.Method &&
                 (!modifiers || (x.modifiers & modifiers) > 0) &&
                 !(x.modifiers & (SymbolModifier.Final | SymbolModifier.Private)) &&
-                existingMethodNames.indexOf(x.name) < 0 &&
+                !existingMethodNames.has(x.name.toLowerCase()) &&
                 util.ciStringContains(word, x.name);
         }
 
-        let aggregate = new TypeAggregate(this.symbolStore, classSymbol, true);
-        let matches = aggregate.members(MemberMergeStrategy.Documented, fn);
+        const aggregate = new TypeAggregate(this.symbolStore, classSymbol, true);
+        const matches = aggregate.members(MemberMergeStrategy.Documented, fn);
         let isIncomplete = matches.length > this.config.maxItems;
-        let limit = Math.min(this.config.maxItems, matches.length);
-        let items: lsp.CompletionItem[] = [];
+        const limit = Math.min(this.config.maxItems, matches.length);
+        const items: lsp.CompletionItem[] = [];
+        let s: PhpSymbol;
 
         for (let n = 0; n < limit; ++n) {
-            items.push(this._toCompletionItem(matches[n]));
+            s = matches[n];
+            if (s.name && s.name[0] === '_') {
+                existingMethodNames.add(s.name);
+            }
+            items.push(this._toCompletionItem(s));
         }
+
+        Array.prototype.push.apply(items, this._magicMethodCompletionItems(word, existingMethodNames));
 
         return <lsp.CompletionList>{
             isIncomplete: isIncomplete,
             items: items
         }
 
+    }
+
+    private _magicMethodCompletionItems(word: string, excludeSet: Set<string>) {
+        let name: string;
+        const items: lsp.CompletionItem[] = [];
+        const keys = Object.keys(MethodDeclarationHeaderCompletion.MAGIC_METHODS);
+        for (let n = 0; n < keys.length; ++n) {
+            name = keys[n];
+            if (!util.ciStringContains(word, name) || excludeSet.has(name)) {
+                continue;
+            }
+
+            items.push({
+                kind: lsp.CompletionItemKind.Method,
+                label: name,
+                insertText: MethodDeclarationHeaderCompletion.MAGIC_METHODS[name],
+                insertTextFormat: lsp.InsertTextFormat.Snippet,
+            });
+
+        }
+        return items;
     }
 
     private _toCompletionItem(s: PhpSymbol) {
@@ -1424,7 +1502,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
             label: s.name,
             insertText: insertText,
             insertTextFormat: lsp.InsertTextFormat.Snippet,
-            detail: s.scope
+            detail: `${s.scope}::${s.name}`
         };
 
         if (s.doc && s.doc.description) {

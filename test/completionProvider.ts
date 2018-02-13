@@ -18,7 +18,9 @@ var noCompletions: lsp.CompletionList = {
 
 var objectCreationSrc =
     `<?php
-    class Foo {}
+    class Foo {
+        function __construct($p){}
+    }
     $var = new F
 `;
 
@@ -335,11 +337,19 @@ var extendsImplementsSrc =
 class Foo i
 `;
 
-var classTypeDesignatorSrc = 
+var instanceOfTypeDesignatorSrc = 
 `<?php
 interface Baz {}
 class Bar implements Baz {}
 $var instanceof B
+`;
+
+var backslashSrc = 
+`<?php
+namespace Foo;
+class Bar{}
+namespace Baz;
+\\Foo\\
 `;
 
 function setup(src: string | string[]) {
@@ -408,10 +418,11 @@ describe('CompletionProvider', () => {
         });
 
         it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 2, character: 16 });
+            var completions = completionProvider.provideCompletions('test', { line: 4, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'Foo');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Constructor);
+            assert.equal(completions.items[0].insertText, 'Foo($0)');
         });
 
     });
@@ -654,13 +665,21 @@ describe('CompletionProvider', () => {
             completionProvider = setup(groupUseSrc);
         });
 
+        let expected = <lsp.CompletionItem[]>[
+            {
+                "kind": 9,
+                "label": "Bar"
+            },
+            {
+                "kind": 7,
+                "label": "Bar\\Baz"
+            }
+        ];
+
         it('completions', function () {
             var completions = completionProvider.provideCompletions('test', { line: 3, character: 9 });
             //console.log(JSON.stringify(completions, null, 4));
-            assert.equal(completions.items.length, 1);
-            assert.equal(completions.items[0].label, 'Baz');
-            assert.equal(completions.items[0].insertText, 'Bar\\Baz');
-            assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Class);
+            assert.deepEqual(completions.items, expected);
         });
 
     });
@@ -685,8 +704,11 @@ describe('CompletionProvider', () => {
                 {
                     "kind": 4,
                     "label": "Fuz",
-                    "insertText": "Fuz",
-                    "detail": "Foo\\Bar",
+                    "detail": "use Foo\\Bar as Fuz",
+                },
+                {
+                    kind: 9,
+                    label: 'Foo'
                 }
             ],
             "isIncomplete": false
@@ -993,10 +1015,6 @@ describe('CompletionProvider', () => {
                     {
                         label: "protected",
                         kind: 14
-                    },
-                    {
-                        label: "implements",
-                        kind: 14
                     }
                 ];
     
@@ -1052,30 +1070,48 @@ describe('CompletionProvider', () => {
 
     });
 
-    describe('classTypeDesignator', () => {
+    describe('instanceOfTypeDesignator', () => {
 
         let completionProvider: CompletionProvider;
         before(function () {
-            completionProvider = setup(classTypeDesignatorSrc);
+            completionProvider = setup(instanceOfTypeDesignatorSrc);
         });
 
         let expected = <CompletionItem[]>[
                 {
                     "kind": 7,
-                    "label": "Bar",
-                    "insertText": "Bar",
-                    "detail": "Bar"
+                    "label": "Bar"
                 },
                 {
                     "kind": 8,
-                    "label": "Baz",
-                    "insertText": "Baz",
-                    "detail": "Baz"
+                    "label": "Baz"
                 }
             ];
 
         it('completions', function () {
             var completions = completionProvider.provideCompletions('test', { line: 3, character: 17 });
+            //console.log(JSON.stringify(completions, null, 4));
+            assert.deepEqual(completions.items, expected);
+        });
+
+    });
+
+    describe('trailing backslash', () => {
+
+        let completionProvider: CompletionProvider;
+        before(function () {
+            completionProvider = setup(backslashSrc);
+        });
+
+        let expected = <lsp.CompletionItem[]>[
+            {
+                "kind": 7,
+                "label": "Bar"
+            }
+        ];
+
+        it('completions', function () {
+            var completions = completionProvider.provideCompletions('test', { line: 4, character: 5 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
         });

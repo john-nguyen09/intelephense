@@ -1,6 +1,6 @@
 # Intelephense
 
-A PHP static code analysis library implemented in Typescript.
+A PHP static code analysis library implemented in Typescript. A PHP language server implementation powered by this library can be found [here](https://github.com/bmewburn/intelephense-server).
 
 ### [Support on Patreon](https://www.patreon.com/bmewburn)
 

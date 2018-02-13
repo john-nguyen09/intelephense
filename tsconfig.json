@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"removeComments": false,
+		"removeComments": true,
 		"target": "ES6",
 		"module": "commonjs",
 		"moduleResolution": "node",
@@ -13,5 +13,6 @@
 		"lib",
 		".vscode",
 		"benchmarks"
+		"bin"
 	]
 }
