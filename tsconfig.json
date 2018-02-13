@@ -12,7 +12,7 @@
 		"test",
 		"lib",
 		".vscode",
-		"benchmarks"
+		"benchmarks",
 		"bin"
 	]
 }

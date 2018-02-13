@@ -260,3 +260,32 @@ export namespace PhpSymbol {
     }
 
 }
+
+/**
+ * uniqueness determined by name and symbol kind
+ */
+export class UniqueSymbolSet {
+
+    private _symbols: PhpSymbol[];
+    private _map: { [index: string]: SymbolKind } = {};
+
+    constructor() {
+        this._symbols = [];
+    }
+
+    add(s: PhpSymbol) {
+        if (!this.has(s)) {
+            this._symbols.push(s);
+            this._map[s.name] |= s.kind;
+        }
+    }
+
+    has(s: PhpSymbol) {
+        return (this._map[s.name] & s.kind) === s.kind;
+    }
+
+    toArray() {
+        return this._symbols.slice(0);
+    }
+
+}

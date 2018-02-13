@@ -5,7 +5,8 @@ import { Log } from '../logger';
 export class SymbolIndex {
     static readonly NAMED_SYMBOL_KIND_MASK = SymbolKind.Namespace |
         SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait |
-        SymbolKind.Method | SymbolKind.Function | SymbolKind.File;
+        SymbolKind.Method | SymbolKind.Function | SymbolKind.File |
+        SymbolKind.Constant | SymbolKind.ClassConstant;
     static readonly NAMED_SYMBOL_EXCLUDE_MODIFIERS = SymbolModifier.Magic;
 
     private static _instance: SymbolIndex;
