@@ -13,7 +13,7 @@ function setup(src: string) {
     let docStore = new ParsedDocumentStore();
     let symbolStore = new SymbolStore();
     let doc = new ParsedDocument('test', src);
-    let refStore = new ReferenceStore(new MemoryCache());
+    let refStore = new ReferenceStore();
     docStore.add(doc);
     let table = SymbolTable.create(doc);
     symbolStore.add(table);

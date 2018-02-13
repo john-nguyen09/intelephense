@@ -190,7 +190,7 @@ export class SymbolStore {
 
     constructor() {
         this._tableIndex = new SymbolTableIndex();
-        this._symbolIndex = new SymbolIndex();
+        this._symbolIndex = SymbolIndex.instance();
         this._symbolCount = 0;
     }
 
@@ -317,24 +317,6 @@ export class SymbolStore {
         }
 
         return filtered;
-    }
-
-    *matchIterator(text:string, filter?: Predicate<PhpSymbol>) {
-
-        if (!text) {
-            return;
-        }
-
-        const indexMatchIterator = this._symbolIndex.matchIterator(text);
-        const symbols = new Set<PhpSymbol>();
-
-        for(let s of indexMatchIterator){
-            if((!filter || filter(s)) && !symbols.has(s)) {
-                symbols.add(s);
-                yield s;
-            }
-        }
-
     }
 
     findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): PhpSymbol[] {

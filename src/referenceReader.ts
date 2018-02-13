@@ -53,6 +53,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         return (x.kind & mask) > 0 && !(x.modifiers & SymbolModifier.Magic);
     };
     private _lastVarTypehints: Tag[];
+    private _symbolOffset = 0;
 
     constructor(
         public doc: ParsedDocument,
@@ -63,7 +64,11 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         this._variableTable = new VariableTable();
         this._classStack = [];
         this._symbols = this.symbolStore.getNamedSymbol(doc.uri);
-        this._scopeStack = [Scope.create(lsp.Location.create(this.doc.uri, util.cloneRange(this._symbols.shift().location.range)))]; //file/root node
+        this._scopeStack = [
+            Scope.create(lsp.Location.create(
+                this.doc.uri, util.cloneRange(this.shiftSymbol().location.range)
+            ))
+        ]; //file/root node
 
         const globalVariables = this.symbolStore.getGlobalVariables();
 
@@ -80,6 +85,18 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         return new ReferenceTable(this.doc.uri, this._scopeStack[0]);
     }
 
+    private shiftSymbol() {
+        return this._symbols[this._symbolOffset++];
+    }
+
+    private currentSymbol() {
+        return this._symbols[this._symbolOffset];
+    }
+
+    private symbolsLength() {
+        return this._symbols.length - this._symbolOffset;
+    }
+
     preorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
 
         let parent = spine.length ? spine[spine.length - 1] : null;
@@ -93,7 +110,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
 
             case PhraseType.NamespaceDefinition:
                 {
-                    let s = this._symbols.shift();
+                    let s = this.shiftSymbol();
                     this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
                     this.nameResolver.namespace = s;
                     this._transformStack.push(new NamespaceDefinitionTransform());
@@ -157,8 +174,8 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
             case PhraseType.NamespaceUseClause:
             case PhraseType.NamespaceUseGroupClause:
                 {
-                    if(this._symbols.length && (this._symbols[0].modifiers & SymbolModifier.Use) > 0) {
-                        this.nameResolver.rules.push(this._symbols.shift());
+                    if(this.symbolsLength && (this.currentSymbol().modifiers & SymbolModifier.Use) > 0) {
+                        this.nameResolver.rules.push(this.shiftSymbol());
                     }
                     this._transformStack.push(new NamespaceUseClauseTransform((<Phrase>node).phraseType));
                     break;
@@ -179,7 +196,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
             case PhraseType.InterfaceDeclaration:
             case PhraseType.AnonymousClassDeclaration:
                 {
-                    let s = this._symbols.shift() || PhpSymbol.create(SymbolKind.Class, '', this.doc.nodeHashedLocation(<Phrase>node));
+                    let s = this.shiftSymbol() || PhpSymbol.create(SymbolKind.Class, '', this.doc.nodeHashedLocation(<Phrase>node));
                     this._scopeStackPush(Scope.create(this.doc.nodeLocation(<Phrase>node)));
                     this.nameResolver.pushClass(s);
                     this._classStack.push(TypeAggregate.create(this.symbolStore, s.name));
@@ -575,7 +592,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         this._scopeStackPush(scope);
         this._variableTable.pushScope(['$this']);
         let type = this._classStack.length ? this._classStack[this._classStack.length - 1] : null;
-        let symbol = this._symbols.shift();
+        let symbol = this.shiftSymbol();
 
         if (type && symbol) {
             let fn = (x: PhpSymbol) => {
@@ -595,7 +612,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
     }
 
     private _functionDeclaration(node: Phrase) {
-        let symbol = this._symbols.shift();
+        let symbol = this.shiftSymbol();
         this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
         this._variableTable.pushScope();
 
@@ -610,7 +627,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
     }
 
     private _anonymousFunctionCreationExpression(node: Phrase) {
-        let symbol = this._symbols.shift();
+        let symbol = this.shiftSymbol();
         this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
         let carry: string[] = ['$this'];
         let children = symbol && symbol.children ? symbol.children : [];

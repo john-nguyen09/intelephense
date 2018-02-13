@@ -52,17 +52,18 @@ export class SymbolProvider {
      * @param query 
      */
     provideWorkspaceSymbols(query: string) {
-        let maxItems = 100;
-        const matches = this.symbolStore.matchIterator(query, this.workspaceSymbolFilter);
-        const symbolInformationList: SymbolInformation[] = [];
+        const maxItems = 100;
+        let matches = this.symbolStore.match(query);
+        let symbolInformationList: SymbolInformation[] = [];
 
-        for(let s of matches) {
-            symbolInformationList.push(this.toSymbolInformation(s));
-            if(--maxItems < 1) {
-                break;
+        let s: PhpSymbol;
+
+        for (let n = 0, l = matches.length; n < l && symbolInformationList.length < maxItems; ++n) {
+            s = matches[n];
+            if (this.workspaceSymbolFilter(s)) {
+                symbolInformationList.push(this.toSymbolInformation(s));
             }
         }
-
         return symbolInformationList;
     }
 

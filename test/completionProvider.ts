@@ -345,7 +345,7 @@ $var instanceof B
 function setup(src: string | string[]) {
     let symbolStore = new SymbolStore();
     let parsedDocumentStore = new ParsedDocumentStore();
-    let refStore = new ReferenceStore(new MemoryCache());
+    let refStore = new ReferenceStore();
     let completionProvider = new CompletionProvider(symbolStore, parsedDocumentStore, refStore);
 
     if (!Array.isArray(src)) {
@@ -669,7 +669,7 @@ describe('CompletionProvider', () => {
 
         let symbolStore = new SymbolStore();
         let parsedDocumentStore = new ParsedDocumentStore();
-        let refStore = new ReferenceStore(new MemoryCache());
+        let refStore = new ReferenceStore();
         let completionProvider = new CompletionProvider(symbolStore, parsedDocumentStore, refStore);
         let doc = new ParsedDocument('doc1', importSrc1);
         let doc2 = new ParsedDocument('doc2', importSrc2);

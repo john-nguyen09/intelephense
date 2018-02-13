@@ -197,7 +197,15 @@ connection.onRequest(discoverReferencesRequest, (params) => {
 		connection.console.warn(`${params.textDocument.uri} exceeds max file size.`);
 		return 0;
 	}
-	return Intelephense.discoverReferences(params.textDocument);
+	let results = 0;
+	try {
+		results = Intelephense.discoverReferences(params.textDocument);
+	} catch (err) {
+		connection.console.error(err.message);
+		connection.console.error(err.stack);
+	}
+
+	return results;
 });
 
 connection.onRequest(forgetRequest, (params) => {

@@ -15,7 +15,7 @@ function setup(src: string) {
     let doc = new ParsedDocument('test', src);
     let table = SymbolTable.create(doc);
     let docStore = new ParsedDocumentStore();
-    let refStore = new ReferenceStore(new MemoryCache());
+    let refStore = new ReferenceStore();
     docStore.add(doc);
     symbolStore.add(table);
     let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
@@ -205,7 +205,7 @@ describe('DefintionProvider', function () {
             let table = SymbolTable.create(doc);
             let table2 = SymbolTable.create(doc2);
             let docStore = new ParsedDocumentStore();
-            let refStore = new ReferenceStore(new MemoryCache());
+            let refStore = new ReferenceStore();
             docStore.add(doc);
             docStore.add(doc2);
             symbolStore.add(table);

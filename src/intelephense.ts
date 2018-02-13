@@ -51,12 +51,6 @@ export namespace Intelephense {
     let hoverProvider: HoverProvider;
     let highlightProvider: HighlightProvider;
     let cacheClear = false;
-    let symbolCache: Cache;
-    let refCache: Cache;
-    let stateCache: Cache;
-    const stateTimestampKey = 'timestamp';
-    const knownDocsFilename = 'known_uris.json';
-    const refStoreCacheKey = 'referenceStore';
 
     let diagnosticsUnsubscribe: Unsubscribe;
 
@@ -80,12 +74,9 @@ export namespace Intelephense {
         }
 
         storagePath = path.join(os.homedir(), dataFolder, util.md5(options.rootPath));
-        symbolCache = createCache(storagePath ? path.join(storagePath, 'symbols') : undefined);
-        refCache = createCache(storagePath ? path.join(storagePath, 'references'): undefined);
-        stateCache = createCache(storagePath ? path.join(storagePath, 'state'): undefined);
         documentStore = new ParsedDocumentStore();
         symbolStore = new SymbolStore();
-        refStore = new ReferenceStore(refCache);
+        refStore = new ReferenceStore();
         symbolProvider = new SymbolProvider(symbolStore);
         completionProvider = new CompletionProvider(symbolStore, documentStore, refStore);
         diagnosticsProvider = new DiagnosticsProvider();
@@ -105,32 +96,14 @@ export namespace Intelephense {
         });
 
         if (options.initializationOptions && options.initializationOptions.clearCache) {
-            return clearCache().then(() => {
-                symbolStore.add(SymbolTable.readBuiltInSymbols());
-            }).catch((msg) => {
-                Log.error(msg);
-            });
+            symbolStore.add(SymbolTable.readBuiltInSymbols());
         } else if(storagePath) {
             symbolStore.add(SymbolTable.readBuiltInSymbols());
-            return stateCache.read(stateTimestampKey).then((data) => {
-                if (!data) {
-                    return;
-                }
-                cacheTimestamp = data;
-                
-            }).then(()=>{
-                return readArrayFromDisk(path.join(storagePath, 'state', knownDocsFilename));
-            }).then((uris)=>{
-                return readCachedSymbolTables(uris);
-            }).then(() => {
-                return cacheReadReferenceStore();
-            }).catch((msg) => {
-                Log.error(msg);
-            });
         } else {
             symbolStore.add(SymbolTable.readBuiltInSymbols());
-            return Promise.resolve();
         }
+
+        return Promise.resolve();
 
     }
 
@@ -140,121 +113,9 @@ export namespace Intelephense {
             return;
         }
 
-        let uris: string[] = [];
-        for (let t of symbolStore.tables) {
-            if (t.uri !== 'php') {
-                uris.push(t.uri);
-            }
-        }
-        return stateCache.write(stateTimestampKey, Date.now()).then(() => {
-            return writeArrayToDisk(uris, path.join(storagePath, 'state', knownDocsFilename)).catch(()=>{});
-        }).then(() => {
-            return cacheWriteReferenceStore();
-        }).then(() => {
-            return refStore.closeAll();
-        }).then(() => {
-            return new Promise<void>((resolve, reject) => {
-                let openDocs = documentStore.documents;
-                let cacheSymbolTableFn = () => {
-                    let doc = openDocs.pop();
-                    if (doc) {
-                        let symbolTable = symbolStore.getSymbolTable(doc.uri);
-                        symbolCache.write(doc.uri, symbolTable).then(cacheSymbolTableFn).catch((msg) => {
-                            Log.error(msg);
-                            cacheSymbolTableFn();
-                        });
-                    } else {
-                        resolve();
-                    }
-                }
-                cacheSymbolTableFn();
-            });
-        }).then(() => {
-            process.exit(0);
-        }).catch((msg) => {
-            Log.error(msg);
-            process.exit(0);
-        });
+        // No caching for now
+        return;
 
-    }
-
-    const refStoreTableSummariesFileName = 'ref_store_table_summaries.json';
-    const refStoreNameIndexFileName = 'ref_store_name_index.json';
-
-    function cacheWriteReferenceStore() {
-        let data = refStore.toJSON();
-
-        if (data && data.length > 0) {
-            return writeArrayToDisk(data, path.join(storagePath, 'state', refStoreTableSummariesFileName)).catch((e)=>{});
-        } else {
-            return Promise.resolve();
-        }
-
-    }
-
-    function cacheReadReferenceStore() {
-
-        let refStoreTables:any[];
-
-        return readArrayFromDisk(path.join(storagePath, 'state', refStoreTableSummariesFileName)).then((items) => {
-            if(items && items.length > 0) {
-                refStore.fromJSON(items);
-            }
-        }).catch((err)=>{
-
-        });
-
-    }
-
-    function readCachedSymbolTables(keys: string[]) {
-
-        if (!keys) {
-            return Promise.resolve();
-        }
-
-        return new Promise<void>((resolve, reject) => {
-
-            let count = keys.length;
-            if (count < 1) {
-                resolve();
-            }
-
-            let batch = Math.min(4, count);
-            let onCacheReadErr = (msg: string) => {
-                Log.error(msg);
-                onCacheRead(undefined);
-            }
-            let onCacheRead = (data: any) => {
-                --count;
-                if (data) {
-                    symbolStore.add(new SymbolTable(data._uri, data._root));
-                }
-
-                let uri = keys.pop();
-                if (uri) {
-                    symbolCache.read(uri).then(onCacheRead).catch(onCacheReadErr);
-                } else if (count < 1) {
-                    resolve();
-                }
-            }
-
-            let uri: string;
-            while (batch-- > 0 && (uri = keys.pop())) {
-                symbolCache.read(uri).then(onCacheRead).catch(onCacheReadErr);
-            }
-
-        });
-
-    }
-
-    function clearCache() {
-        return stateCache.flush().then(() => {
-            return refCache.flush();
-        }).then(() => {
-            return symbolCache.flush();
-        }).catch((msg) => {
-            Log.warn(msg);
-        });
     }
 
     export function provideHighlights(uri: string, position: lsp.Position) {
@@ -309,10 +170,6 @@ export namespace Intelephense {
         refStore.close(textDocument.uri);
         diagnosticsProvider.remove(textDocument.uri);
         let symbolTable = symbolStore.getSymbolTable(textDocument.uri);
-        if (symbolTable) {
-            symbolTable.pruneScopedVars();
-            return symbolCache.write(symbolTable.uri, symbolTable).catch((msg) => { Log.error(msg) });
-        }
     }
 
     export function editDocument(
@@ -347,8 +204,8 @@ export namespace Intelephense {
         try {
             results = completionProvider.provideCompletions(textDocument.uri, position);
         } catch (err) {
-            Log.info('There is an error');
-            Log.error(JSON.stringify(err));
+            Log.info('There is an error: ' + err.message);
+            Log.error(err.stack);
         }
 
         return results;

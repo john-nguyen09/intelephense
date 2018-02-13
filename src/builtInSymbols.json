@@ -35715,21 +35715,21 @@
   },
   {
     "kind": 8,
-    "name": "true",
+    "name": "TRUE",
     "doc": {
       "description": "See Booleans."
     }
   },
   {
     "kind": 8,
-    "name": "false",
+    "name": "FALSE",
     "doc": {
       "description": "See Booleans."
     }
   },
   {
     "kind": 8,
-    "name": "null",
+    "name": "NULL",
     "doc": {
       "description": "See Null."
     }

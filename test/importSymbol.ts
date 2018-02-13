@@ -11,7 +11,7 @@ import {MemoryCache} from '../src/cache';
 function setup(srcArray:string[]) {
 
     let docStore = new ParsedDocumentStore();
-    let refStore = new ReferenceStore(new MemoryCache());
+    let refStore = new ReferenceStore();
     let symbolStore = new SymbolStore();
 
     let doc:ParsedDocument;
@@ -66,7 +66,7 @@ describe('importSymbol', () => {
     let doc1 = new ParsedDocument('doc1', src1);
     let doc2 = new ParsedDocument('doc2', src2);
     let docStore = new ParsedDocumentStore();
-    let refStore = new ReferenceStore(new MemoryCache());
+    let refStore = new ReferenceStore();
     docStore.add(doc1);
     docStore.add(doc2);
     let symbolStore = new SymbolStore();

@@ -140,13 +140,11 @@ export class ReferenceStore {
     private _tables: ReferenceTable[];
     private _nameIndex: NameIndex<ReferenceTableSummary>;
     private _summaryIndex: SortedList<ReferenceTableSummary>;
-    private _cache: Cache;
 
-    constructor(cache: Cache) {
+    constructor() {
         this._nameIndex = new NameIndex<ReferenceTableSummary>(ReferenceTableSummary.keys);
         this._summaryIndex = new SortedList<ReferenceTableSummary>(ReferenceTableSummary.compare);
         this._tables = [];
-        this._cache = cache;
     }
 
     *knownDocuments() {
@@ -177,51 +175,16 @@ export class ReferenceStore {
             return;
         }
         this._nameIndex.remove(summary);
-        if (purge) {
-            this._cache.delete(uri);
-        }
     }
 
     close(uri: string) {
         let table = this._tablesRemove(uri);
-        // if (table) {
-        //     return this._cache.write(table.uri, table.root).catch((msg) => { Log.error(msg) });
-        // }
         return Promise.resolve();
     }
 
     closeAll() {
-        let tables = this._tables;
-        let cache = this._cache;
-        this._tables = [];
-        let count = tables.length;
 
         return new Promise<void>((resolve, reject) => {
-
-            let onReject = (msg: string) => {
-                --count;
-                Log.error(msg);
-                writeTableFn();
-            }
-
-            let onResolve = () => {
-                --count;
-                writeTableFn();
-            }
-
-            let writeTableFn = () => {
-                let table = tables.pop();
-                if (table) {
-                    cache.write(table.uri, table).then(onResolve).catch(onReject);
-                } else if (count < 1) {
-                    resolve();
-                }
-            }
-
-            let maxOpenFiles = Math.min(4, tables.length);
-            for (let n = 0; n < maxOpenFiles; ++n) {
-                writeTableFn();
-            }
 
         });
 
@@ -322,10 +285,6 @@ export class ReferenceStore {
 
         if (table) {
             return Promise.resolve<ReferenceTable>(table);
-        } else {
-            return this._cache.read(uri).then((obj) => {
-                return Promise.resolve<ReferenceTable>(new ReferenceTable(uri, obj));
-            });
         }
     }
 
@@ -359,6 +318,10 @@ class ReferencesVisitor implements TreeVisitor<Scope | Reference> {
     }
 
     preorder(node: Scope | Reference, spine: (Scope | Reference)[]) {
+
+        if (!node) {
+            return true;
+        }
 
         if ((<Reference>node).kind !== undefined && (!this._filter || this._filter(<Reference>node))) {
             this._refs.push(<Reference>node);
