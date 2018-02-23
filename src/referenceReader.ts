@@ -86,10 +86,20 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
     }
 
     private shiftSymbol() {
-        return this._symbols[this._symbolOffset++];
+        if (this._symbolOffset >= this._symbols.length) {
+            return undefined;
+        }
+
+        let result = this._symbols[this._symbolOffset++];
+
+        return result;
     }
 
     private currentSymbol() {
+        if (this._symbolOffset >= this._symbols.length) {
+            return undefined;
+        }
+
         return this._symbols[this._symbolOffset];
     }
 

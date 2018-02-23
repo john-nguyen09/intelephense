@@ -18,7 +18,7 @@ import { TypeAggregate, MemberMergeStrategy } from './typeAggregate';
 import { ReferenceReader } from './referenceReader';
 import { SymbolIndex } from './indexes/symbolIndex';
 
-const builtInsymbolsUri = 'php';
+export const BUILTIN_SYMBOLS_URI = 'php://built-in';
 
 export class SymbolTable implements Traversable<PhpSymbol> {
 
@@ -154,7 +154,7 @@ export class SymbolTable implements Traversable<PhpSymbol> {
 
     static readBuiltInSymbols() {
 
-        return new SymbolTable(builtInsymbolsUri, {
+        return new SymbolTable(BUILTIN_SYMBOLS_URI, {
             kind: SymbolKind.None,
             name: '',
             children: <any>builtInSymbols
@@ -190,7 +190,7 @@ export class SymbolStore {
 
     constructor() {
         this._tableIndex = new SymbolTableIndex();
-        this._symbolIndex = SymbolIndex.instance();
+        this._symbolIndex = new SymbolIndex;
         this._symbolCount = 0;
     }
 
@@ -261,17 +261,12 @@ export class SymbolStore {
             return [];
         }
 
-        let kindMask = SymbolKind.Constant | SymbolKind.Variable;
         let result = this._symbolIndex.find(text);
         let symbols: PhpSymbol[] = [];
-        let s: PhpSymbol;
 
         for (let n = 0, l = result.length; n < l; ++n) {
-            s = result[n];
-            if ((!filter || filter(s)) &&
-                (((s.kind & kindMask) > 0 && s.name === text) ||
-                    (!(s.kind & kindMask) && s.name === text))) {
-                symbols.push(s);
+            if (!filter || filter(result[n])) {
+                symbols.push(result[n]);
             }
         }
 

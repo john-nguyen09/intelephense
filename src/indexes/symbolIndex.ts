@@ -1,14 +1,8 @@
-import { NameIndex, KeysDelegate, Predicate, TreeVisitor, TreeTraverser } from "../types";
+import { NameIndex, Predicate, TreeVisitor, TreeTraverser } from "../types";
 import { PhpSymbol, SymbolKind, SymbolModifier } from "../symbol";
-import { Log } from '../logger';
+import { BUILTIN_SYMBOLS_URI } from '../symbolStore';
 
 export class SymbolIndex {
-    static readonly NAMED_SYMBOL_KIND_MASK = SymbolKind.Namespace |
-        SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait |
-        SymbolKind.Method | SymbolKind.Function | SymbolKind.File |
-        SymbolKind.Constant | SymbolKind.ClassConstant;
-    static readonly NAMED_SYMBOL_EXCLUDE_MODIFIERS = SymbolModifier.Magic;
-
     private static _instance: SymbolIndex;
 
     private _nameIndex: NameIndex<PhpSymbol>;
@@ -70,29 +64,26 @@ export class SymbolIndex {
     }
 
     private static _symbolUri(s: PhpSymbol) {
-        return [s.location.uri];
-    }
-
-    public static instance() {
-        if (!SymbolIndex._instance) {
-            SymbolIndex._instance = new SymbolIndex();
+        if (!s.location) {
+            return [BUILTIN_SYMBOLS_URI];
         }
 
-        return SymbolIndex._instance;
+        return [s.location.uri];
     }
 }
 
 export class SymbolIndexVisitor implements TreeVisitor<PhpSymbol> {
     public static readonly NAMED_SYMBOL_KIND_MASK = SymbolKind.Namespace |
         SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait |
-        SymbolKind.Method | SymbolKind.Function | SymbolKind.File;
+        SymbolKind.Method | SymbolKind.Function | SymbolKind.File |
+        SymbolKind.Constant | SymbolKind.ClassConstant;
     public static readonly NAMED_SYMBOL_EXCLUDE_MODIFIERS = SymbolModifier.Magic;
 
     public namedSymbols: PhpSymbol[] = [];
     public globalVariables: PhpSymbol[] = [];
 
     preorder(node: PhpSymbol, spine: PhpSymbol[]) {
-        if (SymbolIndexVisitor._isNamedSymbol(node) && node.location) {            
+        if (SymbolIndexVisitor._isNamedSymbol(node)) {
             this.namedSymbols.push(node);
         }
 

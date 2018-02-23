@@ -7,6 +7,7 @@
 import { Range } from 'vscode-languageserver-types';
 import * as fuzzysearch from 'fuzzysearch';
 import { Log } from './logger';
+import { PhpSymbol } from './symbol';
 
 export interface Predicate<T> {
     (t: T): boolean;
@@ -536,19 +537,12 @@ export interface BinarySearchResult {
     isExactMatch: boolean
 }
 
-export interface NameIndexNode<T> {
-    key: string;
-    items: T[];
-}
-
-export type KeysDelegate<T> = (t: T) => string[];
-
 export class NameIndex<T> {
 
-    private _keysDelegate: KeysDelegate<T>;
+    private _keysDelegate: (t: T) => string[];
     private _nameIndex: Map<string, T[]>;
 
-    constructor(keysDelegate: KeysDelegate<T>) {
+    constructor(keysDelegate: (t: T) => string[]) {
         this._nameIndex = new Map<string, T[]>();
         this._keysDelegate = keysDelegate;
     }
