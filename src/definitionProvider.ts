@@ -36,6 +36,13 @@ export class DefinitionProvider {
 
         let symbols = this.symbolStore.findSymbolsByReference(ref, MemberMergeStrategy.Override);
 
+        if (ref.kind === SymbolKind.Constructor && symbols.length > 0) {
+            // Only take constructor of current class for go to definition
+            symbols = symbols.filter((symbol) => {
+                return symbol.scope === ref.name;
+            });
+        }
+
         if(ref.kind === SymbolKind.Constructor && symbols.length < 1) {
             //fallback to class
             symbols = this.symbolStore.findSymbolsByReference(Reference.create(SymbolKind.Class, ref.name, ref.location), MemberMergeStrategy.Override);
