@@ -31,6 +31,9 @@ import { HighlightProvider } from './highlightProvider';
 import * as os from 'os';
 import * as util from './util';
 import * as fs from 'fs';
+import * as gracefulFs from 'graceful-fs';
+import Uri from 'vscode-uri';
+gracefulFs.gracefulify(fs);
 
 export namespace Intelephense {
 
@@ -68,43 +71,43 @@ export namespace Intelephense {
     }
 
     export function initialise(options: InitialisationOptions) {
+        return new Promise((resolve, reject) => {
+            if (options.connection) {
+                Log.connection = options.connection;
+            }
 
-        if (options.connection) {
-            Log.connection = options.connection;
-        }
+            storagePath = path.join(os.homedir(), dataFolder, util.md5(options.rootPath));
+            documentStore = new ParsedDocumentStore();
+            symbolStore = new SymbolStore();
+            refStore = new ReferenceStore();
+            symbolProvider = new SymbolProvider(symbolStore);
+            completionProvider = new CompletionProvider(symbolStore, documentStore, refStore);
+            diagnosticsProvider = new DiagnosticsProvider();
+            signatureHelpProvider = new SignatureHelpProvider(symbolStore, documentStore, refStore);
+            definitionProvider = new DefinitionProvider(symbolStore, documentStore, refStore);
+            formatProvider = new FormatProvider(documentStore);
+            nameTextEditProvider = new NameTextEditProvider(symbolStore, documentStore, refStore);
+            referenceProvider = new ReferenceProvider(documentStore, symbolStore, refStore);
+            hoverProvider = new HoverProvider(documentStore, symbolStore, refStore);
+            highlightProvider = new HighlightProvider(documentStore, symbolStore, refStore);
 
-        storagePath = path.join(os.homedir(), dataFolder, util.md5(options.rootPath));
-        documentStore = new ParsedDocumentStore();
-        symbolStore = new SymbolStore();
-        refStore = new ReferenceStore();
-        symbolProvider = new SymbolProvider(symbolStore);
-        completionProvider = new CompletionProvider(symbolStore, documentStore, refStore);
-        diagnosticsProvider = new DiagnosticsProvider();
-        signatureHelpProvider = new SignatureHelpProvider(symbolStore, documentStore, refStore);
-        definitionProvider = new DefinitionProvider(symbolStore, documentStore, refStore);
-        formatProvider = new FormatProvider(documentStore);
-        nameTextEditProvider = new NameTextEditProvider(symbolStore, documentStore, refStore);
-        referenceProvider = new ReferenceProvider(documentStore, symbolStore, refStore);
-        hoverProvider = new HoverProvider(documentStore, symbolStore, refStore);
-        highlightProvider = new HighlightProvider(documentStore, symbolStore, refStore);
+            //keep stores in sync
+            documentStore.parsedDocumentChangeEvent.subscribe((args) => {
+                symbolStore.onParsedDocumentChange(args);
+                let refTable = ReferenceReader.discoverReferences(args.parsedDocument, symbolStore);
+                refStore.add(refTable);
+            });
 
-        //keep stores in sync
-        documentStore.parsedDocumentChangeEvent.subscribe((args) => {
-            symbolStore.onParsedDocumentChange(args);
-            let refTable = ReferenceReader.discoverReferences(args.parsedDocument, symbolStore);
-            refStore.add(refTable);
+            symbolStore.add(SymbolTable.readBuiltInSymbols());
+            try {
+                indexDirectory(Uri.parse(options.rootUri).fsPath);
+            } catch (err) {
+                Log.error(err.message);
+                Log.error(err.stack);
+            }
+
+            resolve();
         });
-
-        if (options.initializationOptions && options.initializationOptions.clearCache) {
-            symbolStore.add(SymbolTable.readBuiltInSymbols());
-        } else if(storagePath) {
-            symbolStore.add(SymbolTable.readBuiltInSymbols());
-        } else {
-            symbolStore.add(SymbolTable.readBuiltInSymbols());
-        }
-
-        return Promise.resolve();
-
     }
 
     export function shutdown() {
@@ -204,7 +207,7 @@ export namespace Intelephense {
         try {
             results = completionProvider.provideCompletions(textDocument.uri, position);
         } catch (err) {
-            Log.info('There is an error: ' + err.message);
+            Log.error(err.message);
             Log.error(err.stack);
         }
 
@@ -306,6 +309,101 @@ export namespace Intelephense {
         if (parsedDocument) {
             parsedDocument.flush();
         }
+    }
+
+    function scanPhpFiles(directory) {
+        let phpFiles = [];
+        let files = fs.readdirSync(directory);
+
+        for (let file of files) {
+            let filePath = path.join(directory, file);
+
+            if (file.endsWith('.php')) {
+                phpFiles.push(filePath);
+
+                continue;
+            }
+
+            const stats = fs.lstatSync(filePath);
+            if (stats.isDirectory()) {
+                Array.prototype.push.apply(phpFiles, scanPhpFiles(filePath));
+            }
+        }
+
+        return phpFiles;
+    }
+
+    function indexDirectory(directory) {
+        let phpFiles = scanPhpFiles(directory);
+        let textDocuments = [];
+        let docPromises: Promise<lsp.TextDocumentItem>[] = [];
+
+        const createDocAsync = (filePath) => {
+            return new Promise<lsp.TextDocumentItem>((resolve, reject) => {
+                try {
+                    fs.readFile(filePath, (err, buffer) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(lsp.TextDocumentItem.create(
+                                Uri.file(filePath).toString(),
+                                phpLanguageId,
+                                0,
+                                buffer.toString()
+                            ));
+                        }
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        };
+
+        for (let phpFile of phpFiles) {
+            docPromises.push(createDocAsync(phpFile));
+        }
+
+        Promise.all(docPromises).then((documents) => {
+            Log.info(`Discover ${documents.length} php files to index`);
+            let start = process.hrtime();
+
+            let discoverSymbols = (index: number) => {
+                Intelephense.discoverSymbols(documents[index]);
+
+                if (index < documents.length) {
+                    setImmediate(() => {
+                        discoverSymbols(index + 1);
+                    });
+                }
+            };
+
+            let discoverReferences = (index: number) => {
+                Intelephense.discoverReferences(documents[index]);
+
+                if (index < documents.length) {
+                    setImmediate(() => {
+                        discoverReferences(index + 1);
+                    });
+                }
+            };
+
+            for (let document of documents) {
+                setImmediate(() => {
+                    Intelephense.discoverSymbols(document);
+                });
+            }
+            for (let document of documents) {
+                setImmediate(() => {
+                    Intelephense.discoverReferences(document);
+                });
+            }
+            let elapsedHr = process.hrtime(start);
+            const elapsed = elapsedHr[0] + (elapsedHr[1] / 1000000000);
+
+            Log.info(`Indexing finished in ${elapsed} seconds`);
+        }).catch((err) => {
+            throw err;
+        });
     }
 
 }

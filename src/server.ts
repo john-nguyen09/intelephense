@@ -18,7 +18,7 @@ import {
 import { Intelephense, IntelephenseConfig, InitialisationOptions, LanguageRange } from './intelephense';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
-let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
+let connection: IConnection = createConnection();
 let initialisedAt: [number, number];
 
 const languageId = 'php';
@@ -183,29 +183,33 @@ connection.onShutdown(Intelephense.shutdown);
 
 connection.onRequest(discoverSymbolsRequest, (params) => {
 
-	if (params.textDocument.text.length > config.file.maxSize) {
-		connection.console.warn(`${params.textDocument.uri} exceeds max file size.`);
-		return 0;
-	}
+	return 0;
 
-	return Intelephense.discoverSymbols(params.textDocument);
+	// if (params.textDocument.text.length > config.file.maxSize) {
+	// 	connection.console.warn(`${params.textDocument.uri} exceeds max file size.`);
+	// 	return 0;
+	// }
+
+	// return Intelephense.discoverSymbols(params.textDocument);
 });
 
 connection.onRequest(discoverReferencesRequest, (params) => {
 
-	if (params.textDocument.text.length > config.file.maxSize) {
-		connection.console.warn(`${params.textDocument.uri} exceeds max file size.`);
-		return 0;
-	}
-	let results = 0;
-	try {
-		results = Intelephense.discoverReferences(params.textDocument);
-	} catch (err) {
-		connection.console.error(err.message);
-		connection.console.error(err.stack);
-	}
+	return 0;
 
-	return results;
+	// if (params.textDocument.text.length > config.file.maxSize) {
+	// 	connection.console.warn(`${params.textDocument.uri} exceeds max file size.`);
+	// 	return 0;
+	// }
+	// let results = 0;
+	// try {
+	// 	results = Intelephense.discoverReferences(params.textDocument);
+	// } catch (err) {
+	// 	connection.console.error(err.message);
+	// 	connection.console.error(err.stack);
+	// }
+
+	// return results;
 });
 
 connection.onRequest(forgetRequest, (params) => {
