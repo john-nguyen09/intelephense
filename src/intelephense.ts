@@ -72,11 +72,12 @@ export namespace Intelephense {
 
     export function initialise(options: InitialisationOptions) {
         return new Promise((resolve, reject) => {
-            if (options.connection) {
+            if (options && options.connection) {
                 Log.connection = options.connection;
             }
 
-            storagePath = path.join(os.homedir(), dataFolder, util.md5(options.rootPath));
+            storagePath = (options && options.rootPath) ?
+                path.join(os.homedir(), dataFolder, util.md5(options.rootPath)) : '';
             documentStore = new ParsedDocumentStore();
             symbolStore = new SymbolStore();
             refStore = new ReferenceStore();

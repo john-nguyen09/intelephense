@@ -1079,12 +1079,12 @@ describe('CompletionProvider', () => {
 
         let expected = <CompletionItem[]>[
                 {
-                    "kind": 7,
-                    "label": "Bar"
-                },
-                {
                     "kind": 8,
                     "label": "Baz"
+                },
+                {
+                    "kind": 7,
+                    "label": "Bar"
                 }
             ];
 

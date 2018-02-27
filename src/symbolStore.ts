@@ -295,23 +295,17 @@ export class SymbolStore {
             return [];
         }
 
-        let matches: PhpSymbol[] = this._symbolIndex.match(text);
+        let matches: PhpSymbol[] = this._symbolIndex.match(text).filter((symbol) => {
+            return symbol;
+        });
 
         if (!filter) {
             return matches;
         }
 
-        let filtered: PhpSymbol[] = [];
-        let s: PhpSymbol;
-
-        for (let n = 0, l = matches.length; n < l; ++n) {
-            s = matches[n];
-            if (filter(s)) {
-                filtered.push(s);
-            }
-        }
-
-        return filtered;
+        return matches.filter((symbol) => {
+            return filter(symbol);
+        });
     }
 
     findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): PhpSymbol[] {

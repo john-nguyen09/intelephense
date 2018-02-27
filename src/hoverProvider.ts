@@ -10,6 +10,7 @@ import { SymbolKind, PhpSymbol, SymbolModifier } from './symbol';
 import { ReferenceStore } from './reference';
 import { Position, Hover, MarkedString } from 'vscode-languageserver-types';
 import { MemberMergeStrategy } from './typeAggregate';
+import * as turndown from 'turndown';
 
 export class HoverProvider {
 
@@ -53,7 +54,9 @@ export class HoverProvider {
                 hoverTexts.push({language: 'php', value: symbolDeclaration});
 
                 if (symbol.doc && symbol.doc.description) {
-                    hoverTexts.push(symbol.doc.description);
+                    let turndownService = new turndown();
+
+                    hoverTexts.push(turndownService.turndown(symbol.doc.description));
                 }
 
                 return {
