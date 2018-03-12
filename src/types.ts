@@ -575,6 +575,11 @@ export class NameIndex<T> {
 
         for (let n = 0; n < suffixes.length; ++n) {
             let items = this._nameIndex.get(suffixes[n]);
+
+            if (!items) {
+                continue;
+            }
+
             let index = items.indexOf(item);
 
             items.splice(index, 1);

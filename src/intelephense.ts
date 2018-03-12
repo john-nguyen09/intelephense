@@ -100,13 +100,6 @@ export namespace Intelephense {
             });
 
             symbolStore.add(SymbolTable.readBuiltInSymbols());
-            try {
-                indexDirectory(Uri.parse(options.rootUri).fsPath);
-            } catch (err) {
-                Log.error(err.message);
-                Log.error(err.stack);
-            }
-
             resolve();
         });
     }
@@ -334,7 +327,7 @@ export namespace Intelephense {
         return phpFiles;
     }
 
-    function indexDirectory(directory) {
+    export function indexDirectory(directory) {
         let phpFiles = scanPhpFiles(directory);
         let textDocuments = [];
         let docPromises: Promise<lsp.TextDocumentItem>[] = [];
@@ -366,9 +359,9 @@ export namespace Intelephense {
 
         Promise.all(docPromises).then((documents) => {
             Log.info(`Discover ${documents.length} php files to index`);
-            let start = process.hrtime();
+            const start = process.hrtime();
 
-            let discoverSymbols = (index: number) => {
+            const discoverSymbols = (index: number) => {
                 Intelephense.discoverSymbols(documents[index]);
 
                 if (index < documents.length) {
@@ -378,7 +371,7 @@ export namespace Intelephense {
                 }
             };
 
-            let discoverReferences = (index: number) => {
+            const discoverReferences = (index: number) => {
                 Intelephense.discoverReferences(documents[index]);
 
                 if (index < documents.length) {
@@ -388,20 +381,33 @@ export namespace Intelephense {
                 }
             };
 
-            for (let document of documents) {
-                setImmediate(() => {
-                    Intelephense.discoverSymbols(document);
-                });
+            const waitForNextTick = () => {
+                return new Promise<void>((resolve, reject) => {
+                    setImmediate(() => {
+                        resolve();
+                    })
+                })
             }
-            for (let document of documents) {
-                setImmediate(() => {
-                    Intelephense.discoverReferences(document);
-                });
-            }
-            let elapsedHr = process.hrtime(start);
-            const elapsed = elapsedHr[0] + (elapsedHr[1] / 1000000000);
 
-            Log.info(`Indexing finished in ${elapsed} seconds`);
+            let promiseChain = waitForNextTick();
+
+            for (let document of documents) {
+                promiseChain = promiseChain.then(() => {
+                    Intelephense.discoverSymbols(document);
+                }).then(waitForNextTick);
+            }
+            for (let document of documents) {
+                promiseChain = promiseChain.then(() => {
+                    Intelephense.discoverReferences(document);
+                }).then(waitForNextTick);
+            }
+
+            promiseChain.then(() => {
+                const elapsedHr = process.hrtime(start);
+                const elapsed = elapsedHr[0] + (elapsedHr[1] / 1000000000);
+
+                Log.info(`Indexing finished in ${elapsed} seconds`);
+            })
         }).catch((err) => {
             throw err;
         });

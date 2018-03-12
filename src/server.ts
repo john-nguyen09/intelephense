@@ -16,6 +16,7 @@ import {
 } from 'vscode-languageserver';
 
 import { Intelephense, IntelephenseConfig, InitialisationOptions, LanguageRange } from './intelephense';
+import Uri from 'vscode-uri';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection();
@@ -66,6 +67,12 @@ connection.onInitialize((params) => {
 			connection.sendDiagnostics(args);
 		});
 		connection.console.info(`Initialised in ${elapsed(initialisedAt).toFixed()} ms`);
+        try {
+            Intelephense.indexDirectory(Uri.parse(params.rootUri).fsPath);
+        } catch (err) {
+            connection.console.error(err.message);
+            connection.console.error(err.stack);
+        }
 
 		return <InitializeResult>{
 			capabilities: {
