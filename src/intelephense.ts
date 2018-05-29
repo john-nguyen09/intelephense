@@ -340,7 +340,7 @@ export namespace Intelephense {
                             reject(err);
                         } else {
                             resolve(lsp.TextDocumentItem.create(
-                                Uri.file(filePath).toString(),
+                                util.pathToUri(filePath),
                                 phpLanguageId,
                                 0,
                                 buffer.toString()

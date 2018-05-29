@@ -8,6 +8,7 @@ import { Position, Range, Location } from 'vscode-languageserver-types';
 import { Predicate } from './types';
 import * as crypto from 'crypto';
 import { URL, parse as parse_url } from 'url';
+import URI from 'vscode-uri/lib';
 
 export function popMany<T>(array: T[], count: number) {
     let popped: T[] = [];
@@ -181,7 +182,7 @@ export function cloneRange(range: Range): Range {
 }
 
 export function pathToUri(filePath: string): string {
-    filePath = filePath.replace('\\', '/').trim();
+    filePath = filePath.split('\\').join('/').trim();
     let parts = filePath.split('/');
     // Don't %-encode the colon after a Windows drive letter
     let first = parts.shift();
@@ -199,6 +200,5 @@ export function pathToUri(filePath: string): string {
 
 export function uriToPath(uri: string)
 {
-    let url = parse_url(uri);
-    return decodeURIComponent(url.path);
+    return URI.parse(uri).fsPath;
 }
