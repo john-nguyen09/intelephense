@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /* Copyright (c) Ben Robert Mewburn 
  * Licensed under the ISC Licence.
  */
@@ -56,7 +55,7 @@ let config: VscodeConfig = {
 };
 
 
-connection.onInitialize((params) => {
+connection.onInitialize((params): Promise<InitializeResult> => {
 	initialisedAt = process.hrtime();
 	connection.console.info('Initialising');
 	let initOptions: InitialisationOptions = params;

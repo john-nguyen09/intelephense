@@ -45,7 +45,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
 
     private _transformStack: NodeTransform[];
     private _variableTable: VariableTable;
-    private _classStack: TypeAggregate[];
+    private _classStack: PhpSymbol[];
     private _scopeStack: Scope[];
     private _symbols: PhpSymbol[];
     private _symbolFilter: Predicate<PhpSymbol> = (x) => {
@@ -210,7 +210,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
                     let s = this.shiftSymbol() || PhpSymbol.create(SymbolKind.Class, '', this.doc.nodeHashedLocation(<Phrase>node));
                     this._scopeStackPush(Scope.create(this.doc.nodeLocation(<Phrase>node)));
                     this.nameResolver.pushClass(s);
-                    this._classStack.push(TypeAggregate.create(this.symbolStore, s.name));
+                    this._classStack.push(s);
                     this._variableTable.pushScope();
                     this._variableTable.setVariable(Variable.create('$this', s.name));
                     this._transformStack.push(null);
@@ -610,15 +610,13 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         let scope = Scope.create(this.doc.nodeLocation(node));
         this._scopeStackPush(scope);
         this._variableTable.pushScope(['$this']);
-        let type = this._classStack.length ? this._classStack[this._classStack.length - 1] : null;
         let symbol = this.shiftSymbol();
 
-        if (type && symbol) {
+        if (symbol) {
             let fn = (x: PhpSymbol) => {
                 return x.kind === SymbolKind.Method && symbol.name === x.name;
             };
             //lookup method on aggregate to inherit doc
-            symbol = type.members(MemberMergeStrategy.Documented, fn).shift();
             let children = symbol && symbol.children ? symbol.children : [];
             let param: PhpSymbol;
             for (let n = 0, l = children.length; n < l; ++n) {
