@@ -10,7 +10,7 @@ export class SymbolIndex {
     private _globalVariableIndex: PhpSymbol[] = [];
 
     constructor() {
-        this._nameIndex = new NameIndex<PhpSymbol>(SymbolIndex._symbolKeys);
+        this._nameIndex = new NameIndex<PhpSymbol>(PhpSymbol.keys);
         this._namedSymbolIndex = new NameIndex<PhpSymbol>(SymbolIndex._symbolUri);
     }
 
@@ -21,7 +21,8 @@ export class SymbolIndex {
         traverser.traverse(symbolIndexVisitor);
 
         this._namedSymbolIndex.addMany(symbolIndexVisitor.namedSymbols);
-        this._nameIndex.addMany(symbolIndexVisitor.namedSymbols);
+        this._nameIndex.addMany(symbolIndexVisitor.namedSymbols
+            .filter(symbol => symbol.modifiers !== SymbolModifier.Use));
         Array.prototype.push.apply(this._globalVariableIndex, symbolIndexVisitor.globalVariables);
     }
 
@@ -50,17 +51,6 @@ export class SymbolIndex {
 
     getGlobalVariables() {
         return this._globalVariableIndex;
-    }
-
-    private static _symbolKeys(s: PhpSymbol) {
-        if (s.kind === SymbolKind.Namespace) {
-            let keys = new Set<string>();
-
-            Set.prototype.add.apply(keys, s.name.split('\\').filter((s) => { return s && s.length > 0 }));
-            return Array.from(keys);
-        }
-
-        return PhpSymbol.keys(s);
     }
 
     private static _symbolUri(s: PhpSymbol) {

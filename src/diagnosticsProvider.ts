@@ -74,6 +74,7 @@ export class DiagnosticsProvider {
         }
 
         this._unsubscribeMap[uri]();
+        this._debounceMap[uri].flush();
         this._debounceMap[uri].clear();
         delete this._debounceMap[uri];
         delete this._unsubscribeMap[uri];

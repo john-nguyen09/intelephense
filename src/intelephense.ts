@@ -156,17 +156,19 @@ export namespace Intelephense {
         documentStore.add(parsedDocument);
         let symbolTable = SymbolTable.create(parsedDocument);
         symbolStore.add(symbolTable);
-        let refTable = ReferenceReader.discoverReferences(parsedDocument, symbolStore);
-        refStore.add(refTable);
-        diagnosticsProvider.add(parsedDocument);
-
+        try {
+            let refTable = ReferenceReader.discoverReferences(parsedDocument, symbolStore);
+            refStore.add(refTable);
+            diagnosticsProvider.add(parsedDocument);
+        } catch (err) {
+            Log.error(err.stack);
+        }
     }
 
     export function closeDocument(textDocument: lsp.TextDocumentIdentifier) {
         documentStore.remove(textDocument.uri);
         refStore.close(textDocument.uri);
         diagnosticsProvider.remove(textDocument.uri);
-        let symbolTable = symbolStore.getSymbolTable(textDocument.uri);
     }
 
     export function editDocument(

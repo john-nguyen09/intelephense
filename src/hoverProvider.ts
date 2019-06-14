@@ -54,9 +54,7 @@ export class HoverProvider {
                 hoverTexts.push({language: 'php', value: symbolDeclaration});
 
                 if (symbol.doc && symbol.doc.description) {
-                    let turndownService = new turndown();
-
-                    hoverTexts.push(turndownService.turndown(symbol.doc.description));
+                    hoverTexts.push(symbol.doc.description);
                 }
 
                 return {

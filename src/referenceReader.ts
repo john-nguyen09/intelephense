@@ -158,6 +158,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
 
             case PhraseType.ClassConstElement:
                 this._transformStack.push(new MemberDeclarationTransform(SymbolKind.ClassConstant, this._currentClassName()));
+                this.shiftSymbol();
                 break;
 
             case PhraseType.MethodDeclarationHeader:
@@ -266,7 +267,11 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
                 break;
 
             case PhraseType.QualifiedName:
-                if (this.doc.nodeText(node).toLowerCase() === 'define') {
+                if (
+                    parent &&
+                    (<Phrase>parent).phraseType === PhraseType.FunctionCallExpression &&
+                    this.doc.nodeText(node).toLowerCase() === 'define'
+                ) {
                     this.shiftSymbol();
                 }
 
