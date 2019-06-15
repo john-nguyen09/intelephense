@@ -8,6 +8,8 @@ import { ReferenceReader } from '../src/referenceReader';
 import { ReferenceStore } from '../src/reference';
 import { MemoryCache } from '../src/cache';
 import 'mocha';
+import LevelConstructor from 'levelup';
+import MemDown from 'memdown';
 
 let src =
     `<?php
@@ -47,15 +49,16 @@ class Foo {
 }
 `;
 
-function setup(src: string) {
+async function setup(src: string) {
+    const level = LevelConstructor(MemDown());
     let docStore = new ParsedDocumentStore();
-    let symbolStore = new SymbolStore();
+    let symbolStore = new SymbolStore(level);
     let doc = new ParsedDocument('test', src);
     let refStore = new ReferenceStore();
     docStore.add(doc);
     let table = SymbolTable.create(doc);
     symbolStore.add(table);
-    let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
+    let refTable = await ReferenceReader.discoverReferences(doc, symbolStore);
     refStore.add(refTable);
     //console.log(JSON.stringify(table.find((x)=>{return x.name === 'bar'}), null, 4));
     return new ReferenceProvider(docStore, symbolStore, refStore);
@@ -63,7 +66,7 @@ function setup(src: string) {
 
 describe('ReferencesProvider', () => {
 
-    it('function refs', () => {
+    it('function refs', async () => {
 
         let expected = [
             {
@@ -107,7 +110,7 @@ describe('ReferencesProvider', () => {
             }
         ];
 
-        let provider = setup(src);
+        let provider = await setup(src);
         let promise = provider.provideReferenceLocations('test', <lsp.Position>{ line: 22, character: 7 }, <lsp.ReferenceContext>{ includeDeclaration: true });
         //console.log(JSON.stringify(locs, null, 4));
         return promise.then((locs) => {
@@ -117,7 +120,7 @@ describe('ReferencesProvider', () => {
 
     });
 
-    it('Class refs', () => {
+    it('Class refs', async () => {
 
         let expected = [
             {
@@ -175,7 +178,7 @@ describe('ReferencesProvider', () => {
         ];
 
 
-        let provider = setup(src);
+        let provider = await setup(src);
         let promise = provider.provideReferenceLocations('test', <lsp.Position>{ line: 18, character: 16 }, <lsp.ReferenceContext>{ includeDeclaration: true });
         //console.log(JSON.stringify(locs, null, 4));
         return promise.then((locs) => {
@@ -184,7 +187,7 @@ describe('ReferencesProvider', () => {
 
     });
 
-    it('var refs', () => {
+    it('var refs', async () => {
 
         let expected = [
             {
@@ -254,7 +257,7 @@ describe('ReferencesProvider', () => {
             }
         ];
 
-        let provider = setup(src);
+        let provider = await setup(src);
         let promise = provider.provideReferenceLocations('test', <lsp.Position>{ line: 18, character: 6 }, <lsp.ReferenceContext>{ includeDeclaration: true });
         //console.log(JSON.stringify(locs, null, 4));
         return promise.then((locs) => {
@@ -263,7 +266,7 @@ describe('ReferencesProvider', () => {
 
     });
 
-    it('method refs', () => {
+    it('method refs', async () => {
 
         let expected = [
             {
@@ -293,7 +296,7 @@ describe('ReferencesProvider', () => {
                 }
             }
         ];
-        let provider = setup(src);
+        let provider = await setup(src);
         let promise = provider.provideReferenceLocations('test', <lsp.Position>{ line: 19, character: 9 }, <lsp.ReferenceContext>{ includeDeclaration: true });
         //console.log(JSON.stringify(locs, null, 4));
         return promise.then((locs) => {
@@ -302,7 +305,7 @@ describe('ReferencesProvider', () => {
 
     });
 
-    it('class const', () => {
+    it('class const', async () => {
 
         let expected = [
             {
@@ -358,7 +361,7 @@ describe('ReferencesProvider', () => {
                 }
             }
         ];
-        let provider = setup(src);
+        let provider = await setup(src);
         let promise = provider.provideReferenceLocations('test', <lsp.Position>{ line: 13, character: 33 }, <lsp.ReferenceContext>{ includeDeclaration: true });
         //console.log(JSON.stringify(locs, null, 4));
         return promise.then((locs) => {
@@ -367,7 +370,7 @@ describe('ReferencesProvider', () => {
 
     });
 
-    it('properties', () => {
+    it('properties', async () => {
 
         let expected = [
             {
@@ -410,7 +413,7 @@ describe('ReferencesProvider', () => {
                 }
             }
         ];
-        let provider = setup(src);
+        let provider = await setup(src);
         let promise = provider.provideReferenceLocations('test', <lsp.Position>{ line: 20, character: 9 }, <lsp.ReferenceContext>{ includeDeclaration: true });
         //console.log(JSON.stringify(locs, null, 4));
         return promise.then((locs) => {
@@ -418,7 +421,7 @@ describe('ReferencesProvider', () => {
         });
     });
 
-    it('parameter refs, closure use', () => {
+    it('parameter refs, closure use', async () => {
 
         let expected = [
             {
@@ -475,7 +478,7 @@ describe('ReferencesProvider', () => {
             }
         ];
 
-        let provider = setup(src);
+        let provider = await setup(src);
         let promise = provider.provideReferenceLocations('test', <lsp.Position>{ line: 1, character: 26 }, <lsp.ReferenceContext>{ includeDeclaration: true });
 
         return promise.then((locs) => {
@@ -484,7 +487,7 @@ describe('ReferencesProvider', () => {
         });
     });
 
-    it('properties', () => {
+    it('properties', async () => {
 
         let expected = [
             {
@@ -514,7 +517,7 @@ describe('ReferencesProvider', () => {
                 }
             }
         ];
-        let provider = setup(privateMethodSrc);
+        let provider = await setup(privateMethodSrc);
         let promise = provider.provideReferenceLocations('test', <lsp.Position>{ line: 2, character: 23 }, <lsp.ReferenceContext>{ includeDeclaration: true });
         
         return promise.then((locs) => {

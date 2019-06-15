@@ -8,16 +8,19 @@ import { ReferenceReader } from '../src/referenceReader';
 import { ReferenceStore } from '../src/reference';
 import { MemoryCache } from '../src/cache';
 import 'mocha';
+import LevelConstructor from 'levelup';
+import MemDown from 'memdown';
 
-function setup(src: string) {
+async function setup(src: string) {
+    const level = LevelConstructor(MemDown());
+    let symbolStore = new SymbolStore(level);
     let docStore = new ParsedDocumentStore();
-    let symbolStore = new SymbolStore();
     let doc = new ParsedDocument('test', src);
     let refStore = new ReferenceStore();
     docStore.add(doc);
     let table = SymbolTable.create(doc);
     symbolStore.add(table);
-    let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
+    let refTable = await ReferenceReader.discoverReferences(doc, symbolStore);
     refStore.add(refTable);
     //console.log(JSON.stringify(table.find((x)=>{return x.name === 'bar'}), null, 4));
     return new HoverProvider(docStore, symbolStore, refStore);
@@ -35,7 +38,7 @@ $var = $var->bar();
 
 describe('hover provider', () => {
 
-    it('vars', () => {
+    it('vars', async () => {
 
         let expected = {
             "contents": "Foo $var",
@@ -50,8 +53,8 @@ describe('hover provider', () => {
                 }
             }
         };
-        let provider = setup(fnAssignmentSrc);
-        let hover = provider.provideHover('test', <lsp.Position>{ line: 6, character: 10 });
+        let provider = await setup(fnAssignmentSrc);
+        let hover = await provider.provideHover('test', <lsp.Position>{ line: 6, character: 10 });
 
         //console.log(JSON.stringify(hover, null, 4));
         assert.deepEqual(hover, expected);

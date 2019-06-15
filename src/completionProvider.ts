@@ -133,10 +133,10 @@ export class CompletionProvider {
         }
     }
 
-    provideCompletions(uri: string, position: lsp.Position) {
+    async provideCompletions(uri: string, position: lsp.Position) {
 
         let doc = this.documentStore.find(uri);
-        let table = this.symbolStore.getSymbolTable(uri);
+        let table = await this.symbolStore.getSymbolTable(uri);
         let refTable = this.refStore.getReferenceTable(uri);
 
         if (!doc || !table || !refTable) {
@@ -172,7 +172,7 @@ export class CompletionProvider {
 interface CompletionStrategy {
     config: CompletionOptions;
     canSuggest(traverser: ParseTreeTraverser): boolean;
-    completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string): lsp.CompletionList;
+    completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string): Promise<lsp.CompletionList>;
 }
 
 abstract class AbstractNameCompletion implements CompletionStrategy {
@@ -192,7 +192,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         return true;
     }
 
-    completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
+    async completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
 
         let items: lsp.CompletionItem[] = [];
         let namePhrase = traverser.clone().ancestor(this._isNamePhrase) as Phrase;
@@ -596,7 +596,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.SimpleVariable]);
     }
 
-    completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
+    async completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
 
         if (!word) {
             return noCompletionResponse;
@@ -615,7 +615,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
 
         let items: lsp.CompletionItem[] = [];
         let refScope = traverser.refTable.scopeAtPosition(scope.location.range.start);
-        let varTable = this._varTypeMap(refScope);
+        let varTable = await this._varTypeMap(refScope);
 
         for (let n = 0; n < limit; ++n) {
             items.push(this._toVariableCompletionItem(varSymbols[n], varTable));
@@ -644,7 +644,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
 
     }
 
-    private _varTypeMap(s: Scope) {
+    private async _varTypeMap(s: Scope) {
 
         let map: { [index: string]: string } = {};
 
@@ -656,7 +656,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
         for (let n = 0, l = s.children.length; n < l; ++n) {
             ref = s.children[n] as Reference;
             if (ref.kind === SymbolKind.Variable || ref.kind === SymbolKind.Parameter) {
-                map[ref.name] = TypeString.merge(map[ref.name], ref.type);
+                map[ref.name] = TypeString.merge(map[ref.name], await TypeString.resolve(ref.type));
             }
         }
 
@@ -754,7 +754,7 @@ class NameCompletion extends AbstractNameCompletion {
             traverser.ancestor(this._isNamePhrase) !== undefined;
     }
 
-    completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
+    async completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
 
         //<?php (no trailing space) is considered short tag open and then name token
         //dont suggest in this context
@@ -802,11 +802,10 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
     abstract canSuggest(traverser: ParseTreeTraverser): boolean;
 
-    completions(traverser: ParseTreeTraverser, word: string) {
-
+    async completions(traverser: ParseTreeTraverser, word: string) {
         let scopedAccessExpr = traverser.ancestor(this._isMemberAccessExpr);
         let scopePhrase = traverser.nthChild(0) as Phrase;
-        let type = this._resolveType(traverser);
+        let type = await this._resolveType(traverser);
         let typeNames = TypeString.atomicClassArray(type);
 
         if (!typeNames.length) {
@@ -852,7 +851,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
     }
 
-    private _resolveType(traverser: ParseTreeTraverser): string {
+    private async _resolveType(traverser: ParseTreeTraverser): Promise<string> {
 
         //assumed that traverser is on the member scope node
         let node: Phrase;
@@ -925,7 +924,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
             return '';
         }
 
-        let type = this.symbolStore.referenceToTypeString(ref);
+        let type = await this.symbolStore.referenceToTypeString(ref);
         while (arrayDereference--) {
             type = TypeString.arrayDereference(type);
         }
@@ -1235,7 +1234,7 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
         return traverser.ancestor(this._isNamespaceDefinition) !== undefined;
     }
 
-    completions(traverser: ParseTreeTraverser, word: string) {
+    async completions(traverser: ParseTreeTraverser, word: string) {
 
         const items: lsp.CompletionItem[] = [];
         const uniqueSymbols = new UniqueSymbolSet();
@@ -1304,7 +1303,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceUseDeclaration, PhraseType.NamespaceUseClause]);
     }
 
-    completions(traverser: ParseTreeTraverser, word: string) {
+    async completions(traverser: ParseTreeTraverser, word: string) {
 
         let items: lsp.CompletionItem[] = [];
         let namespaceUseDecl = traverser.ancestor(this._isNamespaceUseDeclaration) as Phrase;
@@ -1419,7 +1418,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.NamespaceUseGroupClause]);
     }
 
-    completions(traverser: ParseTreeTraverser, word: string) {
+    async completions(traverser: ParseTreeTraverser, word: string) {
 
         let items: lsp.CompletionItem[] = [];
         if (!word) {
@@ -1549,7 +1548,7 @@ class DeclarationBodyCompletion implements CompletionStrategy {
             (ParsedDocument.isPhrase(traverser.node, [PhraseType.Error]) && ParsedDocument.isPhrase(traverser.parent(), DeclarationBodyCompletion._phraseTypes));
     }
 
-    completions(traverser: ParseTreeTraverser, word: string) {
+    async completions(traverser: ParseTreeTraverser, word: string) {
         return <lsp.CompletionList>{
             items: keywordCompletionItems(DeclarationBodyCompletion._keywords, word)
         }
@@ -1587,7 +1586,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
             thisSymbol !== undefined;
     }
 
-    completions(traverser: ParseTreeTraverser, word: string) {
+    async completions(traverser: ParseTreeTraverser, word: string) {
 
         let memberDecl = traverser.ancestor(this._isMethodDeclarationHeader) as Phrase;
         let modifiers = SymbolReader.modifierListToSymbolModifier(<Phrase>traverser.child(this._isMemberModifierList));

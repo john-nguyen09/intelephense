@@ -18,7 +18,7 @@ const textDocumentChangeDebounceWait = 250;
 export interface NodeTransform {
     phraseType?: PhraseType;
     tokenType?: TokenType;
-    push(transform: NodeTransform);
+    push(transform: NodeTransform): void;
 }
 
 export interface ParsedDocumentChangeEventArgs {

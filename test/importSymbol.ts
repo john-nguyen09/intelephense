@@ -7,12 +7,14 @@ import { NameTextEditProvider } from '../src/commands';
 import {ReferenceReader} from '../src/referenceReader';
 import {ReferenceStore, ReferenceTable} from '../src/reference';
 import {MemoryCache} from '../src/cache';
+import LevelConstructor from 'levelup';
+import MemDown from 'memdown';
 
-function setup(srcArray:string[]) {
-
+async function setup(srcArray:string[]) {
+    const level = LevelConstructor(MemDown());
     let docStore = new ParsedDocumentStore();
     let refStore = new ReferenceStore();
-    let symbolStore = new SymbolStore();
+    let symbolStore = new SymbolStore(level);
 
     let doc:ParsedDocument;
     let src:string;
@@ -28,7 +30,7 @@ function setup(srcArray:string[]) {
     }
 
     for(let n = 0; n < srcArray.length; ++n) {
-        refTable = ReferenceReader.discoverReferences(docStore.find('doc' + n), symbolStore);
+        refTable = await ReferenceReader.discoverReferences(docStore.find('doc' + n), symbolStore);
         refStore.add(refTable);
     }
 
@@ -49,7 +51,7 @@ $bar = new \\Foo\\Bar;
 `;
 
 
-describe('importSymbol', () => {
+describe('importSymbol', async () => {
 
     let src1 =
         `<?php
@@ -69,13 +71,14 @@ describe('importSymbol', () => {
     let refStore = new ReferenceStore();
     docStore.add(doc1);
     docStore.add(doc2);
-    let symbolStore = new SymbolStore();
+    const level = LevelConstructor(MemDown());
+    let symbolStore = new SymbolStore(level);
     let t1 = SymbolTable.create(doc1);
     let t2 = SymbolTable.create(doc2);
     symbolStore.add(t1);
     symbolStore.add(t2);
-    let refTable = ReferenceReader.discoverReferences(doc1, symbolStore);
-    let refTable2 = ReferenceReader.discoverReferences(doc2, symbolStore);
+    let refTable = await ReferenceReader.discoverReferences(doc1, symbolStore);
+    let refTable2 = await ReferenceReader.discoverReferences(doc2, symbolStore);
     refStore.add(refTable);
     refStore.add(refTable2);
 
@@ -109,15 +112,15 @@ describe('importSymbol', () => {
     ];
 
 
-    it('Should return text edits when a symbol can be imported', () => {
+    it('Should return text edits when a symbol can be imported', async () => {
 
         let provider = new NameTextEditProvider(symbolStore, docStore, refStore);
-        let edits = provider.provideContractFqnTextEdits('doc2', { line: 2, character: 27 });
+        let edits = await provider.provideContractFqnTextEdits('doc2', { line: 2, character: 27 });
         //console.log(JSON.stringify(edits, null, 4));
         assert.deepEqual(edits, expected);
     });
 
-    it('should not replace use decl reference', () => {
+    it('should not replace use decl reference', async () => {
 
         let expected = [
             {
@@ -135,8 +138,8 @@ describe('importSymbol', () => {
             }
         ];
 
-        let provider = setup([dontEditUseDecl1, dontEditUseDecl2]);
-        let edits = provider.provideContractFqnTextEdits('doc1', {line:2, character:16});
+        let provider = await setup([dontEditUseDecl1, dontEditUseDecl2]);
+        let edits = await provider.provideContractFqnTextEdits('doc1', {line:2, character:16});
         //console.log(JSON.stringify(edits, null, 4));
         assert.deepEqual(edits, expected);
 

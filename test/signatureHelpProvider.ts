@@ -8,6 +8,8 @@ import { ReferenceReader } from '../src/referenceReader';
 import {ReferenceStore} from '../src/reference';
 import {MemoryCache} from '../src/cache';
 import 'mocha';
+import LevelConstructor from 'levelup';
+import MemDown from 'memdown';
 
 
 let constructorHelpSrc =
@@ -61,16 +63,16 @@ let helpWithTypeHintSrc =
     fn()
 `;
 
-function setup(src: string) {
-
+async function setup(src: string) {
+    const level = LevelConstructor(MemDown());
     let docStore = new ParsedDocumentStore();
-    let symbolStore = new SymbolStore();
+    let symbolStore = new SymbolStore(level);
     let doc = new ParsedDocument('test', src);
     let refStore = new ReferenceStore();
     docStore.add(doc);
     let table = SymbolTable.create(doc);
     symbolStore.add(table);
-    let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
+    let refTable = await ReferenceReader.discoverReferences(doc, symbolStore);
     refStore.add(refTable);
 
     return new SignatureHelpProvider(symbolStore, docStore, refStore);
@@ -81,10 +83,10 @@ describe('SignatureHelpProvider', function () {
 
     describe('#provideSignatureHelp', function () {
 
-        it('Constructor help', function () {
+        it('Constructor help', async function () {
 
-            let provider = setup(constructorHelpSrc);
-            let help = provider.provideSignatureHelp('test', {line: 4, character:19});
+            let provider = await setup(constructorHelpSrc);
+            let help = await provider.provideSignatureHelp('test', {line: 4, character:19});
             let expected:lsp.SignatureHelp = {
                 activeParameter:0,
                 activeSignature:0,
@@ -107,10 +109,10 @@ describe('SignatureHelpProvider', function () {
 
         });
 
-        it('Function help', function () {
+        it('Function help', async function () {
 
-            let provider = setup(functionHelpSrc);
-            let help = provider.provideSignatureHelp('test', {line: 2, character:7});
+            let provider = await setup(functionHelpSrc);
+            let help = await provider.provideSignatureHelp('test', {line: 2, character:7});
             let expected:lsp.SignatureHelp = {
                 activeParameter:0,
                 activeSignature:0,
@@ -133,10 +135,10 @@ describe('SignatureHelpProvider', function () {
 
         });
 
-        it('Function help second param', function () {
+        it('Function help second param', async function () {
 
-            let provider = setup(functionHelp2Src);
-            let help = provider.provideSignatureHelp('test', {line: 2, character:10});
+            let provider = await setup(functionHelp2Src);
+            let help = await provider.provideSignatureHelp('test', {line: 2, character:10});
             let expected:lsp.SignatureHelp = {
                 activeParameter:1,
                 activeSignature:0,
@@ -159,10 +161,10 @@ describe('SignatureHelpProvider', function () {
 
         });
 
-        it('Method help', function () {
+        it('Method help', async function () {
 
-            let provider = setup(methodHelpSrc);
-            let help = provider.provideSignatureHelp('test', {line: 5, character:14});
+            let provider = await setup(methodHelpSrc);
+            let help = await provider.provideSignatureHelp('test', {line: 5, character:14});
             let expected:lsp.SignatureHelp = {
                 activeParameter:0,
                 activeSignature:0,
@@ -185,10 +187,10 @@ describe('SignatureHelpProvider', function () {
 
         });
 
-        it('Function help default param sig 2', function () {
+        it('Function help default param sig 2', async function () {
 
-            let provider = setup(defaultParamSrc);
-            let help = provider.provideSignatureHelp('test', {line: 2, character:10});
+            let provider = await setup(defaultParamSrc);
+            let help = await provider.provideSignatureHelp('test', {line: 2, character:10});
             assert.equal(help.signatures.length, 1);
             assert.equal(help.signatures[0].label, 'fn($p1, $p2 = 1)');
             assert.equal(help.activeParameter, 1);
@@ -196,10 +198,10 @@ describe('SignatureHelpProvider', function () {
 
         });
 
-        it('Function help with docs', function () {
+        it('Function help with docs', async function () {
 
-            let provider = setup(helpWithDocsSrc);
-            let help = provider.provideSignatureHelp('test', {line: 6, character:7});
+            let provider = await setup(helpWithDocsSrc);
+            let help = await provider.provideSignatureHelp('test', {line: 6, character:7});
             //console.log(JSON.stringify(help, null, 4));
             let expected:lsp.SignatureHelp = {
                 activeParameter:0,
@@ -221,10 +223,10 @@ describe('SignatureHelpProvider', function () {
 
         });
 
-        it('Function help with type hint', function () {
+        it('Function help with type hint', async function () {
 
-            let provider = setup(helpWithTypeHintSrc);
-            let help = provider.provideSignatureHelp('test', {line: 2, character:7});
+            let provider = await setup(helpWithTypeHintSrc);
+            let help = await provider.provideSignatureHelp('test', {line: 2, character:7});
             //console.log(JSON.stringify(help, null, 4));
             let expected:lsp.SignatureHelp = {
                 activeParameter:0,

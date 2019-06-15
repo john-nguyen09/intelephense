@@ -6,6 +6,7 @@
 
 import {NameResolver} from './nameResolver';
 import * as util from './util';
+import { resolve } from 'dns';
 
 export namespace TypeString {
 
@@ -211,5 +212,21 @@ export namespace TypeString {
 
     }
 
+    export async function resolve(type: string | Promise<string>) {
+        if (type instanceof Promise) {
+            return await type;
+        }
 
+        return type;
+    }
+
+    export async function resolveArray(types: (string | Promise<string>)[]) {
+        const promises: Promise<string>[] = [];
+
+        for (const type of types) {
+            promises.push(resolve(type));
+        }
+
+        return Promise.all(promises);
+    }
 }

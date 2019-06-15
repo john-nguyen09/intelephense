@@ -11,6 +11,7 @@ import {Position, TextEdit, Range} from 'vscode-languageserver-types';
 import {TreeVisitor} from './types';
 import {Phrase, Token, PhraseType, TokenType} from 'php7parser';
 import * as util from './util';
+import { Reference } from './reference';
 
 export class UseDeclarationHelper {
 

@@ -33,6 +33,11 @@ import * as util from './util';
 import * as fs from 'fs';
 import * as gracefulFs from 'graceful-fs';
 import Uri from 'vscode-uri';
+import { LevelUp } from 'levelup';
+import LevelUpConstructor from 'levelup';
+import LevelDOWN from 'leveldown';
+import MemDown from 'memdown';
+import { IConnection } from 'vscode-languageserver';
 gracefulFs.gracefulify(fs);
 
 export namespace Intelephense {
@@ -53,12 +58,12 @@ export namespace Intelephense {
     let referenceProvider: ReferenceProvider;
     let hoverProvider: HoverProvider;
     let highlightProvider: HighlightProvider;
-    let cacheClear = false;
+    let level: LevelUp;
 
     let diagnosticsUnsubscribe: Unsubscribe;
 
     let cacheTimestamp = 0;
-    let storagePath = '';
+    let storagePath: string | null = null;
 
     export function onPublishDiagnostics(fn: (args: PublishDiagnosticsEventArgs) => void) {
         if (diagnosticsUnsubscribe) {
@@ -70,38 +75,53 @@ export namespace Intelephense {
         }
     }
 
-    export function initialise(options: InitialisationOptions) {
-        return new Promise((resolve, reject) => {
-            if (options && options.connection) {
-                Log.connection = options.connection;
-            }
+    export function initialise(params: InitializeParams) {
+        const initialisedAt = process.hrtime();
 
-            storagePath = (options && options.rootPath) ?
-                path.join(os.homedir(), dataFolder, util.md5(options.rootPath)) : '';
-            documentStore = new ParsedDocumentStore();
-            symbolStore = new SymbolStore();
-            refStore = new ReferenceStore();
-            symbolProvider = new SymbolProvider(symbolStore);
-            completionProvider = new CompletionProvider(symbolStore, documentStore, refStore);
-            diagnosticsProvider = new DiagnosticsProvider();
-            signatureHelpProvider = new SignatureHelpProvider(symbolStore, documentStore, refStore);
-            definitionProvider = new DefinitionProvider(symbolStore, documentStore, refStore);
-            formatProvider = new FormatProvider(documentStore);
-            nameTextEditProvider = new NameTextEditProvider(symbolStore, documentStore, refStore);
-            referenceProvider = new ReferenceProvider(documentStore, symbolStore, refStore);
-            hoverProvider = new HoverProvider(documentStore, symbolStore, refStore);
-            highlightProvider = new HighlightProvider(documentStore, symbolStore, refStore);
+        Log.info('Initialising');
+    
+        storagePath = (params && params.rootPath) ?
+            path.join(os.homedir(), dataFolder, util.md5(params.rootPath)) : null;
+        
+        if (storagePath !== null) {
+            level = LevelUpConstructor(LevelDOWN(storagePath));
+        } else {
+            level = LevelUpConstructor(MemDown());
+        }
+        documentStore = new ParsedDocumentStore();
+        symbolStore = new SymbolStore(level);
+        refStore = new ReferenceStore();
+        symbolProvider = new SymbolProvider(symbolStore);
+        completionProvider = new CompletionProvider(symbolStore, documentStore, refStore);
+        diagnosticsProvider = new DiagnosticsProvider();
+        signatureHelpProvider = new SignatureHelpProvider(symbolStore, documentStore, refStore);
+        definitionProvider = new DefinitionProvider(symbolStore, documentStore, refStore);
+        formatProvider = new FormatProvider(documentStore);
+        nameTextEditProvider = new NameTextEditProvider(symbolStore, documentStore, refStore);
+        referenceProvider = new ReferenceProvider(documentStore, symbolStore, refStore);
+        hoverProvider = new HoverProvider(documentStore, symbolStore, refStore);
+        highlightProvider = new HighlightProvider(documentStore, symbolStore, refStore);
 
-            //keep stores in sync
-            documentStore.parsedDocumentChangeEvent.subscribe((args) => {
-                symbolStore.onParsedDocumentChange(args);
-                let refTable = ReferenceReader.discoverReferences(args.parsedDocument, symbolStore);
-                refStore.add(refTable);
-            });
-
-            symbolStore.add(SymbolTable.readBuiltInSymbols());
-            resolve();
+        //keep stores in sync
+        documentStore.parsedDocumentChangeEvent.subscribe((args) => {
+            symbolStore.onParsedDocumentChange(args);
+            ReferenceReader.discoverReferences(args.parsedDocument, symbolStore)
+                .then(refTable => {
+                    refStore.add(refTable);
+                })
+                .catch(err => {
+                    Log.error(err);
+                });
         });
+
+        return symbolStore.add(SymbolTable.readBuiltInSymbols())
+            .then(_ => {
+                Log.info(`Initialised in ${elapsed(initialisedAt).toFixed()} ms`);
+                Intelephense.indexDirectory(Uri.parse(params.rootUri).fsPath);
+            })
+            .catch(err => {
+                Log.error(err);
+            });
     }
 
     export function shutdown() {
@@ -155,14 +175,19 @@ export namespace Intelephense {
         let parsedDocument = new ParsedDocument(textDocument.uri, textDocument.text, textDocument.version);
         documentStore.add(parsedDocument);
         let symbolTable = SymbolTable.create(parsedDocument);
-        symbolStore.add(symbolTable);
-        try {
-            let refTable = ReferenceReader.discoverReferences(parsedDocument, symbolStore);
-            refStore.add(refTable);
-            diagnosticsProvider.add(parsedDocument);
-        } catch (err) {
-            Log.error(err.stack);
-        }
+        symbolStore.add(symbolTable)
+            .then(_ => {
+                return ReferenceReader.discoverReferences(parsedDocument, symbolStore);
+            })
+            .then(refTable => {
+                refStore.add(refTable);
+            })
+            .then(_ => {
+                diagnosticsProvider.add(parsedDocument);
+            })
+            .catch(err => {
+                Log.error(err);
+            });
     }
 
     export function closeDocument(textDocument: lsp.TextDocumentIdentifier) {
@@ -192,7 +217,7 @@ export namespace Intelephense {
         return query ? symbolProvider.provideWorkspaceSymbols(query) : [];
     }
 
-    export function provideCompletions(textDocument: lsp.TextDocumentIdentifier, position: lsp.Position) {
+    export async function provideCompletions(textDocument: lsp.TextDocumentIdentifier, position: lsp.Position) {
         flushParseDebounce(textDocument.uri);
 
         let results: lsp.CompletionList = {
@@ -201,10 +226,9 @@ export namespace Intelephense {
         };
 
         try {
-            results = completionProvider.provideCompletions(textDocument.uri, position);
+            results = await completionProvider.provideCompletions(textDocument.uri, position);
         } catch (err) {
-            Log.error(err.message);
-            Log.error(err.stack);
+            Log.error(err);
         }
 
         return results;
@@ -220,14 +244,14 @@ export namespace Intelephense {
         return definitionProvider.provideDefinition(textDocument.uri, position);
     }
 
-    export function discoverSymbols(textDocument: lsp.TextDocumentItem) {
+    export async function discoverSymbols(textDocument: lsp.TextDocumentItem) {
 
         let uri = textDocument.uri;
 
         if (documentStore.has(uri)) {
             //if document is in doc store/opened then dont rediscover
             //it will have symbols discovered already
-            let symbolTable = symbolStore.getSymbolTable(uri);
+            let symbolTable = await symbolStore.getSymbolTable(uri);
             return symbolTable ? symbolTable.symbolCount : 0;
         }
 
@@ -238,29 +262,6 @@ export namespace Intelephense {
         symbolStore.add(symbolTable);
 
         return symbolTable.symbolCount;
-    }
-
-    export function discoverReferences(textDocument: lsp.TextDocumentItem) {
-        let uri = textDocument.uri;
-        let refTable = refStore.getReferenceTable(uri);
-
-        if (documentStore.has(uri)) {
-            //if document is in doc store/opened then dont rediscover.
-            //it should have had refs discovered already
-            return refTable ? refTable.referenceCount : 0;
-        }
-
-        if (!symbolStore.getSymbolTable(uri)) {
-            //symbols must be discovered first
-            return 0;
-        }
-
-        let text = textDocument.text;
-        let parsedDocument = new ParsedDocument(uri, text, textDocument.version);
-        refTable = ReferenceReader.discoverReferences(parsedDocument, symbolStore);
-        refStore.add(refTable);
-        refStore.close(refTable.uri);
-        return refTable.referenceCount;
     }
 
     export function forget(uri: string) {
@@ -331,27 +332,22 @@ export namespace Intelephense {
 
     export function indexDirectory(directory) {
         let phpFiles = scanPhpFiles(directory);
-        let textDocuments = [];
         let docPromises: Promise<lsp.TextDocumentItem>[] = [];
 
         const createDocAsync = (filePath) => {
             return new Promise<lsp.TextDocumentItem>((resolve, reject) => {
-                try {
-                    fs.readFile(filePath, (err, buffer) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(lsp.TextDocumentItem.create(
-                                util.pathToUri(filePath),
-                                phpLanguageId,
-                                0,
-                                buffer.toString()
-                            ));
-                        }
-                    });
-                } catch (err) {
-                    reject(err);
-                }
+                fs.readFile(filePath, (err, buffer) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(lsp.TextDocumentItem.create(
+                            util.pathToUri(filePath),
+                            phpLanguageId,
+                            0,
+                            buffer.toString()
+                        ));
+                    }
+                });
             });
         };
 
@@ -359,62 +355,47 @@ export namespace Intelephense {
             docPromises.push(createDocAsync(phpFile));
         }
 
+        const start = process.hrtime();
         Promise.all(docPromises).then((documents) => {
             Log.info(`Discover ${documents.length} php files to index`);
-            const start = process.hrtime();
-
-            const discoverSymbols = (index: number) => {
-                Intelephense.discoverSymbols(documents[index]);
-
-                if (index < documents.length) {
-                    setImmediate(() => {
-                        discoverSymbols(index + 1);
-                    });
-                }
-            };
-
-            const discoverReferences = (index: number) => {
-                Intelephense.discoverReferences(documents[index]);
-
-                if (index < documents.length) {
-                    setImmediate(() => {
-                        discoverReferences(index + 1);
-                    });
-                }
-            };
 
             const waitForNextTick = () => {
-                return new Promise<void>((resolve, reject) => {
+                return new Promise<void>((resolve, _) => {
                     setImmediate(() => {
                         resolve();
-                    })
+                    });
                 })
-            }
-
-            let promiseChain = waitForNextTick();
+            };
+            const promiseChain: Promise<void> = waitForNextTick();
 
             for (let document of documents) {
-                promiseChain = promiseChain.then(() => {
-                    Intelephense.discoverSymbols(document);
-                }).then(waitForNextTick);
-            }
-            for (let document of documents) {
-                promiseChain = promiseChain.then(() => {
-                    Intelephense.discoverReferences(document);
-                }).then(waitForNextTick);
+                promiseChain.then(() => {
+                    return Intelephense.discoverSymbols(document);
+                })
+                // Wait for next tick so that any pending requests can be executed
+                .then(waitForNextTick);
             }
 
-            promiseChain.then(() => {
-                const elapsedHr = process.hrtime(start);
-                const elapsed = elapsedHr[0] + (elapsedHr[1] / 1000000000);
+            return promiseChain;
+        })
+        .then(docNumSymbols => {
+            const elapsedHr = process.hrtime(start);
+            const elapsed = elapsedHr[0] + (elapsedHr[1] / 1000000000);
 
-                Log.info(`Indexing finished in ${elapsed} seconds`);
-            })
-        }).catch((err) => {
-            throw err;
+            Log.info(`Indexing finished in ${elapsed} seconds`);
+        })
+        .catch(err => {
+            Log.error(err);
         });
     }
 
+    export function elapsed(start: [number, number]) {
+        if (!start) {
+            return -1;
+        }
+        let diff = process.hrtime(start);
+        return diff[0] * 1000 + diff[1] / 1000000;
+    }
 }
 
 export interface IntelephenseConfig {
@@ -436,7 +417,7 @@ export interface IntelephenseConfig {
 }
 
 export interface InitialisationOptions extends InitializeParams {
-    connection?: any;
+    connection: IConnection;
 }
 
 export interface LanguageRangeList {

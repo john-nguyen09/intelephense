@@ -11,6 +11,7 @@ import { ReferenceStore } from './reference';
 import { Position, Hover, MarkedString } from 'vscode-languageserver-types';
 import { MemberMergeStrategy } from './typeAggregate';
 import * as turndown from 'turndown';
+import { TypeString } from './typeString';
 
 export class HoverProvider {
 
@@ -19,7 +20,7 @@ export class HoverProvider {
     }
 
 
-    provideHover(uri: string, pos: Position): Hover {
+    async provideHover(uri: string, pos: Position): Promise<Hover> {
 
 
         let doc = this.docStore.find(uri);
@@ -35,7 +36,8 @@ export class HoverProvider {
             return undefined;
         }
 
-        let symbol = this.symbolStore.findSymbolsByReference(ref, MemberMergeStrategy.Override).shift();
+        let symbol = (await this.symbolStore.findSymbolsByReference(ref, MemberMergeStrategy.Override))
+            .shift();
 
         if (!symbol) {
             return undefined;
@@ -75,8 +77,10 @@ export class HoverProvider {
                 };
 
             case SymbolKind.Variable:
+                const type = await TypeString.resolve(ref.type);
+
                 return {
-                    contents: [ref.type, symbol.name].join(' ').trim(),
+                    contents: [type, symbol.name].join(' ').trim(),
                     range: ref.location.range
                 };
 

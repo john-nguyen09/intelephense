@@ -20,10 +20,10 @@ export class SignatureHelpProvider {
 
     constructor(public symbolStore: SymbolStore, public docStore: ParsedDocumentStore, public refStore:ReferenceStore) { }
 
-    provideSignatureHelp(uri: string, position: lsp.Position) {
+    async provideSignatureHelp(uri: string, position: lsp.Position) {
 
         let doc = this.docStore.find(uri);
-        let table = this.symbolStore.getSymbolTable(uri);
+        let table = await this.symbolStore.getSymbolTable(uri);
         let refTable = this.refStore.getReferenceTable(uri);
         if (!doc || !table || !refTable) {
             return null;
@@ -36,7 +36,7 @@ export class SignatureHelpProvider {
             return null;
         }
 
-        let symbol = this._getSymbol(traverser.clone());
+        let symbol = await this._getSymbol(traverser.clone());
         let delimFilterFn = (x:Phrase|Token) => {
             return (<Token>x).tokenType === TokenType.Comma && (<Token>x).offset <= token.offset;
         };
@@ -138,27 +138,31 @@ export class SignatureHelpProvider {
         return info;
     }
 
-    private _getSymbol(traverser:ParseTreeTraverser) {
+    private async _getSymbol(traverser:ParseTreeTraverser) {
         let expr = traverser.node as Phrase;
         switch (expr.phraseType) {
             case PhraseType.FunctionCallExpression:
                 if(traverser.child(this._isNamePhrase)){
-                    return this.symbolStore.findSymbolsByReference(traverser.reference).shift();
+                    return (await this.symbolStore.findSymbolsByReference(traverser.reference))
+                        .shift();
                 }
                 return undefined;
             case PhraseType.MethodCallExpression:
                 if(traverser.child(this._isMemberName) && traverser.child(this._isNameToken)) {
-                    return this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Documented).shift();
+                    return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Documented))
+                        .shift();
                 }
                 return undefined;
             case PhraseType.ScopedCallExpression:
                 if(traverser.child(this._isScopedMemberName) && traverser.child(this._isIdentifier)) {
-                    return this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Documented).shift();
+                    return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Documented))
+                        .shift();
                 }
                 return undefined;
             case PhraseType.ObjectCreationExpression:
                 if(traverser.child(this._isClassTypeDesignator) && traverser.child(this._isNamePhraseOrRelativeScope)) {
-                    return this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Override).shift();
+                    return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Override))
+                        .shift();
                 }
                 return undefined;
                 

@@ -32,15 +32,15 @@ export class SymbolProvider {
      * Excludes magic symbols
      * @param uri 
      */
-    provideDocumentSymbols(uri: string) {
-        let symbolTable = this.symbolStore.getSymbolTable(uri);
+    async provideDocumentSymbols(uri: string) {
+        let symbolTable = await this.symbolStore.getSymbolTable(uri);
         let symbols = symbolTable ? symbolTable.symbols : [];
         let symbolInformationList: SymbolInformation[] = [];
 
         for (let n = 0, l = symbols.length; n < l; ++n) {
 
             if (symbols[n].location && (symbols[n].kind & symbolsDisplayMask)) {
-                symbolInformationList.push(this.toSymbolInformation(symbols[n]));
+                symbolInformationList.push(await this.toSymbolInformation(symbols[n]));
             }
         }
 
@@ -51,7 +51,7 @@ export class SymbolProvider {
      * Excludes internal symbols
      * @param query 
      */
-    provideWorkspaceSymbols(query: string) {
+    async provideWorkspaceSymbols(query: string) {
         const maxItems = 100;
         let matches = this.symbolStore.match(query);
         let symbolInformationList: SymbolInformation[] = [];
@@ -61,7 +61,7 @@ export class SymbolProvider {
         for (let n = 0, l = matches.length; n < l && symbolInformationList.length < maxItems; ++n) {
             s = matches[n];
             if (this.workspaceSymbolFilter(s)) {
-                symbolInformationList.push(this.toSymbolInformation(s));
+                symbolInformationList.push(await this.toSymbolInformation(s));
             }
         }
         return symbolInformationList;
@@ -76,12 +76,12 @@ export class SymbolProvider {
 
     }
 
-    toSymbolInformation(s: PhpSymbol, uri?:string) {
+    async toSymbolInformation(s: PhpSymbol, uri?:string) {
 
         let si: SymbolInformation = {
             kind: Kind.File,
             name: s.name,
-            location: uri ? Location.create(uri, s.location.range) : this.symbolStore.symbolLocation(s),
+            location: uri ? Location.create(uri, s.location.range) : await this.symbolStore.symbolLocation(s),
             containerName: s.scope
         };
 

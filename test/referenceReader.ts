@@ -10,10 +10,13 @@ import 'mocha';
 import { SymbolReader } from '../src/symbolReader';
 import * as fs from 'fs';
 import * as path from 'path';
+import LevelConstructor from 'levelup';
+import MemDown from 'memdown';
+import { TypeString } from '../src/typeString';
 
 function readReferences(src:string) {
-
-    let store = new SymbolStore();
+    const level = LevelConstructor(MemDown());
+    let store = new SymbolStore(level);
     let doc = new ParsedDocument('test', src);
     let table = SymbolTable.create(doc);
     //console.log(JSON.stringify(table, null, 4));
@@ -51,9 +54,9 @@ describe('ReferenceReader', () => {
 
     });
 
-    it('@global tag', () => {
+    it('@global tag', async () => {
         let src = fs.readFileSync(path.join(__dirname, '/fixtures/global-variables.php')).toString();
-        let refTable = readReferences(src);
+        let refTable = await readReferences(src);
         let globalReference = refTable.references()[0];
 
         assert.deepEqual(globalReference, <Reference>{
@@ -70,9 +73,9 @@ describe('ReferenceReader', () => {
         });
     });
 
-    it('should have reference to self and $this', () => {
+    it('should have reference to self and $this', async () => {
         let src = fs.readFileSync(path.join(__dirname, '/fixtures/class-with-define.php')).toString();
-        let refTable = readReferences(src);
+        let refTable = await readReferences(src);
         let references = refTable.references();
 
         let expected: Reference[] = [
@@ -344,6 +347,14 @@ describe('ReferenceReader', () => {
                 "scope": "SecondClass"
             }
         ];
+
+        for (let i = 0; i < references.length; i++) {
+            if (!references[i].scope) {
+                continue;
+            }
+
+            references[i].scope = await TypeString.resolve(references[i].scope);
+        }
 
         assert.deepEqual(references, expected);
     });

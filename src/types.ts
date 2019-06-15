@@ -13,6 +13,10 @@ export interface Predicate<T> {
     (t: T): boolean;
 }
 
+export interface AsyncPredicate<T> {
+    (t: T): Promise<boolean>;
+}
+
 export interface DebugLogger {
     debug(message: string): void;
 }

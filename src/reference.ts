@@ -13,8 +13,9 @@ import { Log } from './logger';
 
 export interface Reference extends SymbolIdentifier {
     location: Location;
-    type?: string;
+    type?: string | Promise<string>;
     altName?: string;
+    scope?: string | Promise<string>;
 }
 
 export namespace Reference {

@@ -60,6 +60,7 @@ export namespace PhpSymbolDoc {
 }
 
 export interface PhpSymbol extends SymbolIdentifier {
+    scope?: string;
     modifiers?: SymbolModifier;
     doc?: PhpSymbolDoc;
     type?: string;
@@ -72,7 +73,6 @@ export interface PhpSymbol extends SymbolIdentifier {
 export interface SymbolIdentifier {
     kind: SymbolKind;
     name: string;
-    scope?: string;
 }
 
 export namespace PhpSymbol {

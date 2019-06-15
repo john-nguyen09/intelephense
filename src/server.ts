@@ -15,15 +15,13 @@ import {
 } from 'vscode-languageserver';
 
 import { Intelephense, IntelephenseConfig, InitialisationOptions, LanguageRange } from './intelephense';
-import Uri from 'vscode-uri';
+import { Log } from './logger';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection();
-let initialisedAt: [number, number];
+Log.console = connection.console;
 
 const languageId = 'php';
-const discoverSymbolsRequest = new RequestType<{ textDocument: TextDocumentItem }, number, void, void>('discoverSymbols');
-const discoverReferencesRequest = new RequestType<{ textDocument: TextDocumentItem }, number, void, void>('discoverReferences');
 const forgetRequest = new RequestType<{ uri: string }, void, void, void>('forget');
 const importSymbolRequest = new RequestType<{ uri: string, position: Position, alias?: string }, TextEdit[], void, void>('importSymbol');
 const documentLanguageRangesRequest = new RequestType<{ textDocument: TextDocumentIdentifier }, { version: number, ranges: LanguageRange[] }, void, void>('documentLanguageRanges');
@@ -56,47 +54,35 @@ let config: VscodeConfig = {
 
 
 connection.onInitialize((params): Promise<InitializeResult> => {
-	initialisedAt = process.hrtime();
-	connection.console.info('Initialising');
-	let initOptions: InitialisationOptions = params;
-	initOptions.connection = connection;
-
-	return Intelephense.initialise(initOptions).then(() => {
-		Intelephense.onPublishDiagnostics((args) => {
-			connection.sendDiagnostics(args);
+	return Intelephense.initialise(params)
+		.then(_ => {
+			Intelephense.onPublishDiagnostics((args) => {
+				connection.sendDiagnostics(args);
+			});
+            return <InitializeResult>{
+                capabilities: {
+                    textDocumentSync: TextDocumentSyncKind.Incremental,
+                    documentSymbolProvider: true,
+                    workspaceSymbolProvider: true,
+                    completionProvider: {
+                        triggerCharacters: [
+                            '$', '>', ':', //php
+                            '.', '<', '/' //html/js
+                        ]
+                    },
+                    signatureHelpProvider: {
+                        triggerCharacters: ['(', ',']
+                    },
+                    definitionProvider: true,
+                    //documentFormattingProvider: true,
+                    documentRangeFormattingProvider: false,
+                    referencesProvider: true,
+                    documentLinkProvider: { resolveProvider: false },
+                    hoverProvider: true,
+                    documentHighlightProvider: true
+                }
+            };
 		});
-		connection.console.info(`Initialised in ${elapsed(initialisedAt).toFixed()} ms`);
-        try {
-            Intelephense.indexDirectory(Uri.parse(params.rootUri).fsPath);
-        } catch (err) {
-            connection.console.error(err.message);
-            connection.console.error(err.stack);
-        }
-
-		return <InitializeResult>{
-			capabilities: {
-				textDocumentSync: TextDocumentSyncKind.Incremental,
-				documentSymbolProvider: true,
-				workspaceSymbolProvider: true,
-				completionProvider: {
-					triggerCharacters: [
-						'$', '>', ':', //php
-						'.', '<', '/' //html/js
-					]
-				},
-				signatureHelpProvider: {
-					triggerCharacters: ['(', ',']
-				},
-				definitionProvider: true,
-				//documentFormattingProvider: true,
-				documentRangeFormattingProvider: false,
-				referencesProvider: true,
-				documentLinkProvider: { resolveProvider: false },
-				hoverProvider: true,
-				documentHighlightProvider: true
-			}
-		}
-	});
 
 });
 
@@ -139,13 +125,7 @@ connection.onDocumentHighlight((params) => {
 	return Intelephense.provideHighlights(params.textDocument.uri, params.position);
 })
 
-connection.onDidOpenTextDocument((params) => {
-
-	if (params.textDocument.text.length > config.file.maxSize) {
-		connection.console.warn(`${params.textDocument.uri} not opened -- over max file size.`);
-		return;
-	}
-		
+connection.onDidOpenTextDocument((params) => {		
 	Intelephense.openDocument(params.textDocument);
 });
 
@@ -187,37 +167,6 @@ connection.onDocumentRangeFormatting((params) => {
 
 connection.onShutdown(Intelephense.shutdown);
 
-connection.onRequest(discoverSymbolsRequest, (params) => {
-
-	return 0;
-
-	// if (params.textDocument.text.length > config.file.maxSize) {
-	// 	connection.console.warn(`${params.textDocument.uri} exceeds max file size.`);
-	// 	return 0;
-	// }
-
-	// return Intelephense.discoverSymbols(params.textDocument);
-});
-
-connection.onRequest(discoverReferencesRequest, (params) => {
-
-	return 0;
-
-	// if (params.textDocument.text.length > config.file.maxSize) {
-	// 	connection.console.warn(`${params.textDocument.uri} exceeds max file size.`);
-	// 	return 0;
-	// }
-	// let results = 0;
-	// try {
-	// 	results = Intelephense.discoverReferences(params.textDocument);
-	// } catch (err) {
-	// 	connection.console.error(err.message);
-	// 	connection.console.error(err.stack);
-	// }
-
-	// return results;
-});
-
 connection.onRequest(forgetRequest, (params) => {
 	return Intelephense.forget(params.uri);
 });
@@ -236,11 +185,3 @@ connection.onRequest(documentLanguageRangesRequest, (params) => {
 
 // Listen on the connection
 connection.listen();
-
-function elapsed(start: [number, number]) {
-	if (!start) {
-		return -1;
-	}
-	let diff = process.hrtime(start);
-	return diff[0] * 1000 + diff[1] / 1000000;
-}

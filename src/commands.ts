@@ -22,12 +22,12 @@ export class NameTextEditProvider {
 
     }
 
-    provideContractFqnTextEdits(uri:string, position:Position, alias?:string) {
+    async provideContractFqnTextEdits(uri:string, position:Position, alias?:string) {
 
         const kindMask = SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Function | SymbolKind.Constant | SymbolKind.Constructor;
         let edits:TextEdit[] = [];
         let doc = this.docStore.find(uri);
-        let table = this.symbolStore.getSymbolTable(uri);
+        let table = await this.symbolStore.getSymbolTable(uri);
         let refTable = this.refStore.getReferenceTable(uri);
         if(!doc || !table || !refTable || !this._fullyQualifiedNamePhrase(position, doc, table, refTable)) {
             return edits;

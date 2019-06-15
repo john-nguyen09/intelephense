@@ -11,8 +11,20 @@ import { SymbolStore, SymbolTable } from './symbolStore';
 import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbol';
 import { MemberMergeStrategy, TypeAggregate } from './typeAggregate';
 import { Reference, ReferenceStore, ReferenceTable, Scope } from './reference';
-import { Predicate, TreeVisitor, TreeTraverser } from './types';
+import { Predicate, TreeVisitor, TreeTraverser, AsyncPredicate } from './types';
 import * as util from './util';
+import { TypeString } from './typeString';
+
+
+
+function _sameNameAndScope(
+    name: string, scope: string | Promise<string>
+): AsyncPredicate<Reference | Scope> {
+    return async (ref: Reference): Promise<boolean> => {
+        return ref.name.toLowerCase() === name &&
+            (ref.scope && (await TypeString.resolve(ref.scope)).toLowerCase() === scope);
+    };
+}
 
 export class ReferenceProvider {
 
@@ -20,7 +32,7 @@ export class ReferenceProvider {
 
     }
 
-    provideReferenceLocations(uri: string, position: Position, referenceContext: ReferenceContext) {
+    async provideReferenceLocations(uri: string, position: Position, referenceContext: ReferenceContext) {
 
         let locations: Location[] = [];
         let doc = this.documentStore.find(uri);
@@ -40,7 +52,7 @@ export class ReferenceProvider {
             }
 
             //if class member then make sure base symbol is fetched
-            symbols = this.symbolStore.findSymbolsByReference(ref, MemberMergeStrategy.Base);
+            symbols = await this.symbolStore.findSymbolsByReference(ref, MemberMergeStrategy.Base);
         } else {
             return Promise.resolve(locations);
         }
@@ -82,12 +94,14 @@ export class ReferenceProvider {
 
     }
 
-    private _provideReferences = (symbol: PhpSymbol, table: ReferenceTable): Promise<Reference[]> => {
+    private _provideReferences = async (symbol: PhpSymbol, table: ReferenceTable): Promise<Reference[]> => {
 
         switch (symbol.kind) {
             case SymbolKind.Parameter:
             case SymbolKind.Variable:
-                return Promise.resolve(this._variableReferences(symbol, table, this.symbolStore.getSymbolTable(table.uri)));
+                return Promise.resolve(this._variableReferences(
+                    symbol, table, await this.symbolStore.getSymbolTable(table.uri)
+                ));
             case SymbolKind.Class:
             case SymbolKind.Interface:
             case SymbolKind.Trait:
@@ -106,44 +120,74 @@ export class ReferenceProvider {
 
     }
 
-    private _methodReferences(symbol: PhpSymbol, table: ReferenceTable) {
+    private async _methodReferences(symbol: PhpSymbol, table: ReferenceTable) {
 
         if ((symbol.modifiers & SymbolModifier.Private) > 0) {
             let lcScope = symbol.scope ? symbol.scope.toLowerCase() : '';
             let name = symbol.name.toLowerCase();
             let fn = (x: Reference) => {
-                return x.kind === SymbolKind.Method && x.name.toLowerCase() === name && x.scope && x.scope.toLowerCase() === lcScope;
+                return x.kind === SymbolKind.Method;
             };
-            return Promise.resolve(this._symbolRefsInTableScope(symbol, table, fn));
+            return this._symbolRefsInTableScope(symbol, table, fn, _sameNameAndScope(name, lcScope));
         } else {
-            return this.refStore.find(symbol.name, this._createMemberReferenceFilterFn(symbol));
+            const results = await this.refStore.find(symbol.name);
+            const refs: Reference[] = [];
+            const predicate = this._createMemberReferenceFilterFn(symbol);
+
+            for (const ref of results) {
+                if (await predicate(ref)) {
+                    refs.push(ref);
+                }
+            }
+
+            return refs;
         }
     }
 
-    private _classConstantReferences(symbol: PhpSymbol, table: ReferenceTable) {
+    private async _classConstantReferences(symbol: PhpSymbol, table: ReferenceTable) {
 
         if ((symbol.modifiers & SymbolModifier.Private) > 0) {
             let lcScope = symbol.scope ? symbol.scope.toLowerCase() : '';
             let fn = (x: Reference) => {
-                return x.kind === SymbolKind.ClassConstant && x.name === symbol.name && x.scope && x.scope.toLowerCase() === lcScope;
+                return x.kind === SymbolKind.ClassConstant;
             };
-            return Promise.resolve(this._symbolRefsInTableScope(symbol, table, fn));
+            return this._symbolRefsInTableScope(symbol, table, fn, _sameNameAndScope(name, lcScope));
         } else {
-            return this.refStore.find(symbol.name, this._createMemberReferenceFilterFn(symbol));
+            const results = await this.refStore.find(symbol.name);
+            const refs: Reference[] = [];
+            const predicate = this._createMemberReferenceFilterFn(symbol);
+
+            for (const ref of results) {
+                if (await predicate(ref)) {
+                    refs.push(ref);
+                }
+            }
+
+            return refs;
         }
     }
 
-    private _propertyReferences(symbol: PhpSymbol, table: ReferenceTable) {
+    private async _propertyReferences(symbol: PhpSymbol, table: ReferenceTable) {
 
         let name = symbol.name;
         if ((symbol.modifiers & SymbolModifier.Private) > 0) {
             let lcScope = symbol.scope ? symbol.scope.toLowerCase() : '';
             let fn = (x: Reference) => {
-                return x.kind === SymbolKind.Property && x.name === name && x.scope && lcScope === x.scope.toLowerCase();
+                return x.kind === SymbolKind.Property;
             };
-            return Promise.resolve(this._symbolRefsInTableScope(symbol, table, fn));
+            return this._symbolRefsInTableScope(symbol, table, fn, _sameNameAndScope(name, lcScope));
         } else {
-            return this.refStore.find(name, this._createMemberReferenceFilterFn(symbol));
+            const results = await this.refStore.find(name);
+            const refs: Reference[] = [];
+            const predicate = this._createMemberReferenceFilterFn(symbol);
+
+            for (const ref of results) {
+                if (await predicate(ref)) {
+                    refs.push(ref);
+                }
+            }
+
+            return refs;
         }
 
     }
@@ -158,18 +202,19 @@ export class ReferenceProvider {
             return lcBaseTypeName === x.name.toLowerCase();
         };
 
-        return (r: Reference) => {
+        return async (r: Reference) => {
 
             if (!(r.kind & (SymbolKind.Property | SymbolKind.Method | SymbolKind.ClassConstant)) || !r.scope) {
                 return false;
             }
+            const scope = await TypeString.resolve(r.scope);
 
-            let lcScope = r.scope.toLowerCase();
+            let lcScope = scope.toLowerCase();
             if (map[lcScope] !== undefined) {
                 return map[lcScope];
             }
 
-            let aggregateType = TypeAggregate.create(store, r.scope);
+            let aggregateType = TypeAggregate.create(store, scope);
             if (!aggregateType) {
                 return map[lcScope] = false;
             }
@@ -255,7 +300,12 @@ export class ReferenceProvider {
 
     }
 
-    private _symbolRefsInTableScope(symbol: PhpSymbol, refTable: ReferenceTable, filterFn: Predicate<Scope|Reference>): Reference[] {
+    private async _symbolRefsInTableScope(
+        symbol: PhpSymbol,
+        refTable: ReferenceTable,
+        filterFn: Predicate<Scope | Reference>,
+        extraFilterFn: AsyncPredicate<Scope | Reference>
+    ): Promise<Reference[]> {
 
         let traverser = refTable.createTraverser();
         let pos = symbol.location ? symbol.location.range.start : undefined;
@@ -268,7 +318,16 @@ export class ReferenceProvider {
                 x.location && x.location.range && util.positionEquality(x.location.range.start, pos);
         }
         if (traverser.find(findFn) && traverser.parent()) {
-            return traverser.filter(filterFn) as Reference[];
+            const results = traverser.filter(filterFn) as Reference[];
+            const refs: Reference[] = [];
+
+            for (const ref of results) {
+                if (await extraFilterFn(ref)) {
+                    refs.push(ref);
+                }
+            }
+
+            return refs;
         }
 
         return [];

@@ -8,6 +8,7 @@ import { ParsedDocument, ParsedDocumentChangeEventArgs } from './parsedDocument'
 import { TreeVisitor, Event, Debounce, Unsubscribe } from './types';
 import { Phrase, Token, ParseError, tokenTypeToString, PhraseType } from 'php7parser';
 import * as lsp from 'vscode-languageserver-types';
+import { Log } from './logger';
 
 export interface PublishDiagnosticsEventArgs {
     uri: string;
@@ -52,7 +53,7 @@ export class DiagnosticsProvider {
 
     add(doc: ParsedDocument) {
         if (this.has(doc.uri)) {
-            throw new Error('Duplicate Key');
+            return;
         }
 
         this._docs[doc.uri] = doc;

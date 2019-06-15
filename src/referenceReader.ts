@@ -22,7 +22,7 @@ import { PhpDocParser, Tag } from './phpDoc';
 import { Reference, Scope, ReferenceTable } from './reference';
 
 interface TypeNodeTransform extends NodeTransform {
-    type: string;
+    type: string | Promise<string>;
 }
 
 interface ReferenceNodeTransform extends NodeTransform {
@@ -819,7 +819,7 @@ class NamespaceUseClauseTransform implements ReferenceNodeTransform {
 
 }
 
-type ReferenceSymbolDelegate = (ref: Reference) => PhpSymbol[];
+type ReferenceSymbolDelegate = (ref: Reference) => Promise<PhpSymbol[]>;
 
 class CatchClauseTransform implements VariableNodeTransform {
 
@@ -870,7 +870,7 @@ class ForeachStatementTransform implements NodeTransform {
 
     phraseType = PhraseType.ForeachStatement;
     variables: Variable[];
-    private _type = '';
+    private _type: string | Promise<string> = '';
 
     constructor() {
         this.variables = [];
@@ -878,11 +878,19 @@ class ForeachStatementTransform implements NodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.phraseType === PhraseType.ForeachCollection) {
-            this._type = TypeString.arrayDereference((<ForeachCollectionTransform>transform).type);
+            this._type = (async (): Promise<string> => {
+                let transformType = await TypeString.resolve((<ForeachCollectionTransform>transform).type);
+                return TypeString.arrayDereference(transformType)
+            })();
         } else if (transform.phraseType === PhraseType.ForeachValue) {
             let vars = (<ForeachValueTransform>transform).variables;
-            for (let n = 0; n < vars.length; ++n) {
-                this.variables.push(Variable.resolveBaseVariable(vars[n], this._type));
+
+            for (const variable of vars) {
+                const newVariable = Variable.create(variable.name, (async () => {
+                    return Variable.resolveBaseVariable(variable, await TypeString.resolve(this._type));
+                })());
+
+                this.variables.push(newVariable);
             }
         }
     }
@@ -892,12 +900,12 @@ class ForeachStatementTransform implements NodeTransform {
 interface Variable {
     name: string;
     arrayDereferenced: number;
-    type: string;
+    type: string | Promise<string>;
 }
 
 namespace Variable {
 
-    export function create(name: string, type: string) {
+    export function create(name: string, type: string | Promise<string>) {
         return <Variable>{
             name: name,
             arrayDereferenced: 0,
@@ -905,7 +913,7 @@ namespace Variable {
         };
     }
 
-    export function resolveBaseVariable(variable: Variable, type: string) {
+    export function resolveBaseVariable(variable: Variable, type: string): string {
         let deref = variable.arrayDereferenced;
         if (deref > 0) {
             while (deref-- > 0) {
@@ -916,7 +924,7 @@ namespace Variable {
                 type = TypeString.arrayDereference(type);
             }
         }
-        return Variable.create(variable.name, type);
+        return type;
     }
 }
 
@@ -943,17 +951,17 @@ class ForeachValueTransform implements NodeTransform {
 class ForeachCollectionTransform implements TypeNodeTransform {
 
     phraseType = PhraseType.ForeachCollection;
-    type = '';
+    type: string | Promise<string> = '';
 
     push(transform: NodeTransform) {
-        this.type = (<TypeNodeTransform>transform).type || '';
+        this.type = (<TypeNodeTransform>transform).type;
     }
 }
 
 class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
 
     _variables: Variable[];
-    type = '';
+    type: string | Promise<string> = '';
     private _pushCount = 0;
 
     constructor(public phraseType: PhraseType, private varTypeOverrides: Tag[]) {
@@ -1012,12 +1020,18 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
         }
     }
 
-    get variables() {
-        let type = this.type;
+    get variables(): Variable[] {
         let tags = this.varTypeOverrides;
         let typeOverrideFn = this._typeOverride;
+
         let fn = (x: Variable) => {
-            return Variable.resolveBaseVariable(x, typeOverrideFn(x.name, tags) || type);
+            return Variable.create(
+                x.name,
+                (async () => {
+                    let type = await TypeString.resolve(this.type);
+                    return Variable.resolveBaseVariable(x, typeOverrideFn(x.name, tags) || type);
+                })()
+            );
         };
         return this._variables.map(fn);
     }
@@ -1051,7 +1065,7 @@ class ArrayInititialiserListTransform implements TypeNodeTransform {
 
     phraseType = PhraseType.ArrayInitialiserList;
     variables: Variable[];
-    private _types: string[];
+    private _types: (string | Promise<string>)[];
 
     constructor() {
         this.variables = [];
@@ -1065,16 +1079,18 @@ class ArrayInititialiserListTransform implements TypeNodeTransform {
         }
     }
 
-    get type() {
-        let merged: string;
-        let types: string[];
-        if (this._types.length < 4) {
-            types = this._types;
-        } else {
-            types = [this._types[0], this._types[Math.floor(this._types.length / 2)], this._types[this._types.length - 1]];
-        }
-        merged = TypeString.mergeMany(types);
-        return TypeString.count(merged) < 3 && merged.indexOf('mixed') < 0 ? merged : 'mixed';
+    get type(): Promise<string> {
+        return (async () => {
+            let merged: string;
+            let types: (string | Promise<string>)[];
+            if (this._types.length < 4) {
+                types = this._types;
+            } else {
+                types = [this._types[0], this._types[Math.floor(this._types.length / 2)], this._types[this._types.length - 1]];
+            }
+            merged = TypeString.mergeMany(await TypeString.resolveArray(types));
+            return TypeString.count(merged) < 3 && merged.indexOf('mixed') < 0 ? merged : 'mixed';
+        })();
     }
 
 }
@@ -1083,7 +1099,7 @@ class ArrayElementTransform implements TypeNodeTransform {
 
     phraseType = PhraseType.ArrayElement;
     variables: Variable[];
-    type = '';
+    type: string | Promise<string> = '';
 
     constructor() {
         this.variables = [];
@@ -1102,7 +1118,7 @@ class ArrayValueTransform implements TypeNodeTransform {
 
     phraseType = PhraseType.ArrayValue;
     variables: Variable[];
-    type = '';
+    type: string | Promise<string> = '';
 
     constructor() {
         this.variables = [];
@@ -1145,10 +1161,15 @@ class ArrayValueTransform implements TypeNodeTransform {
 class CoalesceExpressionTransform implements TypeNodeTransform {
 
     phraseType = PhraseType.CoalesceExpression;
-    type = '';
+    type: string | Promise<string> = '';
 
     push(transform: NodeTransform) {
-        this.type = TypeString.merge(this.type, (<TypeNodeTransform>transform).type);
+        this.type = (async () => {
+            return TypeString.merge(
+                await TypeString.resolve(this.type),
+                await TypeString.resolve((<TypeNodeTransform>transform).type)
+            );
+        })();
     }
 
 }
@@ -1167,9 +1188,18 @@ class TernaryExpressionTransform implements TypeNodeTransform {
     }
 
     get type() {
-        return this._transforms.slice(-2).reduce<string>((prev, current) => {
-            return TypeString.merge(prev, (<TypeNodeTransform>current).type);
-        }, '');
+        return (async () => {
+            let result = '';
+
+            const transforms = this._transforms.slice(-2);
+            for (const transform of transforms) {
+                const transformType = await TypeString.resolve((<TypeNodeTransform>transform).type);
+
+                result = TypeString.merge(result, transformType);
+            }
+
+            return result;
+        })();
     }
 
 }
@@ -1178,7 +1208,7 @@ class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTra
 
     phraseType = PhraseType.SubscriptExpression;
     variable: Variable;
-    type = '';
+    type: string | Promise<string> = '';
     private _pushCount = 0;
 
     push(transform: NodeTransform) {
@@ -1194,7 +1224,9 @@ class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTra
                 {
                     let ref = (<SimpleVariableTransform>transform).reference;
                     if (ref) {
-                        this.type = TypeString.arrayDereference(ref.type);
+                        this.type = (async () => {
+                            return TypeString.arrayDereference(await TypeString.resolve(ref.type));
+                        })();
                         this.variable = { name: ref.name, arrayDereferenced: 1, type: this.type };
                     }
                 }
@@ -1203,7 +1235,12 @@ class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTra
             case PhraseType.SubscriptExpression:
                 {
                     let v = (<SubscriptExpressionTransform>transform).variable;
-                    this.type = TypeString.arrayDereference((<SubscriptExpressionTransform>transform).type);
+                    this.type = (async () => {
+                        const type = await TypeString.resolve((<SubscriptExpressionTransform>transform).type);
+
+                        return TypeString.arrayDereference(type);
+                    })();
+
                     if (v) {
                         v.arrayDereferenced++;
                         this.variable = v;
@@ -1218,9 +1255,11 @@ class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTra
             case PhraseType.ScopedCallExpression:
             case PhraseType.ScopedPropertyAccessExpression:
             case PhraseType.ArrayCreationExpression:
-                this.type = TypeString.arrayDereference((<TypeNodeTransform>transform).type);
+                this.type = (async () => {
+                    return TypeString.arrayDereference(await TypeString.resolve((<TypeNodeTransform>transform).type));
+                })();
                 break;
-
+                
             default:
                 break;
         }
@@ -1234,7 +1273,7 @@ class InstanceOfExpressionTransform implements TypeNodeTransform, VariableNodeTr
     type = 'bool';
     private _pushCount = 0;
     private _varName = '';
-    private _varType = '';
+    private _varType: string | Promise<string> = '';
 
     push(transform: NodeTransform) {
 
@@ -1247,7 +1286,9 @@ class InstanceOfExpressionTransform implements TypeNodeTransform, VariableNodeTr
                 }
             }
         } else if (transform.phraseType === PhraseType.InstanceofTypeDesignator) {
-            this._varType = (<TypeDesignatorTransform>transform).type;
+            this._varType = (async () => {
+                return TypeString.resolve((<TypeDesignatorTransform>transform).type);
+            })();
         }
 
     }
@@ -1261,7 +1302,7 @@ class InstanceOfExpressionTransform implements TypeNodeTransform, VariableNodeTr
 class FunctionCallExpressionTransform implements TypeNodeTransform {
 
     phraseType = PhraseType.FunctionCallExpression;
-    type = '';
+    type: string | Promise<string> = '';
 
     constructor(public referenceSymbolDelegate: ReferenceSymbolDelegate) { }
 
@@ -1272,7 +1313,10 @@ class FunctionCallExpressionTransform implements TypeNodeTransform {
             case PhraseType.QualifiedName:
                 {
                     let ref = (<ReferenceNodeTransform>transform).reference;
-                    this.type = this.referenceSymbolDelegate(ref).reduce(symbolsToTypeReduceFn, '');
+                    this.type = (async () => {
+                        return (await this.referenceSymbolDelegate(ref))
+                            .reduce(symbolsToTypeReduceFn, '');
+                    })();
                     break;
                 }
 
@@ -1296,7 +1340,7 @@ class RelativeScopeTransform implements TypeNodeTransform, ReferenceNodeTransfor
 
 class TypeDesignatorTransform implements TypeNodeTransform {
 
-    type = '';
+    type: string | Promise<string> = '';
 
     constructor(public phraseType: PhraseType) { }
 
@@ -1326,7 +1370,7 @@ class AnonymousClassDeclarationTransform implements TypeNodeTransform {
 class ObjectCreationExpressionTransform implements TypeNodeTransform {
 
     phraseType = PhraseType.ObjectCreationExpression;
-    type = '';
+    type: string | Promise<string> = '';
 
     push(transform: NodeTransform) {
         if (
@@ -1521,7 +1565,7 @@ class IdentifierTransform implements TextNodeTransform {
 class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
     reference: Reference;
-    private _scope = '';
+    private _scope: string | Promise<string> = '';
 
     constructor(
         public phraseType: PhraseType,
@@ -1554,7 +1598,9 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
             case PhraseType.RelativeQualifiedName:
             case PhraseType.EncapsulatedExpression:
             case PhraseType.RelativeScope:
-                this._scope = (<TypeNodeTransform>transform).type;
+                this._scope = (async () => {
+                    return await TypeString.resolve((<TypeNodeTransform>transform).type);
+                })();
                 break;
 
             default:
@@ -1563,8 +1609,11 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
 
     }
 
-    get type() {
-        return this.referenceSymbolDelegate(this.reference).reduce(symbolsToTypeReduceFn, '');
+    get type(): Promise<string> {
+        return (async () => {
+            return (await this.referenceSymbolDelegate(this.reference))
+                .reduce(symbolsToTypeReduceFn, '');
+        })();
     }
 
 }
@@ -1704,7 +1753,7 @@ class VariableTable {
         let scope = VariableSet.create(VariableSetKind.Scope);
 
         if (carry) {
-            let type: string;
+            let type: string | Promise<string>;
             let name: string
             for (let n = 0; n < carry.length; ++n) {
                 name = carry[n];
@@ -1779,7 +1828,12 @@ class VariableTable {
         for (let n = 0, l = keys.length; n < l; ++n) {
             v = b.variables[keys[n]];
             if (a.variables[v.name]) {
-                a.variables[v.name].type = TypeString.merge(a.variables[v.name].type, v.type);
+                a.variables[v.name].type = (async () => {
+                    return TypeString.merge(
+                        await TypeString.resolve(a.variables[v.name].type),
+                        await TypeString.resolve(v.type)
+                    );
+                })();
             } else {
                 a.variables[v.name] = v;
             }
@@ -1810,7 +1864,7 @@ namespace VariableSet {
 }
 
 export namespace ReferenceReader {
-    export function discoverReferences(doc: ParsedDocument, symbolStore: SymbolStore) {
+    export async function discoverReferences(doc: ParsedDocument, symbolStore: SymbolStore) {
         let visitor = new ReferenceReader(doc, new NameResolver(), symbolStore);
         doc.traverse(visitor);
         return visitor.refTable;

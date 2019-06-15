@@ -7,18 +7,20 @@ import { MemoryCache } from '../src/cache';
 import * as lsp from 'vscode-languageserver-types';
 import { assert } from 'chai';
 import 'mocha';
+import LevelConstructor from 'levelup';
+import MemDown from 'memdown';
 
 
-function setup(src: string) {
-
-    let symbolStore = new SymbolStore();
+async function setup(src: string) {
+    const level = LevelConstructor(MemDown());
+    let symbolStore = new SymbolStore(level);
     let doc = new ParsedDocument('test', src);
     let table = SymbolTable.create(doc);
     let docStore = new ParsedDocumentStore();
     let refStore = new ReferenceStore();
     docStore.add(doc);
     symbolStore.add(table);
-    let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
+    let refTable = await ReferenceReader.discoverReferences(doc, symbolStore);
     refStore.add(refTable);
 
     return new DefinitionProvider(symbolStore, docStore, refStore);
@@ -81,12 +83,12 @@ describe('DefintionProvider', function () {
         describe('Object access expr', function () {
 
             let provider: DefinitionProvider
-            before(function () {
-                provider = setup(objectAccessSrc);
+            before(async function () {
+                provider = await setup(objectAccessSrc);
             });
 
-            it('method location', function () {
-                let loc = provider.provideDefinition('test', { line: 6, character: 12 });
+            it('method location', async function () {
+                let loc = await provider.provideDefinition('test', { line: 6, character: 12 });
                 let expected: lsp.Location = {
                     uri: 'test',
                     range: {
@@ -98,8 +100,8 @@ describe('DefintionProvider', function () {
                 //console.log(JSON.stringify(loc, null, 4));
             });
 
-            it('property location', function () {
-                let loc = provider.provideDefinition('test', { line: 7, character: 12 });
+            it('property location', async function () {
+                let loc = await provider.provideDefinition('test', { line: 7, character: 12 });
                 let expected: lsp.Location = {
                     uri: 'test',
                     range: {
@@ -116,12 +118,12 @@ describe('DefintionProvider', function () {
         describe('Scoped access expr', function () {
 
             let provider: DefinitionProvider
-            before(function () {
-                provider = setup(scopedAccessSrc);
+            before(async function () {
+                provider = await setup(scopedAccessSrc);
             });
 
-            it('method location', function () {
-                let loc = provider.provideDefinition('test', { line: 8, character: 12 });
+            it('method location', async function () {
+                let loc = await provider.provideDefinition('test', { line: 8, character: 12 });
                 let expected: lsp.Location = {
                     uri: 'test',
                     range: {
@@ -133,8 +135,8 @@ describe('DefintionProvider', function () {
                 //console.log(JSON.stringify(loc, null, 4));
             });
 
-            it('property location', function () {
-                let loc = provider.provideDefinition('test', { line: 7, character: 12 });
+            it('property location', async function () {
+                let loc = await provider.provideDefinition('test', { line: 7, character: 12 });
                 let expected: lsp.Location = {
                     uri: 'test',
                     range: {
@@ -146,8 +148,8 @@ describe('DefintionProvider', function () {
                 //console.log(JSON.stringify(loc, null, 4));
             });
 
-            it('const location', function () {
-                let loc = provider.provideDefinition('test', { line: 6, character: 12 });
+            it('const location', async function () {
+                let loc = await provider.provideDefinition('test', { line: 6, character: 12 });
                 let expected: lsp.Location = {
                     uri: 'test',
                     range: {
@@ -164,12 +166,12 @@ describe('DefintionProvider', function () {
         describe('Name', function () {
 
             let provider: DefinitionProvider;
-            before(function () {
-                provider = setup(nameSrc);
+            before(async function () {
+                provider = await setup(nameSrc);
             });
 
-            it('function', function () {
-                let loc = provider.provideDefinition('test', { line: 3, character: 5 });
+            it('function', async function () {
+                let loc = await provider.provideDefinition('test', { line: 3, character: 5 });
                 let expected: lsp.Location = {
                     uri: 'test',
                     range: {
@@ -183,9 +185,9 @@ describe('DefintionProvider', function () {
 
         });
 
-        it('defines', function () {
-            let provider = setup(defineSrc);
-            let loc = provider.provideDefinition('test', { line: 2, character: 8 });
+        it('defines', async function () {
+            let provider = await setup(defineSrc);
+            let loc = await provider.provideDefinition('test', { line: 2, character: 8 });
             let expected: lsp.Location = {
                 uri: 'test',
                 range: {
@@ -197,9 +199,9 @@ describe('DefintionProvider', function () {
             assert.deepEqual(loc, expected);
         });
 
-        it('multiple locations', () => {
-
-            let symbolStore = new SymbolStore();
+        it('multiple locations', async () => {
+            const level = LevelConstructor(MemDown());
+            let symbolStore = new SymbolStore(level);
             let doc = new ParsedDocument('test', defineSrc);
             let doc2 = new ParsedDocument('test2', constSrc);
             let table = SymbolTable.create(doc);
@@ -210,13 +212,13 @@ describe('DefintionProvider', function () {
             docStore.add(doc2);
             symbolStore.add(table);
             symbolStore.add(table2);
-            let refTable1 = ReferenceReader.discoverReferences(doc, symbolStore);
+            let refTable1 = await ReferenceReader.discoverReferences(doc, symbolStore);
             refStore.add(refTable1);
-            let refTable2 = ReferenceReader.discoverReferences(doc2, symbolStore);
+            let refTable2 = await ReferenceReader.discoverReferences(doc2, symbolStore);
             refStore.add(refTable2);
 
             let provider = new DefinitionProvider(symbolStore, docStore, refStore);
-            let locs = provider.provideDefinition('test2', { line: 2, character: 8 });
+            let locs = await provider.provideDefinition('test2', { line: 2, character: 8 });
             let expected: lsp.Location[] = [
                 {
                     uri: "test",
@@ -250,9 +252,9 @@ describe('DefintionProvider', function () {
 
         });
 
-        it('unprefixed global function', function () {
-            let provider = setup(unprefixedSrc);
-            let loc = provider.provideDefinition('test', { line: 3, character: 2 });
+        it('unprefixed global function', async function () {
+            let provider = await setup(unprefixedSrc);
+            let loc = await provider.provideDefinition('test', { line: 3, character: 2 });
             let expected: lsp.Location = {
                 uri: 'test',
                 range: {

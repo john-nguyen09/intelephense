@@ -15,8 +15,9 @@ import { SymbolReader } from './symbolReader';
 import { NameResolver } from './nameResolver';
 import * as util from './util';
 import { TypeAggregate, MemberMergeStrategy } from './typeAggregate';
-import { ReferenceReader } from './referenceReader';
 import { SymbolIndex } from './indexes/symbolIndex';
+import { SymbolTableIndex } from './indexes/symbolTableIndex';
+import { LevelUp } from 'levelup';
 
 export const BUILTIN_SYMBOLS_URI = 'php://built-in';
 
@@ -136,6 +137,13 @@ export class SymbolTable implements Traversable<PhpSymbol> {
         return (s.kind & mask) > 0;
     }
 
+    toJSON() {
+        return {
+            _uri: this._uri,
+            _root: this._root,
+        };
+    }
+
     static fromJSON(data: any) {
         return new SymbolTable(data._uri, data._root);
     }
@@ -188,8 +196,8 @@ export class SymbolStore {
     private _symbolIndex: SymbolIndex;
     private _symbolCount: number;
 
-    constructor() {
-        this._tableIndex = new SymbolTableIndex();
+    constructor(db: LevelUp) {
+        this._tableIndex = new SymbolTableIndex(db);
         this._symbolIndex = new SymbolIndex;
         this._symbolCount = 0;
     }
@@ -216,36 +224,21 @@ export class SymbolStore {
         return this._symbolCount;
     }
 
-    add(symbolTable: SymbolTable) {
+    async add(symbolTable: SymbolTable) {
         //if table already exists replace it
-        this.remove(symbolTable.uri);
-        this._tableIndex.add(symbolTable);
+        await this.remove(symbolTable.uri);
+        await this._tableIndex.add(symbolTable);
         this._symbolIndex.index(symbolTable.root);
         this._symbolCount += symbolTable.symbolCount;
     }
 
-    remove(uri: string) {
-        let symbolTable = this._tableIndex.remove(uri);
+    async remove(uri: string) {
+        let symbolTable = await this._tableIndex.remove(uri);
         if (!symbolTable) {
             return;
         }
         this._symbolIndex.removeMany(uri);
         this._symbolCount -= symbolTable.symbolCount;
-    }
-
-    toJSON() {
-        return {
-            _tableIndex: this._tableIndex,
-            _symbolCount: this._symbolCount
-        }
-    }
-
-    fromJSON(data:any) {
-        this._symbolCount = data._symbolCount;
-        this._tableIndex.fromJSON(data._tableIndex);
-        for (let t of this._tableIndex.tables()) {
-            this._symbolIndex.index(t.root);
-        }
     }
 
     /**
@@ -308,7 +301,7 @@ export class SymbolStore {
         });
     }
 
-    findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): PhpSymbol[] {
+    async findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): Promise<PhpSymbol[]> {
         if (!ref) {
             return [];
         }
@@ -343,7 +336,7 @@ export class SymbolStore {
                 fn = (x) => {
                     return x.kind === SymbolKind.Method && x.name === ref.name;
                 };
-                symbols = this.findMembers(ref.scope, memberMergeStrategy || MemberMergeStrategy.None, fn);
+                symbols = await this.findMembers(ref.scope, memberMergeStrategy || MemberMergeStrategy.None, fn);
                 break;
 
             case SymbolKind.Property:
@@ -352,7 +345,7 @@ export class SymbolStore {
                     fn = (x) => {
                         return x.kind === SymbolKind.Property && name === x.name;
                     };
-                    symbols = this.findMembers(ref.scope, memberMergeStrategy || MemberMergeStrategy.None, fn);
+                    symbols = await this.findMembers(ref.scope, memberMergeStrategy || MemberMergeStrategy.None, fn);
                     break;
                 }
 
@@ -360,13 +353,13 @@ export class SymbolStore {
                 fn = (x) => {
                     return x.kind === SymbolKind.ClassConstant && x.name === ref.name;
                 };
-                symbols = this.findMembers(ref.scope, memberMergeStrategy || MemberMergeStrategy.None, fn);
+                symbols = await this.findMembers(ref.scope, memberMergeStrategy || MemberMergeStrategy.None, fn);
                 break;
 
             case SymbolKind.Variable:
             case SymbolKind.Parameter:
                 //@todo global vars?
-                table = this.getSymbolTable(ref.location.uri);
+                table = await this.getSymbolTable(ref.location.uri);
                 if (table) {
                     let scope = table.scope(ref.location.range.start);
 
@@ -385,7 +378,7 @@ export class SymbolStore {
                 fn = (x) => {
                     return x.kind === SymbolKind.Method && x.name.toLowerCase() === '__construct';
                 };
-                symbols = this.findMembers(ref.name, memberMergeStrategy || MemberMergeStrategy.None, fn);
+                symbols = await this.findMembers(ref.name, memberMergeStrategy || MemberMergeStrategy.None, fn);
                 break;
 
             default:
@@ -396,9 +389,11 @@ export class SymbolStore {
         return symbols || [];
     }
 
-    findMembers(scope: string, memberMergeStrategy: MemberMergeStrategy, predicate?: Predicate<PhpSymbol>) {
+    private async findMembers(
+        scope: string | Promise<string>, memberMergeStrategy: MemberMergeStrategy, predicate?: Predicate<PhpSymbol>
+    ) {
 
-        let fqnArray = TypeString.atomicClassArray(scope);
+        let fqnArray = TypeString.atomicClassArray(await TypeString.resolve(scope));
         let type: TypeAggregate;
         let members: PhpSymbol[] = [];
         for (let n = 0; n < fqnArray.length; ++n) {
@@ -410,7 +405,7 @@ export class SymbolStore {
         return Array.from(new Set<PhpSymbol>(members));
     }
 
-    findBaseMember(symbol: PhpSymbol) {
+    private async findBaseMember(symbol: PhpSymbol) {
 
         if (
             !symbol || !symbol.scope ||
@@ -432,7 +427,7 @@ export class SymbolStore {
             };
         }
 
-        return this.findMembers(symbol.scope, MemberMergeStrategy.Base, fn).shift() || symbol;
+        return (await this.findMembers(symbol.scope, MemberMergeStrategy.Base, fn)).shift() || symbol;
 
     }
 
@@ -477,12 +472,12 @@ export class SymbolStore {
     }
     */
 
-    symbolLocation(symbol: PhpSymbol): Location {
-        let table = this._tableIndex.findBySymbol(symbol);
+    async symbolLocation(symbol: PhpSymbol): Promise<Location> {
+        let table = await this._tableIndex.findBySymbol(symbol);
         return table ? Location.create(table.uri, symbol.location.range) : undefined;
     }
 
-    referenceToTypeString(ref: Reference) {
+    async referenceToTypeString(ref: Reference) {
 
         if (!ref) {
             return '';
@@ -498,9 +493,10 @@ export class SymbolStore {
             case SymbolKind.Function:
             case SymbolKind.Method:
             case SymbolKind.Property:
-                return this.findSymbolsByReference(ref, MemberMergeStrategy.Documented).reduce<string>((carry, val) => {
-                    return TypeString.merge(carry, PhpSymbol.type(val));
-                }, '');
+                return (await this.findSymbolsByReference(ref, MemberMergeStrategy.Documented))
+                    .reduce<string>((carry, val) => {
+                        return TypeString.merge(carry, PhpSymbol.type(val));
+                    }, '');
 
             case SymbolKind.Variable:
                 return ref.type || '';
@@ -661,74 +657,4 @@ class ContainsVisitor implements TreeVisitor<PhpSymbol> {
 
     }
 
-}
-
-export class SymbolTableIndex {
-
-    private _count = 0;
-    private _tables: Map<string, SymbolTable>;
-
-    constructor() {
-        this._tables = new Map<string, SymbolTable>();
-    }
-
-    count() {
-        return this._count;
-    }
-
-    *tables() {
-        for (let key of this._tables.keys()) {
-            yield this._tables.get(key);
-        }
-    }
-
-    add(table: SymbolTable) {
-        if (this._tables.has(table.uri)) {
-            throw new Error(`Duplicate key ${table.uri}`);
-        }
-
-        this._tables.set(table.uri, table);
-        ++this._count;
-    }
-
-    remove(uri: string) {
-        if (!this._tables.has(uri)) {
-            return undefined;
-        }
-
-        let table = this._tables.get(uri);
-        this._tables.delete(uri);
-        --this._count;
-
-        return table;
-    }
-
-    find(uri: string) {
-        return this._tables.get(uri);
-    }
-
-    findBySymbol(s: PhpSymbol) {
-        if (!s.location) {
-            return undefined;
-        }
-
-        return this.find(s.location.uri);
-    }
-
-    toJSON() {
-        return {
-            _tables: this._tables,
-            _count: this._count
-        }
-    }
-
-    fromJSON(data: any) {
-        this._count = data._count;
-        this._tables = data._tables;
-    }
-}
-
-export interface SymbolTableIndexNode {
-    hash: number;
-    tables: SymbolTable[];
 }

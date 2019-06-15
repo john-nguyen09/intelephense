@@ -10,6 +10,8 @@ import {MemoryCache} from '../src/cache';
 import * as fs from 'fs';
 import { CompletionItem } from 'vscode-languageserver-types';
 import * as path from 'path';
+import LevelConstructor from 'levelup';
+import MemDown from 'memdown';
 
 var noCompletions: lsp.CompletionList = {
     items: [],
@@ -352,8 +354,9 @@ namespace Baz;
 \\Foo\\
 `;
 
-function setup(src: string | string[]) {
-    let symbolStore = new SymbolStore();
+async function setup(src: string | string[]) {
+    const level = LevelConstructor(MemDown());
+    let symbolStore = new SymbolStore(level);
     let parsedDocumentStore = new ParsedDocumentStore();
     let refStore = new ReferenceStore();
     let completionProvider = new CompletionProvider(symbolStore, parsedDocumentStore, refStore);
@@ -368,7 +371,7 @@ function setup(src: string | string[]) {
         let table = SymbolTable.create(doc);
         symbolStore.add(table);
         let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
-        refStore.add(refTable);
+        refStore.add(await refTable);
     }
 
     return completionProvider;
@@ -383,26 +386,26 @@ describe('CompletionProvider', () => {
     describe('Closure', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(closureSrc);
+        before(async function () {
+            completionProvider = await setup(closureSrc);
         });
 
-        it('use var completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 10, character: 16 });
+        it('use var completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 10, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'fooFn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
         });
 
-        it('internal var completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 12, character: 16 });
+        it('internal var completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 12, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'barFn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
         });
 
-        it('param var completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 11, character: 16 });
+        it('param var completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 11, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, '$param');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Variable);
@@ -413,12 +416,12 @@ describe('CompletionProvider', () => {
     describe('Object creation', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(objectCreationSrc);
+        before(async function () {
+            completionProvider = await setup(objectCreationSrc);
         });
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 4, character: 16 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 4, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'Foo');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Constructor);
@@ -431,13 +434,13 @@ describe('CompletionProvider', () => {
 
         let completionProvider: CompletionProvider;
 
-        before(function () {
-            completionProvider = setup(scopedAccessSrc);
+        before(async function () {
+            completionProvider = await setup(scopedAccessSrc);
             //console.log(JSON.stringify(completionProvider.symbolStore, null, 4));
         });
 
-        it('::', function () {
-            let completions = completionProvider.provideCompletions('test', { line: 7, character: 17 });
+        it('::', async function () {
+            let completions = await completionProvider.provideCompletions('test', { line: 7, character: 17 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 3);
             completions.items.forEach((x) => {
@@ -451,15 +454,15 @@ describe('CompletionProvider', () => {
         });
 
 
-        it('$', function () {
-            let completions = completionProvider.provideCompletions('test', { line: 8, character: 18 });
+        it('$', async function () {
+            let completions = await completionProvider.provideCompletions('test', { line: 8, character: 18 });
             assert.equal(completions.items[0].label, '$bar');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Property);
             //console.log(JSON.stringify(completions, null, 4));
         });
 
-        it('Identifier', function () {
-            let completions = completionProvider.provideCompletions('test', { line: 9, character: 18 });
+        it('Identifier', async function () {
+            let completions = await completionProvider.provideCompletions('test', { line: 9, character: 18 });
             assert.equal(completions.items.length, 2);
             completions.items.forEach((x) => {
                 assert.isTrue(
@@ -476,12 +479,12 @@ describe('CompletionProvider', () => {
     describe('Object access', function () {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(objectSrc);
+        before(async function () {
+            completionProvider = await setup(objectSrc);
         });
 
-        it('->', function () {
-            let completions = completionProvider.provideCompletions('test', { line: 9, character: 10 });
+        it('->', async function () {
+            let completions = await completionProvider.provideCompletions('test', { line: 9, character: 10 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 3);
             completions.items.forEach((x) => {
@@ -494,32 +497,32 @@ describe('CompletionProvider', () => {
 
         });
 
-        it('Identifier', function () {
-            let completions = completionProvider.provideCompletions('test', { line: 9, character: 11 });
+        it('Identifier', async function () {
+            let completions = await completionProvider.provideCompletions('test', { line: 9, character: 11 });
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, 'bar');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
         });
 
-        it('@method', function () {
-            let provider = setup(methodTagSrc);
-            let completions = provider.provideCompletions('test', { line: 6, character: 11 });
+        it('@method', async function () {
+            let provider = await setup(methodTagSrc);
+            let completions = await provider.provideCompletions('test', { line: 6, character: 11 });
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, 'bar');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
 
         });
 
-        it('@property', function () {
-            let provider = setup(propertyTagSrc);
-            let completions = provider.provideCompletions('test', { line: 6, character: 10 });
+        it('@property', async function () {
+            let provider = await setup(propertyTagSrc);
+            let completions = await provider.provideCompletions('test', { line: 6, character: 10 });
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, 'prop');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Property);
 
         });
 
-        it('with use decl', function () {
+        it('with use decl', async function () {
 
             let src = `<?php
             namespace Foo\\Bar;
@@ -528,8 +531,8 @@ describe('CompletionProvider', () => {
             }
             `;
 
-            let provider = setup([src, objSrc2]);
-            let completions = provider.provideCompletions('test2', { line: 3, character: 6 });
+            let provider = await setup([src, objSrc2]);
+            let completions = await provider.provideCompletions('test2', { line: 3, character: 6 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, 'fn');
@@ -541,12 +544,12 @@ describe('CompletionProvider', () => {
     describe('Variables', function () {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(variableSrc);
+        before(async function () {
+            completionProvider = await setup(variableSrc);
         });
 
-        it('Suggest variable from correct scope', function () {
-            let completions = completionProvider.provideCompletions('test', { line: 5, character: 5 });
+        it('Suggest variable from correct scope', async function () {
+            let completions = await completionProvider.provideCompletions('test', { line: 5, character: 5 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, '$baz');
@@ -554,8 +557,8 @@ describe('CompletionProvider', () => {
 
         });
 
-        it('Parameters', function () {
-            let completions = completionProvider.provideCompletions('test', { line: 2, character: 17 });
+        it('Parameters', async function () {
+            let completions = await completionProvider.provideCompletions('test', { line: 2, character: 17 });
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, '$foo');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Variable);
@@ -567,12 +570,12 @@ describe('CompletionProvider', () => {
     describe('Names', function () {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(nameSrc);
+        before(async function () {
+            completionProvider = await setup(nameSrc);
         });
 
-        it('name completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 3, character: 5 });
+        it('name completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 3, character: 5 });
             //console.log(JSON.stringify(completions, null, 4));
             //should also suggest keywords abstract, break, global
             assert.equal(completions.items.length, 4);
@@ -592,12 +595,12 @@ describe('CompletionProvider', () => {
     describe('Namespace use', function () {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(nsUse);
+        before(async function () {
+            completionProvider = await setup(nsUse);
         });
 
-        it('use completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 2, character: 9 });
+        it('use completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 2, character: 9 });
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, 'Foo');
             assert.equal(completions.items[0].insertText, 'Bar\\Foo');
@@ -610,12 +613,12 @@ describe('CompletionProvider', () => {
     describe('Class extends', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(classBaseSrc);
+        before(async function () {
+            completionProvider = await setup(classBaseSrc);
         });
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 3, character: 23 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 3, character: 23 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, 'Foo');
@@ -627,12 +630,12 @@ describe('CompletionProvider', () => {
     describe('Implements', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(implementsSrc);
+        before(async function () {
+            completionProvider = await setup(implementsSrc);
         });
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 3, character: 38 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 3, character: 38 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, 'FooInterface');
@@ -644,12 +647,12 @@ describe('CompletionProvider', () => {
     describe('Interface extends', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(interfaceBaseSrc);
+        before(async function () {
+            completionProvider = await setup(interfaceBaseSrc);
         });
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 3, character: 27 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 3, character: 27 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 1);
             assert.equal(completions.items[0].label, 'Bar');
@@ -661,8 +664,8 @@ describe('CompletionProvider', () => {
     describe('Use group', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(groupUseSrc);
+        before(async function () {
+            completionProvider = await setup(groupUseSrc);
         });
 
         let expected = <lsp.CompletionItem[]>[
@@ -676,17 +679,17 @@ describe('CompletionProvider', () => {
             }
         ];
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 3, character: 9 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 3, character: 9 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
         });
 
     });
 
-    describe('Imports', () => {
-
-        let symbolStore = new SymbolStore();
+    describe('Imports', async () => {
+        const level = LevelConstructor(MemDown());
+        let symbolStore = new SymbolStore(level);
         let parsedDocumentStore = new ParsedDocumentStore();
         let refStore = new ReferenceStore();
         let completionProvider = new CompletionProvider(symbolStore, parsedDocumentStore, refStore);
@@ -696,8 +699,8 @@ describe('CompletionProvider', () => {
         symbolStore.add(SymbolTable.create(doc));
         parsedDocumentStore.add(doc2);
         symbolStore.add(SymbolTable.create(doc2));
-        refStore.add(ReferenceReader.discoverReferences(doc, symbolStore));
-        refStore.add(ReferenceReader.discoverReferences(doc2, symbolStore));
+        refStore.add(await ReferenceReader.discoverReferences(doc, symbolStore));
+        refStore.add(await ReferenceReader.discoverReferences(doc2, symbolStore));
 
         let expected = <lsp.CompletionList>{
             "items": [
@@ -714,9 +717,9 @@ describe('CompletionProvider', () => {
             "isIncomplete": false
         };
 
-        it('should provide import aliases', () => {
+        it('should provide import aliases', async () => {
 
-            let completions = completionProvider.provideCompletions('doc2', { line: 3, character: 16 });
+            let completions = await completionProvider.provideCompletions('doc2', { line: 3, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions, expected);
         });
@@ -726,19 +729,19 @@ describe('CompletionProvider', () => {
     describe('traits', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(traitSrc);
+        before(async function () {
+            completionProvider = await setup(traitSrc);
         });
 
-        it('internal completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 7, character: 16 });
+        it('internal completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 7, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'barFn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
         });
 
-        it('external completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 11, character: 7 });
+        it('external completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 11, character: 7 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'barFn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
@@ -748,18 +751,18 @@ describe('CompletionProvider', () => {
 
     describe('ns prefix', () => {
 
-        it('prefix enabled', function () {
-            let completionProvider = setup(prefixSrc);
-            var completions = completionProvider.provideCompletions('test', { line: 3, character: 3 });
+        it('prefix enabled', async function () {
+            let completionProvider = await setup(prefixSrc);
+            var completions = await completionProvider.provideCompletions('test', { line: 3, character: 3 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].insertText, '\\barFn()');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Function);
         });
 
-        it('prefix disabled', function () {
-            let completionProvider = setup(prefixSrc);
+        it('prefix disabled', async function () {
+            let completionProvider = await setup(prefixSrc);
             completionProvider.config = { backslashPrefix: false, maxItems: 100, addUseDeclaration: false };
-            var completions = completionProvider.provideCompletions('test', { line: 3, character: 3 });
+            var completions = await completionProvider.provideCompletions('test', { line: 3, character: 3 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].insertText, 'barFn()');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Function);
@@ -770,12 +773,12 @@ describe('CompletionProvider', () => {
     describe('stubs - duplicate names', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(duplicateNameSrc);
+        before(async function () {
+            completionProvider = await setup(duplicateNameSrc);
         });
 
-        it('all methods external', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 11, character: 7 });
+        it('all methods external', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 11, character: 7 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 3);
             let fnNames = ['fnA', 'fnB', 'fnC'];
@@ -783,8 +786,8 @@ describe('CompletionProvider', () => {
             assert.oneOf(completions.items[1].label, fnNames);
         });
 
-        it('all methods internal', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 7, character: 16 });
+        it('all methods internal', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 7, character: 16 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items.length, 3);
             let fnNames = ['fnA', 'fnB', 'fnC'];
@@ -798,8 +801,8 @@ describe('CompletionProvider', () => {
     describe('additional use decl', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup([additionalUseDeclSrc1, additionalUseDeclSrc2]);
+        before(async function () {
+            completionProvider = await setup([additionalUseDeclSrc1, additionalUseDeclSrc2]);
         });
 
         let expected = [
@@ -818,16 +821,16 @@ describe('CompletionProvider', () => {
             }
         ];
 
-        it('additional text edit', function () {
-            var completions = completionProvider.provideCompletions('test2', { line: 3, character: 14 });
+        it('additional text edit', async function () {
+            var completions = await completionProvider.provideCompletions('test2', { line: 3, character: 14 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items[0].additionalTextEdits, expected);
         });
 
-        it('no additional text edit if disabled', function () {
-            let completionProvider = setup([additionalUseDeclSrc1, additionalUseDeclSrc2]);
+        it('no additional text edit if disabled', async function () {
+            let completionProvider = await setup([additionalUseDeclSrc1, additionalUseDeclSrc2]);
             completionProvider.config = { backslashPrefix: true, maxItems: 100, addUseDeclaration: false };
-            var completions = completionProvider.provideCompletions('test2', { line: 3, character: 14 });
+            var completions = await completionProvider.provideCompletions('test2', { line: 3, character: 14 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.isUndefined(completions.items[0].additionalTextEdits);
         });
@@ -837,19 +840,19 @@ describe('CompletionProvider', () => {
     describe('$this and static return types', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(staticAndThisSrc);
+        before(async function () {
+            completionProvider = await setup(staticAndThisSrc);
         });
 
-        it('static', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 11, character: 7 });
+        it('static', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 11, character: 7 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'fn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
         });
 
-        it('$this', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 12, character: 17 });
+        it('$this', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 12, character: 17 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'fn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
@@ -861,19 +864,19 @@ describe('CompletionProvider', () => {
     describe('@var typehinting', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(varTypehintSrc);
+        before(async function () {
+            completionProvider = await setup(varTypehintSrc);
         });
 
-        it('overrides assignment', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 9, character: 8 });
+        it('overrides assignment', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 9, character: 8 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'bar');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
         });
 
-        it('non assignment context', function() {
-            var completions = completionProvider.provideCompletions('test', { line: 12, character: 8 });
+        it('non assignment context', async function() {
+            var completions = await completionProvider.provideCompletions('test', { line: 12, character: 8 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'foo');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
@@ -885,12 +888,12 @@ describe('CompletionProvider', () => {
     describe('encapsulated expr member access', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(encapsExprSrc);
+        before(async function () {
+            completionProvider = await setup(encapsExprSrc);
         });
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 4, character: 14 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 4, character: 14 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'fn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
@@ -901,12 +904,12 @@ describe('CompletionProvider', () => {
     describe('foreach', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(foreachSrc);
+        before(async function () {
+            completionProvider = await setup(foreachSrc);
         });
 
-        it('value', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 6, character: 11 });
+        it('value', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 6, character: 11 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'fn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
@@ -917,12 +920,12 @@ describe('CompletionProvider', () => {
     describe('array deref', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(arrayDerefSrc);
+        before(async function () {
+            completionProvider = await setup(arrayDerefSrc);
         });
 
-        it('members', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 5, character: 12 });
+        it('members', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 5, character: 12 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'fn');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
@@ -933,19 +936,19 @@ describe('CompletionProvider', () => {
     describe('static and self member access', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(staticAndSelfSrc);
+        before(async function () {
+            completionProvider = await setup(staticAndSelfSrc);
         });
 
-        it('static', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 5, character: 18 });
+        it('static', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 5, character: 18 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'bar');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
         });
 
-        it('self', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 4, character: 17 });
+        it('self', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 4, character: 17 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'bar');
             assert.equal(completions.items[0].kind, lsp.CompletionItemKind.Method);
@@ -957,12 +960,12 @@ describe('CompletionProvider', () => {
     describe('member visibility', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(memberVisibilitySrc);
+        before(async function () {
+            completionProvider = await setup(memberVisibilitySrc);
         });
 
-        it('this private and protected', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 5, character: 15 });
+        it('this private and protected', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 5, character: 15 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.lengthOf(completions.items, 3);
         });
@@ -972,12 +975,12 @@ describe('CompletionProvider', () => {
     describe('use trait clause', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(useTraitClauseSrc);
+        before(async function () {
+            completionProvider = await setup(useTraitClauseSrc);
         });
 
-        it('traits', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 5, character: 9 });
+        it('traits', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 5, character: 9 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'Bar');
         });
@@ -987,12 +990,12 @@ describe('CompletionProvider', () => {
     describe('instanceof', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(instanceOfSrc);
+        before(async function () {
+            completionProvider = await setup(instanceOfSrc);
         });
 
-        it('members', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 6, character: 11 });
+        it('members', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 6, character: 11 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.equal(completions.items[0].label, 'fn');
         });
@@ -1001,8 +1004,8 @@ describe('CompletionProvider', () => {
 
     describe('class decl body', () => {
         
-        it('visibility mod', ()=>{
-            let completionProvider = setup(declBodySrc1);
+        it('visibility mod', async ()=>{
+            let completionProvider = await setup(declBodySrc1);
             let expected = <lsp.CompletionItem[]>[
                     {
                         label: "public",
@@ -1018,14 +1021,14 @@ describe('CompletionProvider', () => {
                     }
                 ];
     
-            var completions = completionProvider.provideCompletions('test', { line: 2, character: 5 });
+            var completions = await completionProvider.provideCompletions('test', { line: 2, character: 5 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
 
         });
 
-        it('f', ()=>{
-            let completionProvider = setup(declBodySrc2);
+        it('f', async ()=>{
+            let completionProvider = await setup(declBodySrc2);
             let expected = <lsp.CompletionItem[]>[
                     {
                         label:"final",
@@ -1037,7 +1040,7 @@ describe('CompletionProvider', () => {
                     }
                 ];
     
-            var completions = completionProvider.provideCompletions('test', { line: 2, character: 12 });
+            var completions = await completionProvider.provideCompletions('test', { line: 2, character: 12 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
 
@@ -1047,8 +1050,8 @@ describe('CompletionProvider', () => {
     describe('extends implements', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(extendsImplementsSrc);
+        before(async function () {
+            completionProvider = await setup(extendsImplementsSrc);
         });
 
         let expected = <lsp.CompletionItem[]>[
@@ -1062,8 +1065,8 @@ describe('CompletionProvider', () => {
             }
         ];
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 1, character: 11 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 1, character: 11 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
         });
@@ -1073,8 +1076,8 @@ describe('CompletionProvider', () => {
     describe('instanceOfTypeDesignator', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(instanceOfTypeDesignatorSrc);
+        before(async function () {
+            completionProvider = await setup(instanceOfTypeDesignatorSrc);
         });
 
         let expected = <CompletionItem[]>[
@@ -1088,8 +1091,8 @@ describe('CompletionProvider', () => {
                 }
             ];
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 3, character: 17 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 3, character: 17 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
         });
@@ -1099,8 +1102,8 @@ describe('CompletionProvider', () => {
     describe('trailing backslash', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
-            completionProvider = setup(backslashSrc);
+        before(async function () {
+            completionProvider = await setup(backslashSrc);
         });
 
         let expected = <lsp.CompletionItem[]>[
@@ -1110,8 +1113,8 @@ describe('CompletionProvider', () => {
             }
         ];
 
-        it('completions', function () {
-            var completions = completionProvider.provideCompletions('test', { line: 4, character: 5 });
+        it('completions', async function () {
+            var completions = await completionProvider.provideCompletions('test', { line: 4, character: 5 });
             //console.log(JSON.stringify(completions, null, 4));
             assert.deepEqual(completions.items, expected);
         });
@@ -1121,7 +1124,7 @@ describe('CompletionProvider', () => {
     describe('Global variable', () => {
 
         let completionProvider: CompletionProvider;
-        before(function () {
+        before(async function () {
             let files = [
                 path.join(__dirname, '/fixtures/global-variables.php'),
                 path.join(__dirname, '/fixtures/completions.php')
@@ -1132,11 +1135,11 @@ describe('CompletionProvider', () => {
                 filesContent.push(fs.readFileSync(file).toString());
             }
 
-            completionProvider = setup(filesContent);
+            completionProvider = await setup(filesContent);
         });
 
-        it('Member access', function () {
-            let completions = completionProvider.provideCompletions('test2', { line: 5, character: 9 });
+        it('Member access', async function () {
+            let completions = await completionProvider.provideCompletions('test2', { line: 5, character: 9 });
             let exptectedItems = [
                 {
                     kind: lsp.CompletionItemKind.Method,
@@ -1155,7 +1158,7 @@ describe('CompletionProvider', () => {
             
             assert.deepEqual(completions.items, exptectedItems);
 
-            completions = completionProvider.provideCompletions('test2', { line: 8, character: 5 });
+            completions = await completionProvider.provideCompletions('test2', { line: 8, character: 5 });
             assert.deepEqual(completions.items, exptectedItems);
         });
 

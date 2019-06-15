@@ -7,11 +7,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ParsedDocument } from '../src/parsedDocument';
 import * as lsp from 'vscode-languageserver-types';
+import LevelConstructor from 'levelup';
+import MemDown from 'memdown';
 
 describe('symbolProviders', () => {
-    it('provide symbols', () => {
+    it('provide symbols', async () => {
         let src = fs.readFileSync(path.join(__dirname, '/fixtures/symbols.php')).toString();
-        let symbolStore = new SymbolStore();
+        const level = LevelConstructor(MemDown());
+        let symbolStore = new SymbolStore(level);
         let document = new ParsedDocument('test', src);
         let symbolTable = SymbolTable.create(document);
 
@@ -19,7 +22,7 @@ describe('symbolProviders', () => {
 
         let symbolProvider = new SymbolProvider(symbolStore);
 
-        let results = symbolProvider.provideDocumentSymbols('test');
+        let results = await symbolProvider.provideDocumentSymbols('test');
         let expected = [
             { kind: lsp.SymbolKind.Constant, name: 'TEST_CONST', location: {
                 uri: 'test', range: { start: { line: 2, character: 0 }, end: { line: 2, character: 23 } }
