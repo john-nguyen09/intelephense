@@ -6,7 +6,6 @@ import { assert } from 'chai';
 import 'mocha';
 import { ReferenceReader } from '../src/referenceReader';
 import {ReferenceStore} from '../src/reference';
-import {MemoryCache} from '../src/cache';
 import * as fs from 'fs';
 import { CompletionItem } from 'vscode-languageserver-types';
 import * as path from 'path';
@@ -356,8 +355,8 @@ namespace Baz;
 
 async function setup(src: string | string[]) {
     const level = LevelConstructor(MemDown());
-    let symbolStore = new SymbolStore(level);
     let parsedDocumentStore = new ParsedDocumentStore();
+    let symbolStore = new SymbolStore(level, parsedDocumentStore);
     let refStore = new ReferenceStore();
     let completionProvider = new CompletionProvider(symbolStore, parsedDocumentStore, refStore);
 
@@ -370,8 +369,8 @@ async function setup(src: string | string[]) {
         parsedDocumentStore.add(doc);
         let table = SymbolTable.create(doc);
         await symbolStore.add(table);
-        let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
-        refStore.add(await refTable);
+        let refTable = await ReferenceReader.discoverReferences(doc, symbolStore);
+        refStore.add(refTable);
     }
 
     return completionProvider;
@@ -689,8 +688,8 @@ describe('CompletionProvider', () => {
 
     describe('Imports', async () => {
         const level = LevelConstructor(MemDown());
-        let symbolStore = new SymbolStore(level);
         let parsedDocumentStore = new ParsedDocumentStore();
+        let symbolStore = new SymbolStore(level, parsedDocumentStore);
         let refStore = new ReferenceStore();
         let completionProvider = new CompletionProvider(symbolStore, parsedDocumentStore, refStore);
         let doc = new ParsedDocument('doc1', importSrc1);
@@ -1081,15 +1080,15 @@ describe('CompletionProvider', () => {
         });
 
         let expected = <CompletionItem[]>[
-                {
-                    "kind": 8,
-                    "label": "Baz"
-                },
-                {
-                    "kind": 7,
-                    "label": "Bar"
-                }
-            ];
+            {
+                "kind": 7,
+                "label": "Bar"
+            },
+            {
+                "kind": 8,
+                "label": "Baz"
+            },
+        ];
 
         it('completions', async function () {
             var completions = await completionProvider.provideCompletions('test', { line: 3, character: 17 });

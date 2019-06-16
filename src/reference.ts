@@ -8,7 +8,6 @@ import { Predicate, TreeVisitor, TreeTraverser, NameIndex, Traversable, SortedLi
 import { SymbolIdentifier, SymbolKind } from './symbol';
 import { Range, Location, Position } from 'vscode-languageserver-types';
 import * as util from './util';
-import { FileCache, Cache } from './cache';
 import { Log } from './logger';
 
 export interface Reference extends SymbolIdentifier {

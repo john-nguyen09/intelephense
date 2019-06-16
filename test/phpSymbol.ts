@@ -10,7 +10,8 @@ describe('PhpSymbol', () => {
         it('Should return correct acronym for camel case fqn', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Class,
-                name:'Foo\\MyFooClass'
+                name:'Foo\\MyFooClass',
+                location: null,
             } 
             assert.equal(acronym(PhpSymbol.notFqn(s.name)), 'mfc');
         });
@@ -18,7 +19,8 @@ describe('PhpSymbol', () => {
         it('Should return correct acronym for lower case underscore separated name', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Function,
-                name:'_my_function'
+                name:'_my_function',
+                location: null,
             } 
             assert.equal(acronym(s.name), 'mf');
         });
@@ -26,7 +28,8 @@ describe('PhpSymbol', () => {
         it('Should return correct acronym for camel case variable/property', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Variable,
-                name:'$myProperty'
+                name:'$myProperty',
+                location: null,
             } 
             assert.equal(acronym(s.name), 'mp');
         });
@@ -34,7 +37,8 @@ describe('PhpSymbol', () => {
         it('Should return correct acronym for upper case underscore separated name', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Variable,
-                name:'THIS_IS_A_CONSTANT'
+                name:'THIS_IS_A_CONSTANT',
+                location: null,
             } 
             assert.equal(acronym(s.name), 'tiac');
         });
@@ -46,7 +50,8 @@ describe('PhpSymbol', () => {
         it('Should return correct suffixes for camel case fqn', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Class,
-                name:'Foo\\MyFooClass'
+                name:'Foo\\MyFooClass',
+                location: null,
             }
 
             let expected = [
@@ -59,7 +64,8 @@ describe('PhpSymbol', () => {
         it('Should return correct suffixes for lower case underscore separated name', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Function,
-                name:'_my_function'
+                name:'_my_function',
+                location: null,
             } 
 
             let expected = [
@@ -72,7 +78,8 @@ describe('PhpSymbol', () => {
         it('Should return correct suffixes for camel case variable/property', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Variable,
-                name:'$myProperty'
+                name:'$myProperty',
+                location: null,
             } 
 
             let expected = [
@@ -85,7 +92,8 @@ describe('PhpSymbol', () => {
         it('Should return correct suffixes for upper case underscore separated name', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Variable,
-                name:'THIS_IS_A_CONSTANT'
+                name:'THIS_IS_A_CONSTANT',
+                location: null,
             } 
 
             let expected = [

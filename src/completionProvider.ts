@@ -250,7 +250,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             };
 
             Array.prototype.push.apply(items, keywordCompletionItems(this._getKeywords(traverser.clone()), word));
-            const imports = this._importedSymbols(nameResolver.rules, this._symbolFilter, word);
+            const imports = await this._importedSymbols(nameResolver.rules, this._symbolFilter, word);
             let imported: PhpSymbol;
 
             for (let n = 0; n < imports.length; ++n) {
@@ -259,7 +259,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
                     importMap[imported.associated[0].name] = imported;
                 }
                 items.push(
-                    this._toCompletionItem(
+                    await this._toCompletionItem(
                         imports[n],
                         useDeclarationHelper,
                         nameResolver.namespaceName,
@@ -272,7 +272,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         }
 
         const uniqueSymbols = new UniqueSymbolSet();
-        const iterator = this.symbolStore.match(word, pred);
+        const iterator = await this.symbolStore.match(word, pred);
         let limit = this.config.maxItems;
         let isIncomplete = false;
 
@@ -282,7 +282,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             }
 
             uniqueSymbols.add(s);
-            items.push(this._toCompletionItem(
+            items.push(await this._toCompletionItem(
                 s,
                 useDeclarationHelper,
                 nameResolver.namespaceName,
@@ -317,7 +317,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
     protected abstract _getKeywords(traverser: ParseTreeTraverser): string[];
 
-    protected _importedSymbols(rules: PhpSymbol[], pred: Predicate<PhpSymbol>, text: string) {
+    protected async _importedSymbols(rules: PhpSymbol[], pred: Predicate<PhpSymbol>, text: string) {
 
         let filteredRules: PhpSymbol[] = [];
         let r: PhpSymbol;
@@ -334,7 +334,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         let imported: PhpSymbol[] = [];
         for (let n = 0, l = filteredRules.length; n < l; ++n) {
             r = filteredRules[n];
-            s = this.symbolStore.find(r.associated[0].name, pred).shift();
+            s = (await this.symbolStore.find(r.associated[0].name, pred)).shift();
             if (s) {
                 merged = PhpSymbol.clone(s);
                 merged.associated = r.associated;
@@ -351,7 +351,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         return imported;
     }
 
-    protected _toCompletionItem(
+    protected async _toCompletionItem(
         s: PhpSymbol,
         useDeclarationHelper: UseDeclarationHelper,
         namespaceName: string,
@@ -550,7 +550,7 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         return [];
     }
 
-    protected _toCompletionItem(
+    protected async _toCompletionItem(
         s: PhpSymbol,
         useDeclarationHelper: UseDeclarationHelper,
         namespaceName: string,
@@ -559,9 +559,9 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         qualifiedNameRule: PhpSymbol
     ) {
 
-        let item = super._toCompletionItem(s, useDeclarationHelper, namespaceName, isUnqualified, fqnOffset, qualifiedNameRule);
+        let item = await super._toCompletionItem(s, useDeclarationHelper, namespaceName, isUnqualified, fqnOffset, qualifiedNameRule);
         let aggregate = new TypeAggregate(this.symbolStore, s);
-        let constructor = aggregate.firstMember(this._isConstructor);
+        let constructor = await aggregate.firstMember(this._isConstructor);
         if (item.kind !== lsp.CompletionItemKind.Module) { //namespace
             item.kind = lsp.CompletionItemKind.Constructor;
         }
@@ -813,7 +813,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
         }
 
         let nameResolver = traverser.nameResolver;
-        let classAggregateType = TypeAggregate.create(this.symbolStore, nameResolver.className);
+        let classAggregateType = await TypeAggregate.create(this.symbolStore, nameResolver.className);
         let typeName: string;
         let fn: Predicate<PhpSymbol>;
         let typeAggregate: TypeAggregate;
@@ -824,15 +824,15 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
             if (classAggregateType && classAggregateType.name.toLowerCase() === typeName.toLowerCase()) {
                 typeAggregate = classAggregateType;
             } else {
-                typeAggregate = TypeAggregate.create(this.symbolStore, typeName);
+                typeAggregate = await TypeAggregate.create(this.symbolStore, typeName);
             }
 
             if (!typeAggregate) {
                 continue;
             }
 
-            fn = this._createMemberPredicate(typeName, word, classAggregateType);
-            Array.prototype.push.apply(symbols, typeAggregate.members(MemberMergeStrategy.Documented, fn));
+            fn = await this._createMemberPredicate(typeName, word, classAggregateType);
+            Array.prototype.push.apply(symbols, await typeAggregate.members(MemberMergeStrategy.Documented, fn));
         }
 
         symbols = Array.from(new Set<PhpSymbol>(symbols)); //unique
@@ -933,7 +933,9 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
     }
 
-    protected abstract _createMemberPredicate(scopeName: string, word: string, classContext: TypeAggregate): Predicate<PhpSymbol>;
+    protected abstract async _createMemberPredicate(
+        scopeName: string, word: string, classContext: TypeAggregate
+    ): Promise<Predicate<PhpSymbol>>;
 
     protected _isMemberAccessExpr(node: Phrase | Token) {
         switch ((<Phrase>node).phraseType) {
@@ -1063,20 +1065,22 @@ class ScopedAccessCompletion extends MemberAccessCompletion {
             ParsedDocument.isPhrase(traverser.parent(), [PhraseType.ScopedMemberName]);
     }
 
-    protected _createMemberPredicate(scopeName: string, word: string, classContext: TypeAggregate): Predicate<PhpSymbol> {
+    protected async _createMemberPredicate(
+        scopeName: string, word: string, classContext: TypeAggregate
+    ): Promise<Predicate<PhpSymbol>> {
         if (classContext && scopeName.toLowerCase() === classContext.name.toLowerCase()) {
             //public, protected, private
             return (x) => {
                 return (x.modifiers & SymbolModifier.Static) > 0 && util.ciStringContains(word, x.name);
             };
-        } else if (classContext && classContext.isBaseClass(scopeName)) {
+        } else if (classContext && await classContext.isBaseClass(scopeName)) {
             //public, protected
             //looking for non static here as well to handle parent keyword
             return (x) => {
                 return !(x.modifiers & SymbolModifier.Private) && util.ciStringContains(word, x.name);
             };
 
-        } else if (classContext && classContext.isAssociated(scopeName)) {
+        } else if (classContext && await classContext.isAssociated(scopeName)) {
             //public, protected
             return (x) => {
                 return (x.modifiers & SymbolModifier.Static) > 0 &&
@@ -1108,7 +1112,9 @@ class ObjectAccessCompletion extends MemberAccessCompletion {
 
     }
 
-    protected _createMemberPredicate(scopeName: string, word: string, classContext: TypeAggregate): Predicate<PhpSymbol> {
+    protected async _createMemberPredicate(
+        scopeName: string, word: string, classContext: TypeAggregate
+    ): Promise<Predicate<PhpSymbol>> {
 
         //php allows static methods to be accessed with ->
         if (classContext && scopeName.toLowerCase() === classContext.name.toLowerCase()) {
@@ -1116,7 +1122,7 @@ class ObjectAccessCompletion extends MemberAccessCompletion {
             return (x) => {
                 return util.ciStringContains(word, x.name);
             };
-        } else if (classContext && classContext.isAssociated(scopeName)) {
+        } else if (classContext && await classContext.isAssociated(scopeName)) {
             //public, protected
             const mask = SymbolModifier.Private;
             return (x) => {
@@ -1239,7 +1245,7 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
         const items: lsp.CompletionItem[] = [];
         const uniqueSymbols = new UniqueSymbolSet();
         //namespaces always match on fqn
-        const matches = this.symbolStore.match(word, this._symbolFilter);
+        const matches = await this.symbolStore.match(word, this._symbolFilter);
         let isIncomplete = false;
         let n = this.config.maxItems;
         //replace from the last \
@@ -1317,7 +1323,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             return (x.kind & kindMask) > 0 && !(x.modifiers & SymbolModifier.Use);
         }
 
-        const matches = this.symbolStore.match(word, pred);
+        const matches = await this.symbolStore.match(word, pred);
         const uniqueSymbols = new UniqueSymbolSet();
         let n = this.config.maxItems;
         let isIncomplete = false;
@@ -1445,7 +1451,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
             return (x.kind & kindMask) > 0 && !(x.modifiers & SymbolModifier.Use);
         };
 
-        let matches = this.symbolStore.match(word, pred);
+        let matches = await this.symbolStore.match(word, pred);
         let uniqueSymbols = new UniqueSymbolSet();
         let isIncomplete = false;
         let n = this.config.maxItems;
@@ -1610,7 +1616,7 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
         }
 
         const aggregate = new TypeAggregate(this.symbolStore, classSymbol, true);
-        const matches = aggregate.members(MemberMergeStrategy.Documented, fn);
+        const matches = await aggregate.members(MemberMergeStrategy.Documented, fn);
         let isIncomplete = matches.length > this.config.maxItems;
         const limit = Math.min(this.config.maxItems, matches.length);
         const items: lsp.CompletionItem[] = [];

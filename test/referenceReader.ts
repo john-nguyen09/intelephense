@@ -5,7 +5,6 @@ import * as lsp from 'vscode-languageserver-types';
 import { assert } from 'chai';
 import { ReferenceReader } from '../src/referenceReader';
 import { ReferenceStore, Reference } from '../src/reference';
-import { MemoryCache } from '../src/cache';
 import 'mocha';
 import { SymbolReader } from '../src/symbolReader';
 import * as fs from 'fs';
@@ -16,7 +15,8 @@ import { TypeString } from '../src/typeString';
 
 async function readReferences(src:string) {
     const level = LevelConstructor(MemDown());
-    let store = new SymbolStore(level);
+    const docStore = new ParsedDocumentStore();
+    let store = new SymbolStore(level, docStore);
     let doc = new ParsedDocument('test', src);
     let table = SymbolTable.create(doc);
     //console.log(JSON.stringify(table, null, 4));

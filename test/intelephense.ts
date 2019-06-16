@@ -1,6 +1,8 @@
 import { Intelephense } from '../src/intelephense';
 import { assert } from 'chai';
 import 'mocha';
+import { pathToUri } from '../src/util';
+import { join } from 'path';
 
 describe('intelephense', function(){
 

@@ -6,15 +6,14 @@ import * as lsp from 'vscode-languageserver-types';
 import { assert } from 'chai';
 import { ReferenceReader } from '../src/referenceReader';
 import { ReferenceStore } from '../src/reference';
-import { MemoryCache } from '../src/cache';
 import 'mocha';
 import LevelConstructor from 'levelup';
 import MemDown from 'memdown';
 
 async function setup(src: string) {
     const level = LevelConstructor(MemDown());
-    let symbolStore = new SymbolStore(level);
     let docStore = new ParsedDocumentStore();
+    let symbolStore = new SymbolStore(level, docStore);
     let doc = new ParsedDocument('test', src);
     let refStore = new ReferenceStore();
     docStore.add(doc);

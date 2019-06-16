@@ -3,7 +3,6 @@ import { SymbolStore, SymbolTable } from '../src/symbolStore';
 import { ParsedDocumentStore, ParsedDocument } from '../src/parsedDocument';
 import { ReferenceReader } from '../src/referenceReader';
 import { ReferenceStore } from '../src/reference';
-import { MemoryCache } from '../src/cache';
 import * as lsp from 'vscode-languageserver-types';
 import { assert } from 'chai';
 import 'mocha';
@@ -13,10 +12,10 @@ import MemDown from 'memdown';
 
 async function setup(src: string) {
     const level = LevelConstructor(MemDown());
-    let symbolStore = new SymbolStore(level);
-    let doc = new ParsedDocument('test', src);
-    let table = SymbolTable.create(doc);
     let docStore = new ParsedDocumentStore();
+    let doc = new ParsedDocument('test', src);
+    let symbolStore = new SymbolStore(level, docStore);
+    let table = SymbolTable.create(doc);
     let refStore = new ReferenceStore();
     docStore.add(doc);
     await symbolStore.add(table);
@@ -201,12 +200,12 @@ describe('DefintionProvider', function () {
 
         it('multiple locations', async () => {
             const level = LevelConstructor(MemDown());
-            let symbolStore = new SymbolStore(level);
+            let docStore = new ParsedDocumentStore();
+            let symbolStore = new SymbolStore(level, docStore);
             let doc = new ParsedDocument('test', defineSrc);
             let doc2 = new ParsedDocument('test2', constSrc);
             let table = SymbolTable.create(doc);
             let table2 = SymbolTable.create(doc2);
-            let docStore = new ParsedDocumentStore();
             let refStore = new ReferenceStore();
             docStore.add(doc);
             docStore.add(doc2);

@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import 'mocha';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ParsedDocument } from '../src/parsedDocument';
+import { ParsedDocument, ParsedDocumentStore } from '../src/parsedDocument';
 import * as lsp from 'vscode-languageserver-types';
 import LevelConstructor from 'levelup';
 import MemDown from 'memdown';
@@ -14,7 +14,8 @@ describe('symbolProviders', () => {
     it('provide symbols', async () => {
         let src = fs.readFileSync(path.join(__dirname, '/fixtures/symbols.php')).toString();
         const level = LevelConstructor(MemDown());
-        let symbolStore = new SymbolStore(level);
+        const docStore = new ParsedDocumentStore();
+        let symbolStore = new SymbolStore(level, docStore);
         let document = new ParsedDocument('test', src);
         let symbolTable = SymbolTable.create(document);
 

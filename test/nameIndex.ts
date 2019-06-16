@@ -6,31 +6,38 @@ import 'mocha';
 let symbols: PhpSymbol[] = [
     {
         kind: SymbolKind.Class,
-        name: 'Foo\\MyFoo'
+        name: 'Foo\\MyFoo',
+        location: null,
     },
     {
         kind: SymbolKind.Property,
-        name: 'fooBar'
+        name: 'fooBar',
+        location: null,
     },
     {
         kind: SymbolKind.Method,
-        name: 'myFooFunction'
+        name: 'myFooFunction',
+        location: null,
     },
     {
         kind: SymbolKind.Method,
-        name: 'myBarFunction'
+        name: 'myBarFunction',
+        location: null,
     },
     {
         kind: SymbolKind.Interface,
-        name: 'Bar\\MyBar'
+        name: 'Bar\\MyBar',
+        location: null,
     },
     {
         kind:SymbolKind.Function,
-        name: 'zoo'
+        name: 'zoo',
+        location: null,
     },
     {
         kind: SymbolKind.Class,
-        name: 'Foo\\myFoo'
+        name: 'Foo\\myFoo',
+        location: null,
     }
 ];
 

@@ -6,11 +6,11 @@
 
 import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbol';
 import { Reference } from './reference';
-import { TreeTraverser, Predicate, TreeVisitor, Traversable, BinarySearch, NameIndex } from './types';
+import { TreeTraverser, Predicate, TreeVisitor, Traversable, BinarySearch, NameIndex, HashedLocation } from './types';
 import { Position, Location, Range } from 'vscode-languageserver-types';
 import { TypeString } from './typeString';
 import * as builtInSymbols from './builtInSymbols.json';
-import { ParsedDocument, ParsedDocumentChangeEventArgs } from './parsedDocument';
+import { ParsedDocument, ParsedDocumentChangeEventArgs, ParsedDocumentStore } from './parsedDocument';
 import { SymbolReader } from './symbolReader';
 import { NameResolver } from './nameResolver';
 import * as util from './util';
@@ -24,11 +24,13 @@ export const BUILTIN_SYMBOLS_URI = 'php://built-in';
 export class SymbolTable implements Traversable<PhpSymbol> {
 
     private _uri: string;
+    private _modifiedTime: number;
     private _root: PhpSymbol;
 
-    constructor(uri: string, root: PhpSymbol) {
+    constructor(uri: string, root: PhpSymbol, modifiedTime: number) {
         this._uri = uri;
         this._root = root;
+        this._modifiedTime = modifiedTime;
     }
 
     get uri() {
@@ -37,6 +39,10 @@ export class SymbolTable implements Traversable<PhpSymbol> {
 
     get root() {
         return this._root;
+    }
+
+    get modifiedTime() {
+        return this._modifiedTime;
     }
 
     get symbols() {
@@ -141,21 +147,22 @@ export class SymbolTable implements Traversable<PhpSymbol> {
         return {
             _uri: this._uri,
             _root: this._root,
+            _modifiedTime: this.modifiedTime,
         };
     }
 
     static fromJSON(data: any) {
-        return new SymbolTable(data._uri, data._root);
+        return new SymbolTable(data._uri, data._root, data._modifiedTime);
     }
 
-    static create(parsedDocument: ParsedDocument, externalOnly?: boolean) {
-
-        let symbolReader = new SymbolReader(parsedDocument, new NameResolver());
+    static create(parsedDocument: ParsedDocument, modifiedTime: number = 0) {
+        const symbolReader = new SymbolReader(parsedDocument, new NameResolver());
 
         parsedDocument.traverse(symbolReader);
         return new SymbolTable(
             parsedDocument.uri,
-            symbolReader.symbol
+            symbolReader.symbol,
+            modifiedTime
         );
 
     }
@@ -166,7 +173,7 @@ export class SymbolTable implements Traversable<PhpSymbol> {
             kind: SymbolKind.None,
             name: '',
             children: <any>builtInSymbols
-        });
+        }, 0);
 
     }
 
@@ -196,15 +203,15 @@ export class SymbolStore {
     private _symbolIndex: SymbolIndex;
     private _symbolCount: number;
 
-    constructor(db: LevelUp) {
+    constructor(db: LevelUp, private _documentStore: ParsedDocumentStore) {
         this._tableIndex = new SymbolTableIndex(db);
-        this._symbolIndex = new SymbolIndex;
+        this._symbolIndex = new SymbolIndex(db);
         this._symbolCount = 0;
     }
 
     onParsedDocumentChange = (args: ParsedDocumentChangeEventArgs) => {
         this.remove(args.parsedDocument.uri);
-        let table = SymbolTable.create(args.parsedDocument);
+        let table = SymbolTable.create(args.parsedDocument, 0);
         this.add(table);
     };
 
@@ -212,9 +219,9 @@ export class SymbolStore {
         return this._tableIndex.find(uri);
     }
 
-    get tables() {
-        return this._tableIndex.tables();
-    }
+    // get tables() {
+    //     return this._tableIndex.tables();
+    // }
 
     get tableCount() {
         return this._tableIndex.count();
@@ -227,8 +234,8 @@ export class SymbolStore {
     async add(symbolTable: SymbolTable) {
         //if table already exists replace it
         await this.remove(symbolTable.uri);
-        await this._tableIndex.add(symbolTable);
-        this._symbolIndex.index(symbolTable.root);
+        await this._tableIndex.add(symbolTable, this._documentStore.has(symbolTable.uri));
+        await this._symbolIndex.index(symbolTable.root);
         this._symbolCount += symbolTable.symbolCount;
     }
 
@@ -237,7 +244,7 @@ export class SymbolStore {
         if (!symbolTable) {
             return;
         }
-        this._symbolIndex.removeMany(uri);
+        await this._symbolIndex.removeMany(uri);
         this._symbolCount -= symbolTable.symbolCount;
     }
 
@@ -248,13 +255,13 @@ export class SymbolStore {
      * @param text 
      * @param filter 
      */
-    find(text: string, filter?: Predicate<PhpSymbol>) {
+    async find(text: string, filter?: Predicate<PhpSymbol>) {
 
         if (!text) {
             return [];
         }
 
-        let result = this._symbolIndex.find(text);
+        let result = await this._symbolIndex.find(text);
         let symbols: PhpSymbol[] = [];
 
         for (let n = 0, l = result.length; n < l; ++n) {
@@ -264,10 +271,6 @@ export class SymbolStore {
         }
 
         return symbols;
-    }
-
-    getNamedSymbol(uri: string) {
-        return this._symbolIndex.getNamedSymbol(uri);
     }
 
     getGlobalVariables() {
@@ -282,15 +285,16 @@ export class SymbolStore {
      * matches indexed symbols where symbol keys begin with text.
      * Case insensitive
      */
-    match(text: string, filter?: Predicate<PhpSymbol>) {
+    async match(text: string, filter?: Predicate<PhpSymbol>) {
 
         if (!text) {
             return [];
         }
 
-        let matches: PhpSymbol[] = this._symbolIndex.match(text).filter((symbol) => {
-            return symbol;
-        });
+        let matches: PhpSymbol[] = (await this._symbolIndex.match(text))
+            .filter((symbol) => {
+                return symbol;
+            });
 
         if (!filter) {
             return matches;
@@ -318,7 +322,7 @@ export class SymbolStore {
                 fn = (x) => {
                     return (x.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait)) > 0;
                 };
-                symbols = this.find(ref.name, fn);
+                symbols = await this.find(ref.name, fn);
                 break;
 
             case SymbolKind.Function:
@@ -326,9 +330,9 @@ export class SymbolStore {
                 fn = (x) => {
                     return x.kind === ref.kind;
                 };
-                symbols = this.find(ref.name, fn);
+                symbols = await this.find(ref.name, fn);
                 if (symbols.length < 1 && ref.altName) {
-                    symbols = this.find(ref.altName, fn);
+                    symbols = await this.find(ref.altName, fn);
                 }
                 break;
 
@@ -397,9 +401,9 @@ export class SymbolStore {
         let type: TypeAggregate;
         let members: PhpSymbol[] = [];
         for (let n = 0; n < fqnArray.length; ++n) {
-            type = TypeAggregate.create(this, fqnArray[n]);
+            type = await TypeAggregate.create(this, fqnArray[n]);
             if (type) {
-                Array.prototype.push.apply(members, type.members(memberMergeStrategy, predicate));
+                Array.prototype.push.apply(members, await type.members(memberMergeStrategy, predicate));
             }
         }
         return Array.from(new Set<PhpSymbol>(members));

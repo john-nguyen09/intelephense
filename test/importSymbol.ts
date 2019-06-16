@@ -6,7 +6,6 @@ import { SymbolStore, SymbolTable } from '../src/symbolStore';
 import { NameTextEditProvider } from '../src/commands';
 import {ReferenceReader} from '../src/referenceReader';
 import {ReferenceStore, ReferenceTable} from '../src/reference';
-import {MemoryCache} from '../src/cache';
 import LevelConstructor from 'levelup';
 import MemDown from 'memdown';
 
@@ -14,7 +13,7 @@ async function setup(srcArray:string[]) {
     const level = LevelConstructor(MemDown());
     let docStore = new ParsedDocumentStore();
     let refStore = new ReferenceStore();
-    let symbolStore = new SymbolStore(level);
+    let symbolStore = new SymbolStore(level, docStore);
 
     let doc:ParsedDocument;
     let src:string;
@@ -72,7 +71,7 @@ describe('importSymbol', async () => {
     docStore.add(doc1);
     docStore.add(doc2);
     const level = LevelConstructor(MemDown());
-    let symbolStore = new SymbolStore(level);
+    let symbolStore = new SymbolStore(level, docStore);
     let t1 = SymbolTable.create(doc1);
     let t2 = SymbolTable.create(doc2);
     await symbolStore.add(t1);

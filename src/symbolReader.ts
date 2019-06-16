@@ -1600,7 +1600,8 @@ export namespace SymbolReader {
                 tag = doc.findGlobalTag(s.name);
 
                 if (tag) {
-                    s.doc = PhpSymbolDoc.create(doc.text, TypeString.nameResolve(tag.typeString, nameResolver));
+                    s.type = TypeString.nameResolve(tag.typeString, nameResolver);
+                    s.doc = PhpSymbolDoc.create(doc.text, s.type);
                 }
 
                 break;

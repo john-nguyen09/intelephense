@@ -5,7 +5,7 @@
 'use strict';
 
 import {
-    TreeVisitor, MultiVisitor
+    TreeVisitor, MultiVisitor, TreeTraverser
 } from './types';
 import { Phrase, Token, PhraseType, TokenType } from 'php7parser';
 import { SymbolKind, PhpSymbol, SymbolModifier } from './symbol';
@@ -20,6 +20,7 @@ import { TypeAggregate, MemberMergeStrategy } from './typeAggregate';
 import * as util from './util';
 import { PhpDocParser, Tag } from './phpDoc';
 import { Reference, Scope, ReferenceTable } from './reference';
+import { SymbolIndex } from './indexes/symbolIndex';
 
 interface TypeNodeTransform extends NodeTransform {
     type: string | Promise<string>;
@@ -59,24 +60,20 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         public doc: ParsedDocument,
         public nameResolver: NameResolver,
         public symbolStore: SymbolStore,
+        namedSymbols: PhpSymbol[],
+        globalVariables: PhpSymbol[]
     ) {
         this._transformStack = [];
         this._variableTable = new VariableTable();
         this._classStack = [];
-        this._symbols = this.symbolStore.getNamedSymbol(doc.uri);
+        this._symbols = namedSymbols;
         this._scopeStack = [
             Scope.create(lsp.Location.create(
                 this.doc.uri, util.cloneRange(this.shiftSymbol().location.range)
             ))
         ]; //file/root node
 
-        const globalVariables = this.symbolStore.getGlobalVariables();
-
-        for (let globalVariable of globalVariables) {
-            if (!globalVariable.type && globalVariable.doc) {
-                globalVariable.type = TypeString.nameResolve(globalVariable.doc.type, this.nameResolver);
-            }
-
+        for (const globalVariable of globalVariables) {
             this._variableTable.setVariable(Variable.create(globalVariable.name, globalVariable.type));
         }
     }
@@ -1865,7 +1862,14 @@ namespace VariableSet {
 
 export namespace ReferenceReader {
     export async function discoverReferences(doc: ParsedDocument, symbolStore: SymbolStore) {
-        let visitor = new ReferenceReader(doc, new NameResolver(), symbolStore);
+        const symbolTable = await symbolStore.getSymbolTable(doc.uri);
+        const traverser = new TreeTraverser([symbolTable.root]);
+        const symbols = traverser.filter((s: PhpSymbol) => {
+            return SymbolIndex.isNamedSymbol(s);
+        });
+
+        const globalVariables = await symbolStore.getGlobalVariables();
+        const visitor = new ReferenceReader(doc, new NameResolver(), symbolStore, symbols, globalVariables);
         doc.traverse(visitor);
         return visitor.refTable;
     }

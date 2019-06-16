@@ -5,7 +5,11 @@
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"outDir": "lib",
-		"declaration": true
+		"declaration": true,
+		"lib": [
+			"es2015",
+      		"esnext.asynciterable"
+		]
 	},
 	"exclude": [
 		"node_modules",

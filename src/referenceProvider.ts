@@ -54,7 +54,7 @@ export class ReferenceProvider {
             //if class member then make sure base symbol is fetched
             symbols = await this.symbolStore.findSymbolsByReference(ref, MemberMergeStrategy.Base);
         } else {
-            return Promise.resolve(locations);
+            return locations;
         }
 
         return this.provideReferences(symbols, table, referenceContext.includeDeclaration).then((refs) => {
@@ -95,27 +95,26 @@ export class ReferenceProvider {
     }
 
     private _provideReferences = async (symbol: PhpSymbol, table: ReferenceTable): Promise<Reference[]> => {
-
         switch (symbol.kind) {
             case SymbolKind.Parameter:
             case SymbolKind.Variable:
-                return Promise.resolve(this._variableReferences(
+                return this._variableReferences(
                     symbol, table, await this.symbolStore.getSymbolTable(table.uri)
-                ));
+                );
             case SymbolKind.Class:
             case SymbolKind.Interface:
             case SymbolKind.Trait:
             case SymbolKind.Function:
             case SymbolKind.Constant:
-                return this.refStore.find(symbol.name);
+                return await this.refStore.find(symbol.name);
             case SymbolKind.Property:
-                return this._propertyReferences(symbol, table);
+                return await this._propertyReferences(symbol, table);
             case SymbolKind.ClassConstant:
-                return this._classConstantReferences(symbol, table);
+                return await this._classConstantReferences(symbol, table);
             case SymbolKind.Method:
-                return this._methodReferences(symbol, table);
+                return await this._methodReferences(symbol, table);
             default:
-                return Promise.resolve<Reference[]>([]);
+                return [];
         }
 
     }
@@ -148,6 +147,7 @@ export class ReferenceProvider {
 
         if ((symbol.modifiers & SymbolModifier.Private) > 0) {
             let lcScope = symbol.scope ? symbol.scope.toLowerCase() : '';
+            let name = symbol.name.toLowerCase();
             let fn = (x: Reference) => {
                 return x.kind === SymbolKind.ClassConstant;
             };
@@ -214,11 +214,11 @@ export class ReferenceProvider {
                 return map[lcScope];
             }
 
-            let aggregateType = TypeAggregate.create(store, scope);
+            let aggregateType = await TypeAggregate.create(store, scope);
             if (!aggregateType) {
                 return map[lcScope] = false;
             }
-            return map[lcScope] = aggregateType.associated(associatedFilterFn).length > 0;
+            return map[lcScope] = (await aggregateType.associated(associatedFilterFn)).length > 0;
 
         };
 
@@ -228,7 +228,7 @@ export class ReferenceProvider {
 
         let symbolTreeTraverser = symbolTable.createTraverser();
         symbolTreeTraverser.find((x)=>{
-            return x === symbol;
+            return PhpSymbol.equality(x, symbol);
         });
 
         let outerScope = symbolTreeTraverser.parent();

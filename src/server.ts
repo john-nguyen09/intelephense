@@ -22,10 +22,6 @@ let connection: IConnection = createConnection();
 Log.console = connection.console;
 
 const languageId = 'php';
-const forgetRequest = new RequestType<{ uri: string }, void, void, void>('forget');
-const importSymbolRequest = new RequestType<{ uri: string, position: Position, alias?: string }, TextEdit[], void, void>('importSymbol');
-const documentLanguageRangesRequest = new RequestType<{ textDocument: TextDocumentIdentifier }, { version: number, ranges: LanguageRange[] }, void, void>('documentLanguageRanges');
-const knownDocumentsRequest = new RequestType<void, { timestamp: number, documents: string[] }, void, void>('knownDocuments');
 
 interface VscodeConfig extends IntelephenseConfig {
 	formatProvider: { enable: boolean }
@@ -166,22 +162,6 @@ connection.onDocumentRangeFormatting((params) => {
 });
 
 connection.onShutdown(Intelephense.shutdown);
-
-connection.onRequest(forgetRequest, (params) => {
-	return Intelephense.forget(params.uri);
-});
-
-connection.onRequest(importSymbolRequest, (params) => {
-	return Intelephense.provideContractFqnTextEdits(params.uri, params.position, params.alias);
-});
-
-connection.onRequest(knownDocumentsRequest, () => {
-	return Intelephense.knownDocuments();
-});
-
-connection.onRequest(documentLanguageRangesRequest, (params) => {
-	return Intelephense.documentLanguageRanges(params.textDocument);
-});
 
 // Listen on the connection
 connection.listen();

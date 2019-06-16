@@ -11,50 +11,59 @@ export class SymbolTableIndex {
 
     private _count = 0;
     private _db: LevelUp<AbstractLevelDOWN<string, SymbolTable>>;
-    private _tables: Map<string, SymbolTable>;
+    private _openedTables: Map<string, SymbolTable>;
 
     constructor(db: LevelUp) {
         this._db = Subleveldown(db, SymbolTableIndex.PREFIX, {
             valueEncoding: SymbolTableEncoder,
         });
-        this._tables = new Map<string, SymbolTable>();
+        this._openedTables = new Map<string, SymbolTable>();
     }
 
     count() {
         return this._count;
     }
 
-    *tables() {
-        for (let key of this._tables.keys()) {
-            yield this._tables.get(key);
+    async add(table: SymbolTable, isOpen: boolean = false) {
+        if (isOpen) {
+            this._openedTables.set(table.uri, table);
+        } else {
+            await this._db.put(table.uri, table);
+            ++this._count;
         }
-    }
-
-    async add(table: SymbolTable) {
-        if (this._tables.has(table.uri)) {
-            throw new Error(`Duplicate key ${table.uri}`);
-        }
-
-        this._tables.set(table.uri, table);
-        await this._db.put(table.uri, table);
-        ++this._count;
     }
 
     async remove(uri: string) {
-        if (!this._tables.has(uri)) {
+        if (this._openedTables.has(uri)) {
+            const table = await this.find(uri);
+
+            this._openedTables.delete(uri);
+
+            return table;
+        }
+
+        const table = await this.find(uri);
+        if (!table) {
             return undefined;
         }
 
-        let table = this._tables.get(uri);
-        this._tables.delete(uri);
         await this._db.del(uri);
         --this._count;
 
         return table;
     }
 
-    async find(uri: string) {
-        return this._tables.get(uri);
+    async find(uri: string): Promise<SymbolTable | undefined> {
+        if (this._openedTables.has(uri)) {
+            return this._openedTables.get(uri);
+        }
+
+        let result: SymbolTable | undefined = undefined;
+        try {
+            result = await this._db.get(uri);
+        } catch (e) { }
+
+        return result;
     }
 
     async findBySymbol(s: PhpSymbol) {
@@ -62,7 +71,7 @@ export class SymbolTableIndex {
             return undefined;
         }
 
-        return this.find(s.location.uri);
+        return await this.find(s.location.uri);
     }
 }
 

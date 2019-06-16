@@ -259,6 +259,22 @@ export namespace PhpSymbol {
         return uniqueSymbols;
     }
 
+    /**
+     * Equality determined by location
+     * 
+     * @param s1 First symbol
+     * @param s2 Second symbol
+     */
+    export function equality(s1: PhpSymbol, s2: PhpSymbol) {
+        if (!s1.location || !s2.location) {
+            return s1.name == s2.name &&
+                s1.kind == s2.kind &&
+                s1.modifiers == s2.modifiers;
+        }
+
+        return s1.location.uri == s2.location.uri &&
+            util.rangeEquality(s1.location.range, s2.location.range);
+    }
 }
 
 /**

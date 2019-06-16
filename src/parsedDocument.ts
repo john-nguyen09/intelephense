@@ -11,7 +11,6 @@ import {
     TreeVisitor, TreeTraverser, Event, Debounce, Unsubscribe,
     Predicate, Traversable, HashedLocation
 } from './types';
-import * as util from './util';
 
 const textDocumentChangeDebounceWait = 250;
 

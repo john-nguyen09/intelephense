@@ -52,13 +52,12 @@ export class SymbolProvider {
      * @param query 
      */
     async provideWorkspaceSymbols(query: string) {
-        const maxItems = 100;
-        let matches = this.symbolStore.match(query);
+        let matches = await this.symbolStore.match(query);
         let symbolInformationList: SymbolInformation[] = [];
 
         let s: PhpSymbol;
 
-        for (let n = 0, l = matches.length; n < l && symbolInformationList.length < maxItems; ++n) {
+        for (let n = 0, l = matches.length; n < l; ++n) {
             s = matches[n];
             if (this.workspaceSymbolFilter(s)) {
                 symbolInformationList.push(await this.toSymbolInformation(s));
