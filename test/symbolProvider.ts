@@ -18,7 +18,7 @@ describe('symbolProviders', () => {
         let document = new ParsedDocument('test', src);
         let symbolTable = SymbolTable.create(document);
 
-        symbolStore.add(symbolTable);
+        await symbolStore.add(symbolTable);
 
         let symbolProvider = new SymbolProvider(symbolStore);
 

@@ -369,7 +369,7 @@ async function setup(src: string | string[]) {
         let doc = new ParsedDocument('test' + (n > 0 ? n + 1 : ''), src[n]);
         parsedDocumentStore.add(doc);
         let table = SymbolTable.create(doc);
-        symbolStore.add(table);
+        await symbolStore.add(table);
         let refTable = ReferenceReader.discoverReferences(doc, symbolStore);
         refStore.add(await refTable);
     }
@@ -696,9 +696,9 @@ describe('CompletionProvider', () => {
         let doc = new ParsedDocument('doc1', importSrc1);
         let doc2 = new ParsedDocument('doc2', importSrc2);
         parsedDocumentStore.add(doc);
-        symbolStore.add(SymbolTable.create(doc));
+        await symbolStore.add(SymbolTable.create(doc));
         parsedDocumentStore.add(doc2);
-        symbolStore.add(SymbolTable.create(doc2));
+        await symbolStore.add(SymbolTable.create(doc2));
         refStore.add(await ReferenceReader.discoverReferences(doc, symbolStore));
         refStore.add(await ReferenceReader.discoverReferences(doc2, symbolStore));
 

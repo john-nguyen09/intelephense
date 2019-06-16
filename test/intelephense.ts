@@ -6,9 +6,9 @@ describe('intelephense', function(){
 
     describe('#initialise', function(){
 
-        it('Built in symbols', function(){
+        it('Built in symbols', async function(){
 
-            Intelephense.initialise(null);
+            await Intelephense.initialise(null);
             assert.isAbove(Intelephense.numberSymbolsKnown(), 1);
 
             let src = 

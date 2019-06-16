@@ -14,14 +14,14 @@ import LevelConstructor from 'levelup';
 import MemDown from 'memdown';
 import { TypeString } from '../src/typeString';
 
-function readReferences(src:string) {
+async function readReferences(src:string) {
     const level = LevelConstructor(MemDown());
     let store = new SymbolStore(level);
     let doc = new ParsedDocument('test', src);
     let table = SymbolTable.create(doc);
     //console.log(JSON.stringify(table, null, 4));
-    store.add(table);
-    return ReferenceReader.discoverReferences(doc, store);
+    await store.add(table);
+    return await ReferenceReader.discoverReferences(doc, store);
 
 }
 
@@ -47,9 +47,9 @@ class SomeClass
 
 describe('ReferenceReader', () => {
 
-    it('issue 82', () => {
+    it('issue 82', async () => {
 
-        let refTable = readReferences(issue82Src);
+        let refTable = await readReferences(issue82Src);
 
 
     });

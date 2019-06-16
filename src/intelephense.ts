@@ -117,7 +117,19 @@ export namespace Intelephense {
         return symbolStore.add(SymbolTable.readBuiltInSymbols())
             .then(_ => {
                 Log.info(`Initialised in ${elapsed(initialisedAt).toFixed()} ms`);
-                Intelephense.indexDirectory(Uri.parse(params.rootUri).fsPath);
+                let rootUri: string | null = null;
+
+                if (params) {
+                    if (params.rootUri) {
+                        rootUri = params.rootUri;
+                    } else if (params.rootPath) {
+                        rootUri = util.pathToUri(params.rootPath);
+                    }
+                }
+
+                if (rootUri) {
+                    Intelephense.indexDirectory(Uri.parse(params.rootUri).fsPath);
+                }
             })
             .catch(err => {
                 Log.error(err);

@@ -71,7 +71,7 @@ async function setup(src: string) {
     let refStore = new ReferenceStore();
     docStore.add(doc);
     let table = SymbolTable.create(doc);
-    symbolStore.add(table);
+    await symbolStore.add(table);
     let refTable = await ReferenceReader.discoverReferences(doc, symbolStore);
     refStore.add(refTable);
 

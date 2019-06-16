@@ -19,7 +19,7 @@ async function setup(src: string) {
     let docStore = new ParsedDocumentStore();
     let refStore = new ReferenceStore();
     docStore.add(doc);
-    symbolStore.add(table);
+    await symbolStore.add(table);
     let refTable = await ReferenceReader.discoverReferences(doc, symbolStore);
     refStore.add(refTable);
 
@@ -210,8 +210,8 @@ describe('DefintionProvider', function () {
             let refStore = new ReferenceStore();
             docStore.add(doc);
             docStore.add(doc2);
-            symbolStore.add(table);
-            symbolStore.add(table2);
+            await symbolStore.add(table);
+            await symbolStore.add(table2);
             let refTable1 = await ReferenceReader.discoverReferences(doc, symbolStore);
             refStore.add(refTable1);
             let refTable2 = await ReferenceReader.discoverReferences(doc2, symbolStore);

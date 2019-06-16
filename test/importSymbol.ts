@@ -26,7 +26,7 @@ async function setup(srcArray:string[]) {
         doc = new ParsedDocument('doc' + n, src);
         docStore.add(doc);
         symbolTable = SymbolTable.create(doc);
-        symbolStore.add(symbolTable);
+        await symbolStore.add(symbolTable);
     }
 
     for(let n = 0; n < srcArray.length; ++n) {
@@ -75,8 +75,8 @@ describe('importSymbol', async () => {
     let symbolStore = new SymbolStore(level);
     let t1 = SymbolTable.create(doc1);
     let t2 = SymbolTable.create(doc2);
-    symbolStore.add(t1);
-    symbolStore.add(t2);
+    await symbolStore.add(t1);
+    await symbolStore.add(t2);
     let refTable = await ReferenceReader.discoverReferences(doc1, symbolStore);
     let refTable2 = await ReferenceReader.discoverReferences(doc2, symbolStore);
     refStore.add(refTable);
