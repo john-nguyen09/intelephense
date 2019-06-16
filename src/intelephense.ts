@@ -251,18 +251,10 @@ export namespace Intelephense {
     export async function discoverSymbols(textDocument: lsp.TextDocumentItem) {
 
         const uri = textDocument.uri;
-        console.log('Retrieve saved data');
         let symbolTable = await symbolStore.getSymbolTable(uri);
         const filePath = util.uriToPath(uri);
         const fstats = await statAsync(filePath);
         const fileModifiedTime = Math.floor(fstats.mtime.getTime() / 1000);
-
-        if (symbolTable !== undefined) {
-            console.log({
-                saved: symbolTable.modifiedTime,
-                current: fileModifiedTime,
-            });
-        }
 
         if (symbolTable !== undefined && symbolTable.modifiedTime === fileModifiedTime) {
             return false;
@@ -271,7 +263,6 @@ export namespace Intelephense {
         const parsedDocument = new ParsedDocument(uri, textDocument.text, textDocument.version);
         symbolTable = SymbolTable.create(parsedDocument, fileModifiedTime);
         symbolTable.pruneScopedVars();
-        console.log('Reindex');
         await symbolStore.add(symbolTable);
 
         return true;
@@ -389,8 +380,6 @@ export namespace Intelephense {
                 // Wait for next tick so that any pending requests can be executed
                 // await waitForNextTick();
             }
-
-            Log.info(`Reindex count: ${reindexCount}`);
         })
         .then(_ => {
             const elapsedHr = process.hrtime(start);
