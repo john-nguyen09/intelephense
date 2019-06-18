@@ -11,6 +11,7 @@ import {
     TreeVisitor, TreeTraverser, Event, Debounce, Unsubscribe,
     Predicate, Traversable, HashedLocation
 } from './types';
+import * as AsyncLock from 'async-lock';
 
 const textDocumentChangeDebounceWait = 250;
 
@@ -351,11 +352,13 @@ export class ParsedDocumentStore {
     private _bubbleEvent = (args: ParsedDocumentChangeEventArgs) => {
         this._parsedDocumentChangeEvent.trigger(args);
     }
+    private _lock: AsyncLock;
 
     constructor() {
         this._parsedDocumentmap = {};
         this._parsedDocumentChangeEvent = new Event<ParsedDocumentChangeEventArgs>();
         this._unsubscribeMap = {};
+        this._lock = new AsyncLock();
     }
 
     get parsedDocumentChangeEvent() {
@@ -370,6 +373,10 @@ export class ParsedDocumentStore {
         return Object.keys(this._parsedDocumentmap).map((v) => {
             return this._parsedDocumentmap[v];
         });
+    }
+
+    async acquireLock(uri: string, action: () => void | PromiseLike<void>) {
+        return this._lock.acquire(uri, action);
     }
 
     has(uri: string) {

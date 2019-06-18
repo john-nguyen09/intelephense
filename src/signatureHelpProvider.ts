@@ -21,29 +21,35 @@ export class SignatureHelpProvider {
     constructor(public symbolStore: SymbolStore, public docStore: ParsedDocumentStore, public refStore:ReferenceStore) { }
 
     async provideSignatureHelp(uri: string, position: lsp.Position) {
+        let response: lsp.SignatureHelp | null = null;
+        
+        await this.docStore.acquireLock(uri, async() => {
+            let doc = this.docStore.find(uri);
+            let table = await this.symbolStore.getSymbolTable(uri);
+            let refTable = this.refStore.getReferenceTable(uri);
+            if (!doc || !table || !refTable) {
+                return;
+            }
+    
+            let traverser = new ParseTreeTraverser(doc, table, refTable);
+            let token = traverser.position(position);
+            let callableExpr = traverser.ancestor(this._isCallablePhrase) as Phrase;
+            if (!callableExpr || !token || token.tokenType === TokenType.CloseParenthesis) {
+                return;
+            }
+    
+            let symbol = await this._getSymbol(traverser.clone());
+            let delimFilterFn = (x:Phrase|Token) => {
+                return (<Token>x).tokenType === TokenType.Comma && (<Token>x).offset <= token.offset;
+            };
+            let argNumber = ParsedDocument.filterChildren(<Phrase>ParsedDocument.findChild(callableExpr, this._isArgExprList), delimFilterFn).length;
+    
+            if (symbol) {
+                response = this._createSignatureHelp(symbol, argNumber);
+            }
+        });
 
-        let doc = this.docStore.find(uri);
-        let table = await this.symbolStore.getSymbolTable(uri);
-        let refTable = this.refStore.getReferenceTable(uri);
-        if (!doc || !table || !refTable) {
-            return null;
-        }
-
-        let traverser = new ParseTreeTraverser(doc, table, refTable);
-        let token = traverser.position(position);
-        let callableExpr = traverser.ancestor(this._isCallablePhrase) as Phrase;
-        if (!callableExpr || !token || token.tokenType === TokenType.CloseParenthesis) {
-            return null;
-        }
-
-        let symbol = await this._getSymbol(traverser.clone());
-        let delimFilterFn = (x:Phrase|Token) => {
-            return (<Token>x).tokenType === TokenType.Comma && (<Token>x).offset <= token.offset;
-        };
-        let argNumber = ParsedDocument.filterChildren(<Phrase>ParsedDocument.findChild(callableExpr, this._isArgExprList), delimFilterFn).length;
-
-        return symbol ? this._createSignatureHelp(symbol, argNumber) : null;
-
+        return response;
     }
 
     private _createSignatureHelp(fn: PhpSymbol, argNumber: number) {

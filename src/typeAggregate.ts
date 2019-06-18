@@ -9,7 +9,6 @@ import { SymbolStore } from './symbolStore';
 import { Predicate } from './types';
 import * as util from './util';
 import {TypeString} from './typeString';
-import { Log } from './logger';
 
 export const enum MemberMergeStrategy {
     None, //returns all symbols
@@ -285,13 +284,18 @@ export class TypeAggregate {
             return PhpSymbol.isClassLike(x) && !associatedContains(x);
         }
 
+        const symbolCache = new Map<string, PhpSymbol[]>();
         while ((stub = queue.shift())) {
 
-            if(this._excludeTraits && stub.kind === SymbolKind.Trait) {
+            if (this._excludeTraits && stub.kind === SymbolKind.Trait) {
                 continue;
             }
 
-            symbols = await this.symbolStore.find(stub.name, filterFn);
+            if (!symbolCache.has(stub.name)) {
+                symbolCache.set(stub.name, await this.symbolStore.find(stub.name));
+            }
+
+            symbols = symbolCache.get(stub.name).filter(filterFn);
             for(let n = 0; n < symbols.length; ++n) {
                 s = symbols[n];
                 associated.add(s);

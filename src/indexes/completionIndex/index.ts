@@ -1,10 +1,13 @@
 import { WordSeparator } from "./wordSeparator";
 import { LevelUp } from "levelup";
 import * as Subleveldown from 'subleveldown';
-import { AbstractLevelDOWN, AbstractIteratorOptions } from "abstract-leveldown";
+import { AbstractLevelDOWN, AbstractIteratorOptions, AbstractBatch } from "abstract-leveldown";
 import { CodecEncoder } from "level-codec";
 import { PhpSymbol } from "../../symbol";
-import { PhpSymbolIdentifier } from "../symbolIndex";
+import { PhpSymbolIdentifier, SymbolIndex } from "../symbolIndex";
+import { SymbolStore, SymbolTable } from "../../symbolStore";
+import { SymbolTableIndex } from "../symbolTableIndex";
+import { CompletionItem, CompletionItemKind } from "vscode-languageserver";
 
 export interface CompletionValue {
     uri: string;
@@ -13,9 +16,9 @@ export interface CompletionValue {
 
 export class CompletionIndex {
     public static readonly INFO_SEP = '#';
-    public static LIMIT = 10000;
+    public static LIMIT = 1000;
 
-    private db: LevelUp<AbstractLevelDOWN<string, CompletionValue[]>>;
+    private db: LevelUp<AbstractLevelDOWN<string, CompletionValue>>;
 
     constructor(db: LevelUp, prefix: string) {
         this.db = Subleveldown(db, prefix, {
@@ -26,42 +29,44 @@ export class CompletionIndex {
     async put(symbol: PhpSymbol) {
         const tokens = WordSeparator.getTokens(symbol.name);
         const uri = symbol.location ? symbol.location.uri : '';
-        const previousResultMap = new Map<string, CompletionValue[]>();
+        const inputs: AbstractBatch<string, CompletionValue>[] = [];
+        const symbolIdentifier = PhpSymbolIdentifier.create(symbol);
 
         for (const token of tokens) {
             const indexKey = CompletionIndex.getKey(uri, token);
-            let previousResults: CompletionValue[] = [];
-            if (previousResultMap.has(indexKey)) {
-                previousResults = previousResultMap.get(indexKey);
-            } else {
-                previousResults = await this.get(uri, token);
-            }
-
-            previousResults.push({
-                uri: uri,
-                identifier: PhpSymbolIdentifier.create(symbol),
+            inputs.push({
+                type: 'put',
+                key: indexKey + '#' + SymbolIndex.getNamedSymbolKey(symbolIdentifier),
+                value: {
+                    uri: uri,
+                    identifier: symbolIdentifier,
+                },
             });
-            previousResultMap.set(indexKey, previousResults);
         }
-
-        const promises: Promise<void>[] = [];
-        for (const [indexKey, results] of previousResultMap.entries()) {
-            promises.push(this.db.put(indexKey, results));
-        }
-
-        await Promise.all(promises);
+        await this.db.batch(inputs);
     }
 
     async get(uri: string, token: string): Promise<CompletionValue[]> {
-        const results: CompletionValue[] = [];
-
-        try {
-            const values = await this.db.get(CompletionIndex.getKey(uri, token));
-
-            results.push(...values);
-        } catch (err) { }
-
-        return results;
+        return new Promise<CompletionValue[]>((resolve, reject) => {
+            const results: CompletionValue[] = [];
+            const prefix = CompletionIndex.getKey(uri, token);
+    
+            this.db.createValueStream({
+                gte: prefix,
+                lte: prefix + '\xFF',
+            })
+            .on('data', (data) => {
+                results.push(data);
+            })
+            .on('end', () => {
+                resolve(results);
+            })
+            .on('error', (err) => {
+                if (err) {
+                    reject(err);
+                }
+            });
+        });
     }
 
     async match(keyword: string): Promise<CompletionValue[]> {
@@ -81,7 +86,7 @@ export class CompletionIndex {
 
             readStream
                 .on('data', (data) => {
-                    completions.push(...data);
+                    completions.push(data);
                 })
                 .on('end', () => {
                     resolve(completions);
@@ -99,14 +104,32 @@ export class CompletionIndex {
             return;
         }
 
-        const tokens = WordSeparator.getTokens(name);
-        const promises: Promise<void>[] = [];
+        return new Promise<void>((resolve, reject) => {
+            const tokens = WordSeparator.getTokens(name);
+            const promises: Promise<void>[] = [];
 
-        for (let token of tokens) {
-            promises.push(this.db.del(CompletionIndex.getKey(uri, token)));
-        }
+            for (const token of tokens) {
+                const indexKey = CompletionIndex.getKey(uri, token);
 
-        await Promise.all(promises);
+                this.db.createKeyStream({
+                    gte: indexKey,
+                    lte: indexKey + '\xFF',
+                })
+                .on('data', (data) => {
+                    promises.push(this.db.del(data));
+                })
+                .on('end', () => {
+                    Promise.all(promises).then(() => {
+                        resolve();
+                    });
+                })
+                .on('error', (err) => {
+                    if (err) {
+                        reject(err);
+                    }
+                });
+            }
+        });
     }
 
     public static getKey(uri: string, token: string) {

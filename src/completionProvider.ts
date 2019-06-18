@@ -134,37 +134,48 @@ export class CompletionProvider {
     }
 
     async provideCompletions(uri: string, position: lsp.Position) {
+        let response = noCompletionResponse;
 
-        let doc = this.documentStore.find(uri);
-        let table = await this.symbolStore.getSymbolTable(uri);
-        let refTable = this.refStore.getReferenceTable(uri);
+        const start = process.hrtime();
+        await this.documentStore.acquireLock(uri, async () => {
+            console.log(`provideCompletions: Got lock after ${util.elapsed(start).toFixed(2)}`);
+            let doc = this.documentStore.find(uri);
+            let table: SymbolTable = undefined;
+            
+                table = await this.symbolStore.getSymbolTable(uri);
+            let refTable = this.refStore.getReferenceTable(uri);
 
-        if (!doc || !table || !refTable) {
-            return noCompletionResponse;
-        }
-
-        let traverser = new ParseTreeTraverser(doc, table, refTable);
-        traverser.position(position);
-
-        //return early if not in <?php ?>
-        let t = traverser.node as Token;
-        if (!t || t.tokenType === TokenType.Text) {
-            return noCompletionResponse;
-        }
-
-        let offset = doc.offsetAtPosition(position);
-        let word = doc.wordAtOffset(offset);
-        let strategy: CompletionStrategy = null;
-
-        for (let n = 0, l = this._strategies.length; n < l; ++n) {
-            if (this._strategies[n].canSuggest(traverser.clone())) {
-                strategy = this._strategies[n];
-                break;
+            if (!doc || !table || !refTable) {
+                return;
             }
-        }
 
-        return strategy ? strategy.completions(traverser, word, doc.lineSubstring(offset)) : noCompletionResponse;
+            let traverser = new ParseTreeTraverser(doc, table, refTable);
+            traverser.position(position);
 
+            //return early if not in <?php ?>
+            let t = traverser.node as Token;
+            if (!t || t.tokenType === TokenType.Text) {
+                return;
+            }
+
+            let offset = doc.offsetAtPosition(position);
+            let word = doc.wordAtOffset(offset);
+            let strategy: CompletionStrategy = null;
+
+            for (let n = 0, l = this._strategies.length; n < l; ++n) {
+                if (this._strategies[n].canSuggest(traverser.clone())) {
+                    strategy = this._strategies[n];
+                    break;
+                }
+            }
+
+            if (strategy) {
+                response = await strategy.completions(traverser, word, doc.lineSubstring(offset));
+            }
+        });
+        console.log(`provideCompletions: Total time taken is ${util.elapsed(start).toFixed(2)}`);
+
+        return response;
     }
 
 }
@@ -615,7 +626,9 @@ class SimpleVariableCompletion implements CompletionStrategy {
 
         let items: lsp.CompletionItem[] = [];
         let refScope = traverser.refTable.scopeAtPosition(scope.location.range.start);
+        const start = process.hrtime();
         let varTable = await this._varTypeMap(refScope);
+        console.log(`Found varTable in ${util.elapsed(start).toFixed(2)}`);
 
         for (let n = 0; n < limit; ++n) {
             items.push(this._toVariableCompletionItem(varSymbols[n], varTable));
@@ -656,7 +669,13 @@ class SimpleVariableCompletion implements CompletionStrategy {
         for (let n = 0, l = s.children.length; n < l; ++n) {
             ref = s.children[n] as Reference;
             if (ref.kind === SymbolKind.Variable || ref.kind === SymbolKind.Parameter) {
-                map[ref.name] = TypeString.merge(map[ref.name], await TypeString.resolve(ref.type));
+                const start = process.hrtime();
+                const type = await TypeString.resolve(ref.type);
+                console.log({
+                    ref,
+                    message: `Resolve ${type} in ${util.elapsed(start).toFixed(2)}`,
+                });
+                map[ref.name] = TypeString.merge(map[ref.name], type);
             }
         }
 

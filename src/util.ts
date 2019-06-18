@@ -202,3 +202,51 @@ export function uriToPath(uri: string)
 {
     return URI.parse(uri).fsPath;
 }
+
+export function substrCount(
+    haystack: string, needle: string, offset?: number, length?: number
+): number {
+    //  discuss at: http://locutus.io/php/substr_count/
+    // original by: Kevin van Zonneveld (http://kvz.io)
+    // bugfixed by: Onno Marsman (https://twitter.com/onnomarsman)
+    // improved by: Brett Zamir (http://brett-zamir.me)
+    // improved by: Thomas
+    //   example 1: substr_count('Kevin van Zonneveld', 'e')
+    //   returns 1: 3
+    //   example 2: substr_count('Kevin van Zonneveld', 'K', 1)
+    //   returns 2: 0
+    //   example 3: substr_count('Kevin van Zonneveld', 'Z', 0, 10)
+    //   returns 3: false
+
+    var cnt = 0;
+
+    haystack += '';
+    needle += '';
+    if (!offset) {
+        offset = 0;
+    }
+    if (!length) {
+        length = 0;
+    }
+    if (needle.length === 0) {
+        return 0;
+    }
+    offset--;
+
+    while ((offset = haystack.indexOf(needle, offset + 1)) !== -1) {
+        if (length > 0 && (offset + needle.length) > length) {
+            break;
+        }
+        cnt++;
+    }
+
+    return cnt;
+}
+
+export function elapsed(start: [number, number]) {
+    if (!start) {
+        return -1;
+    }
+    let diff = process.hrtime(start);
+    return diff[0] * 1000 + diff[1] / 1000000;
+}

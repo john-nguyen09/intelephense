@@ -102,21 +102,29 @@ export namespace Intelephense {
 
         //keep stores in sync
         documentStore.parsedDocumentChangeEvent.subscribe((args) => {
-            symbolStore.onParsedDocumentChange(args);
-            ReferenceReader.discoverReferences(args.parsedDocument, symbolStore)
-                .then(refTable => {
-                    refStore.add(refTable);
-                })
-                .catch(err => {
-                    Log.error(err);
-                });
+            documentStore.acquireLock(args.parsedDocument.uri, () => {
+                const start = process.hrtime();
+
+                return symbolStore
+                    .onParsedDocumentChange(args)
+                    .then(symbolTable => {
+                        return ReferenceReader.discoverReferences(args.parsedDocument, symbolStore, symbolTable)
+                    })
+                    .then(refTable => {
+                        refStore.add(refTable);
+                        console.log(`Reindex: ${util.elapsed(start)}`);
+                    })
+                    .catch(err => {
+                        Log.error(err);
+                    });
+            });
         });
 
         const builtinSymbolTable = SymbolTable.readBuiltInSymbols();
 
         return symbolStore.add(builtinSymbolTable)
             .then(_ => {
-                Log.info(`Initialised in ${elapsed(initialisedAt).toFixed()} ms`);
+                Log.info(`Initialised in ${util.elapsed(initialisedAt).toFixed()} ms`);
                 let rootUri: string | null = null;
 
                 if (params) {
@@ -186,7 +194,9 @@ export namespace Intelephense {
                 return ReferenceReader.discoverReferences(parsedDocument, symbolStore);
             })
             .then(refTable => {
-                refStore.add(refTable);
+                if (refTable) {
+                    refStore.add(refTable);
+                }
                 diagnosticsProvider.add(parsedDocument);
             })
             .catch(err => {
@@ -390,14 +400,6 @@ export namespace Intelephense {
         .catch(err => {
             Log.error(err);
         });
-    }
-
-    export function elapsed(start: [number, number]) {
-        if (!start) {
-            return -1;
-        }
-        let diff = process.hrtime(start);
-        return diff[0] * 1000 + diff[1] / 1000000;
     }
 }
 

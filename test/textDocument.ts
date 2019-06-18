@@ -38,8 +38,17 @@ describe('TextDocument', function () {
     describe('lineOffsets', function () {
 
         it('correct line offsets', function () {
-
-            assert.deepEqual(doc.lineOffsets, [0, 6, 7, 21, 22]);
+            assert.deepEqual([
+                doc.lineSubstring(5),
+                doc.lineSubstring(6),
+                doc.lineSubstring(20),
+                doc.lineSubstring(21),
+            ], [
+                '<?php',
+                '',
+                '    $var = 1;',
+                ''
+            ]);
 
         });
 

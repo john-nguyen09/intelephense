@@ -1861,8 +1861,12 @@ namespace VariableSet {
 }
 
 export namespace ReferenceReader {
-    export async function discoverReferences(doc: ParsedDocument, symbolStore: SymbolStore) {
-        const symbolTable = await symbolStore.getSymbolTable(doc.uri);
+    export async function discoverReferences(
+        doc: ParsedDocument, symbolStore: SymbolStore, symbolTable?: SymbolTable
+    ) {
+        if (!symbolTable) {
+            symbolTable = await symbolStore.getSymbolTable(doc.uri);
+        }
         const traverser = new TreeTraverser([symbolTable.root]);
         const symbols = traverser.filter((s: PhpSymbol) => {
             return SymbolIndex.isNamedSymbol(s);

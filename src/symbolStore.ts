@@ -209,14 +209,20 @@ export class SymbolStore {
         this._symbolCount = 0;
     }
 
-    onParsedDocumentChange = (args: ParsedDocumentChangeEventArgs) => {
-        this.remove(args.parsedDocument.uri);
-        let table = SymbolTable.create(args.parsedDocument, 0);
-        this.add(table);
+    onParsedDocumentChange = async (args: ParsedDocumentChangeEventArgs) => {
+        await this.remove(args.parsedDocument.uri);
+        const table = SymbolTable.create(args.parsedDocument, 0);
+        await this.add(table);
+
+        return table;
     };
 
-    getSymbolTable(uri: string) {
-        return this._tableIndex.find(uri);
+    async getSymbolTable(uri: string): Promise<SymbolTable | undefined> {
+        let table: SymbolTable = undefined;
+
+        table = await this._tableIndex.find(uri);
+
+        return table;
     }
 
     // get tables() {
@@ -232,7 +238,6 @@ export class SymbolStore {
     }
 
     async add(symbolTable: SymbolTable) {
-        //if table already exists replace it
         await this.remove(symbolTable.uri);
         await this._tableIndex.add(symbolTable, this._documentStore.has(symbolTable.uri));
         await this._symbolIndex.index(symbolTable.root);
@@ -246,6 +251,8 @@ export class SymbolStore {
         }
         await this._symbolIndex.removeMany(uri);
         this._symbolCount -= symbolTable.symbolCount;
+
+        return symbolTable;
     }
 
     /**

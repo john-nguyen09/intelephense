@@ -6,6 +6,7 @@ import * as Subleveldown from 'subleveldown';
 import { CodecEncoder } from "level-codec";
 import { CompletionIndex, CompletionValue } from "./completionIndex";
 import { Position } from "vscode-languageserver";
+import { elapsed } from "../util";
 
 export type PhpSymbolIdentifier = [string, string, number, number, number, number];
 
@@ -93,7 +94,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     }
 
     async find(key: string) {
-        return this.findSymbols(this._namedSymbols, {
+        return await this.findSymbols(this._namedSymbols, {
             gte: key,
             lte: key + '\xFF',
         });
@@ -183,7 +184,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         });
     }
 
-    private static getNamedSymbolKey(identifier: PhpSymbolIdentifier) {
+    static getNamedSymbolKey(identifier: PhpSymbolIdentifier) {
         return identifier.join('#');
     }
 
