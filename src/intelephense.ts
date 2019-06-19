@@ -6,24 +6,24 @@
 
 import { ParsedDocument, ParsedDocumentStore, LanguageRange } from './parsedDocument';
 import { SymbolStore, SymbolTable } from './symbolStore';
-import { SymbolProvider } from './symbolProvider';
-import { CompletionProvider } from './completionProvider';
-import { DiagnosticsProvider, PublishDiagnosticsEventArgs } from './diagnosticsProvider';
+import { SymbolProvider } from './providers/symbolProvider';
+import { CompletionProvider } from './providers/completionProvider';
+import { DiagnosticsProvider, PublishDiagnosticsEventArgs } from './providers/diagnosticsProvider';
 import { Unsubscribe } from './types';
-import { SignatureHelpProvider } from './signatureHelpProvider';
-import { DefinitionProvider } from './definitionProvider';
-import { FormatProvider } from './formatProvider';
+import { SignatureHelpProvider } from './providers/signatureHelpProvider';
+import { DefinitionProvider } from './providers/definitionProvider';
+import { FormatProvider } from './providers/formatProvider';
 import * as lsp from 'vscode-languageserver-types';
 import { InitializeParams } from 'vscode-languageserver-protocol';
 import { NameTextEditProvider } from './commands';
 import { ReferenceReader } from './referenceReader';
-import { ReferenceProvider } from './referenceProvider';
+import { ReferenceProvider } from './providers/referenceProvider';
 import { ReferenceStore } from './reference';
 import { Log } from './logger';
 import * as path from 'path';
 export { LanguageRange } from './parsedDocument';
-import { HoverProvider } from './hoverProvider';
-import { HighlightProvider } from './highlightProvider';
+import { HoverProvider } from './providers/hoverProvider';
+import { HighlightProvider } from './providers/highlightProvider';
 import * as os from 'os';
 import * as util from './util';
 import * as fs from 'fs';
@@ -103,8 +103,6 @@ export namespace Intelephense {
         //keep stores in sync
         documentStore.parsedDocumentChangeEvent.subscribe((args) => {
             documentStore.acquireLock(args.parsedDocument.uri, () => {
-                const start = process.hrtime();
-
                 return symbolStore
                     .onParsedDocumentChange(args)
                     .then(symbolTable => {
@@ -112,7 +110,6 @@ export namespace Intelephense {
                     })
                     .then(refTable => {
                         refStore.add(refTable);
-                        console.log(`Reindex: ${util.elapsed(start)}`);
                     })
                     .catch(err => {
                         Log.error(err);

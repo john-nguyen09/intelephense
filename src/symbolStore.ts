@@ -319,7 +319,6 @@ export class SymbolStore {
 
         let symbols: PhpSymbol[];
         let fn: Predicate<PhpSymbol>;
-        let lcName: string;
         let table: SymbolTable;
 
         switch (ref.kind) {

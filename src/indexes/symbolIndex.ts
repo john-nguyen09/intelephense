@@ -35,6 +35,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         SymbolKind.Method | SymbolKind.Function | SymbolKind.File |
         SymbolKind.Constant | SymbolKind.ClassConstant;
     public static readonly NAMED_SYMBOL_EXCLUDE_MODIFIERS = SymbolModifier.Magic;
+    public static readonly IDENTIFIER_JOINER = '#';
     
     public static isNamedSymbol(s: PhpSymbol) {
         return (s.kind & this.NAMED_SYMBOL_KIND_MASK) && !(s.modifiers & this.NAMED_SYMBOL_EXCLUDE_MODIFIERS);
@@ -95,8 +96,8 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
 
     async find(key: string) {
         return await this.findSymbols(this._namedSymbols, {
-            gte: key,
-            lte: key + '\xFF',
+            gte: key + SymbolIndex.IDENTIFIER_JOINER,
+            lte: key + SymbolIndex.IDENTIFIER_JOINER + '\xFF',
         });
     }
 
@@ -185,7 +186,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     }
 
     static getNamedSymbolKey(identifier: PhpSymbolIdentifier) {
-        return identifier.join('#');
+        return identifier.join(SymbolIndex.IDENTIFIER_JOINER);
     }
 
     private static _isGlobalVariables(s: PhpSymbol) {

@@ -5,15 +5,15 @@
 'use strict';
 
 import { Position, ReferenceContext, Location } from 'vscode-languageserver-types';
-import { ParsedDocumentStore, ParsedDocument } from './parsedDocument';
-import { ParseTreeTraverser } from './parseTreeTraverser';
-import { SymbolStore, SymbolTable } from './symbolStore';
-import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbol';
-import { MemberMergeStrategy, TypeAggregate } from './typeAggregate';
-import { Reference, ReferenceStore, ReferenceTable, Scope } from './reference';
-import { Predicate, TreeVisitor, TreeTraverser, AsyncPredicate } from './types';
-import * as util from './util';
-import { TypeString } from './typeString';
+import { ParsedDocumentStore, ParsedDocument } from '../parsedDocument';
+import { ParseTreeTraverser } from '../parseTreeTraverser';
+import { SymbolStore, SymbolTable } from '../symbolStore';
+import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from '../symbol';
+import { MemberMergeStrategy, TypeAggregate } from '../typeAggregate';
+import { Reference, ReferenceStore, ReferenceTable, Scope } from '../reference';
+import { Predicate, TreeVisitor, TreeTraverser, AsyncPredicate } from '../types';
+import * as util from '../util';
+import { TypeString } from '../typeString';
 
 
 

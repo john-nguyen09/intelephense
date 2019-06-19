@@ -5,9 +5,9 @@
 'use strict';
 
 import * as lsp from 'vscode-languageserver-types';
-import { TreeVisitor } from './types'
+import { TreeVisitor } from '../types'
 import { Phrase, Token, PhraseType, TokenType } from 'php7parser';
-import { ParsedDocument, ParsedDocumentStore } from './parsedDocument';
+import { ParsedDocument, ParsedDocumentStore } from '../parsedDocument';
 
 interface FormatRule {
     (previous: Token, doc: ParsedDocument, indentText: string, indentUnit: string): lsp.TextEdit;

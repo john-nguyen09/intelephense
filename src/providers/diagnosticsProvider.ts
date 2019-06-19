@@ -4,11 +4,11 @@
 
 'use strict';
 
-import { ParsedDocument, ParsedDocumentChangeEventArgs } from './parsedDocument';
-import { TreeVisitor, Event, Debounce, Unsubscribe } from './types';
+import { ParsedDocument, ParsedDocumentChangeEventArgs } from '../parsedDocument';
+import { TreeVisitor, Event, Debounce, Unsubscribe } from '../types';
 import { Phrase, Token, ParseError, tokenTypeToString, PhraseType } from 'php7parser';
 import * as lsp from 'vscode-languageserver-types';
-import { Log } from './logger';
+import { Log } from '../logger';
 
 export interface PublishDiagnosticsEventArgs {
     uri: string;

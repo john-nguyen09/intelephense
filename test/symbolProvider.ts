@@ -1,5 +1,5 @@
 import { SymbolStore, SymbolTable } from '../src/symbolStore';
-import { SymbolProvider } from '../src/symbolProvider';
+import { SymbolProvider } from '../src/providers/symbolProvider';
 import * as util from '../src/util';
 import { assert } from 'chai';
 import 'mocha';

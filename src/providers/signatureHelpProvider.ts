@@ -5,15 +5,15 @@
 'use strict';
 
 import * as lsp from 'vscode-languageserver-types';
-import { SymbolKind, PhpSymbol, SymbolModifier } from './symbol';
-import { SymbolStore } from './symbolStore';
-import { ParseTreeTraverser } from './parseTreeTraverser';
-import { TypeString } from './typeString';
-import { ParsedDocument, ParsedDocumentStore } from './parsedDocument';
+import { SymbolKind, PhpSymbol, SymbolModifier } from '../symbol';
+import { SymbolStore } from '../symbolStore';
+import { ParseTreeTraverser } from '../parseTreeTraverser';
+import { TypeString } from '../typeString';
+import { ParsedDocument, ParsedDocumentStore } from '../parsedDocument';
 import { Phrase, PhraseType, Token, TokenType } from 'php7parser';
-import * as util from './util';
-import { MemberMergeStrategy } from './typeAggregate';
-import {ReferenceStore} from './reference';
+import * as util from '../util';
+import { MemberMergeStrategy } from '../typeAggregate';
+import {ReferenceStore} from '../reference';
 
 
 export class SignatureHelpProvider {

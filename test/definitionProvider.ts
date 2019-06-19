@@ -1,4 +1,4 @@
-import { DefinitionProvider } from '../src/definitionProvider';
+import { DefinitionProvider } from '../src/providers/definitionProvider';
 import { SymbolStore, SymbolTable } from '../src/symbolStore';
 import { ParsedDocumentStore, ParsedDocument } from '../src/parsedDocument';
 import { ReferenceReader } from '../src/referenceReader';

@@ -6,8 +6,6 @@
 
 import { Range } from 'vscode-languageserver-types';
 import * as fuzzysearch from 'fuzzysearch';
-import { Log } from './logger';
-import { PhpSymbol } from './symbol';
 
 export interface Predicate<T> {
     (t: T): boolean;

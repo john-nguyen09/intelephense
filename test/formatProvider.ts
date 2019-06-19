@@ -1,4 +1,4 @@
-import { FormatProvider } from '../src/formatProvider';
+import { FormatProvider } from '../src/providers/formatProvider';
 import { SymbolStore, SymbolTable } from '../src/symbolStore';
 import { ParsedDocumentStore, ParsedDocument } from '../src/parsedDocument';
 import { ReferenceReader } from '../src/referenceReader';

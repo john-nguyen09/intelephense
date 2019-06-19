@@ -1,4 +1,4 @@
-import { SignatureHelpProvider } from '../src/signatureHelpProvider';
+import { SignatureHelpProvider } from '../src/providers/signatureHelpProvider';
 import { SymbolKind } from '../src/symbol';
 import {SymbolStore, SymbolTable} from '../src/symbolStore';
 import { ParsedDocumentStore, ParsedDocument } from '../src/parsedDocument';

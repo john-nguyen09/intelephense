@@ -1,4 +1,4 @@
-import { HoverProvider } from '../src/hoverProvider';
+import { HoverProvider } from '../src/providers/hoverProvider';
 import { SymbolKind } from '../src/symbol';
 import { SymbolStore, SymbolTable } from '../src/symbolStore';
 import { ParsedDocumentStore, ParsedDocument } from '../src/parsedDocument';

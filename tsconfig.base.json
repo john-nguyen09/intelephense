@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"removeComments": true,
+		"target": "ES6",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"outDir": "lib",
+		"declaration": true,
+		"lib": [
+			"es2015",
+      		"esnext.asynciterable"
+		]
+	}
+}

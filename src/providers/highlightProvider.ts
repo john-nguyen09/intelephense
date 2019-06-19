@@ -4,12 +4,12 @@
 
 'use strict';
 
-import { ParsedDocumentStore } from './parsedDocument';
-import { SymbolStore } from './symbolStore';
-import { SymbolKind, PhpSymbol, SymbolModifier } from './symbol';
-import { ReferenceStore } from './reference';
+import { ParsedDocumentStore } from '../parsedDocument';
+import { SymbolStore } from '../symbolStore';
+import { SymbolKind, PhpSymbol, SymbolModifier } from '../symbol';
+import { ReferenceStore } from '../reference';
 import { Position, DocumentHighlight, DocumentHighlightKind } from 'vscode-languageserver-types';
-import { MemberMergeStrategy } from './typeAggregate';
+import { MemberMergeStrategy } from '../typeAggregate';
 
 export class HighlightProvider {
 

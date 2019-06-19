@@ -5,19 +5,19 @@
 'use strict';
 
 import { Token, TokenType, Phrase, PhraseType } from 'php7parser';
-import { PhpSymbol, SymbolKind, SymbolModifier, UniqueSymbolSet } from './symbol';
-import { Reference, ReferenceStore, Scope } from './reference';
-import { SymbolStore, SymbolTable } from './symbolStore';
-import { SymbolReader } from './symbolReader';
-import { TypeString } from './typeString';
-import { NameResolver } from './nameResolver';
-import { ParsedDocument, ParsedDocumentStore } from './parsedDocument';
-import { Predicate } from './types';
-import { ParseTreeTraverser } from './parseTreeTraverser';
+import { PhpSymbol, SymbolKind, SymbolModifier, UniqueSymbolSet } from '../symbol';
+import { Reference, ReferenceStore, Scope } from '../reference';
+import { SymbolStore, SymbolTable } from '../symbolStore';
+import { SymbolReader } from '../symbolReader';
+import { TypeString } from '../typeString';
+import { NameResolver } from '../nameResolver';
+import { ParsedDocument, ParsedDocumentStore } from '../parsedDocument';
+import { Predicate } from '../types';
+import { ParseTreeTraverser } from '../parseTreeTraverser';
 import * as lsp from 'vscode-languageserver-types';
-import * as util from './util';
-import { TypeAggregate, MemberMergeStrategy } from './typeAggregate';
-import { UseDeclarationHelper } from './useDeclarationHelper';
+import * as util from '../util';
+import { TypeAggregate, MemberMergeStrategy } from '../typeAggregate';
+import { UseDeclarationHelper } from '../useDeclarationHelper';
 
 const noCompletionResponse: lsp.CompletionList = {
     items: [],
@@ -136,9 +136,7 @@ export class CompletionProvider {
     async provideCompletions(uri: string, position: lsp.Position) {
         let response = noCompletionResponse;
 
-        const start = process.hrtime();
         await this.documentStore.acquireLock(uri, async () => {
-            console.log(`provideCompletions: Got lock after ${util.elapsed(start).toFixed(2)}`);
             let doc = this.documentStore.find(uri);
             let table: SymbolTable = undefined;
             
@@ -173,7 +171,6 @@ export class CompletionProvider {
                 response = await strategy.completions(traverser, word, doc.lineSubstring(offset));
             }
         });
-        console.log(`provideCompletions: Total time taken is ${util.elapsed(start).toFixed(2)}`);
 
         return response;
     }
@@ -626,9 +623,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
 
         let items: lsp.CompletionItem[] = [];
         let refScope = traverser.refTable.scopeAtPosition(scope.location.range.start);
-        const start = process.hrtime();
         let varTable = await this._varTypeMap(refScope);
-        console.log(`Found varTable in ${util.elapsed(start).toFixed(2)}`);
 
         for (let n = 0; n < limit; ++n) {
             items.push(this._toVariableCompletionItem(varSymbols[n], varTable));
@@ -669,12 +664,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
         for (let n = 0, l = s.children.length; n < l; ++n) {
             ref = s.children[n] as Reference;
             if (ref.kind === SymbolKind.Variable || ref.kind === SymbolKind.Parameter) {
-                const start = process.hrtime();
                 const type = await TypeString.resolve(ref.type);
-                console.log({
-                    ref,
-                    message: `Resolve ${type} in ${util.elapsed(start).toFixed(2)}`,
-                });
                 map[ref.name] = TypeString.merge(map[ref.name], type);
             }
         }

@@ -4,14 +4,14 @@
 
 'use strict';
 
-import { ParsedDocumentStore } from './parsedDocument';
-import { SymbolStore } from './symbolStore';
-import { SymbolKind, PhpSymbol, SymbolModifier } from './symbol';
-import { ReferenceStore } from './reference';
+import { ParsedDocumentStore } from '../parsedDocument';
+import { SymbolStore } from '../symbolStore';
+import { SymbolKind, PhpSymbol, SymbolModifier } from '../symbol';
+import { ReferenceStore } from '../reference';
 import { Position, Hover, MarkedString } from 'vscode-languageserver-types';
-import { MemberMergeStrategy } from './typeAggregate';
+import { MemberMergeStrategy } from '../typeAggregate';
 import * as turndown from 'turndown';
-import { TypeString } from './typeString';
+import { TypeString } from '../typeString';
 
 export class HoverProvider {
 
