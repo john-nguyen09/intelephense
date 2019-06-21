@@ -41,6 +41,8 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         return (s.kind & this.NAMED_SYMBOL_KIND_MASK) && !(s.modifiers & this.NAMED_SYMBOL_EXCLUDE_MODIFIERS);
     }
 
+    private _belongsToUri: LevelUp<AbstractLevelDOWN<string, PhpSymbolIdentifier[]>>;
+    private _belongsToUriIds: PhpSymbolIdentifier[] = [];
     private _namedSymbols: LevelUp<AbstractLevelDOWN<string, PhpSymbol>>;
     private _namedSymbolJobs: Promise<void>[] = [];
     private _globalVariables: LevelUp<AbstractLevelDOWN<string, PhpSymbol>>;
@@ -49,6 +51,9 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     private _completionJobs: Promise<void>[] = [];
 
     constructor(db: LevelUp) {
+        this._belongsToUri = Subleveldown(db, 'symbol-belongs-to-uri', {
+            valueEncoding: 'json',
+        });
         this._namedSymbols = Subleveldown(db, 'named-symbols', {
             valueEncoding: SymbolEncoder,
         });
@@ -72,26 +77,31 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         this._namedSymbolJobs = [];
         this._globalVariableJobs = [];
         this._completionJobs = [];
+
+        if (root.location) {
+            await this._belongsToUri.put(root.location.uri, this._belongsToUriIds);
+        }
+        this._belongsToUriIds = [];
     }
 
     async removeMany(uri: string) {
-        await Promise.all([
-            this.deleteSymbols(this._globalVariables, {}, (s: PhpSymbol) => {
+        let symbolIds: PhpSymbolIdentifier[] = [];
+        try {
+            symbolIds = await this._belongsToUri.get(uri);
+        } catch (e) { }
+        const promises: Promise<void>[] = [];
+
+        for (const symbolId of symbolIds) {
+            promises.push(this._namedSymbols.del(SymbolIndex.getSymbolKey(symbolId)));
+            promises.push(this._completion.del(uri, symbolId[0]));
+        }
+        promises.push((async () => {
+            await this.deleteSymbols(this._globalVariables, {}, (s: PhpSymbol) => {
                 return s.location.uri === uri;
-            }),
-            this.deleteSymbols(this._namedSymbols, {
-                gte: uri,
-                lte: uri + '\xFF',
-            }).then((namedSymbols) => {
-                const promises: Promise<void>[] = [];
+            });
+        })());
 
-                for (const symbol of namedSymbols) {
-                    promises.push(this._completion.del(uri, symbol.name));
-                }
-
-                return Promise.all(promises);
-            }),
-        ]);
+        await Promise.all(promises);
     }
 
     async find(key: string) {
@@ -111,7 +121,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         const promises: Promise<PhpSymbol>[] = [];
 
         for (const completionValue of completionValues) {
-            promises.push(this._namedSymbols.get(SymbolIndex.getNamedSymbolKey(completionValue.identifier)));
+            promises.push(this._namedSymbols.get(SymbolIndex.getSymbolKey(completionValue.identifier)));
         }
 
         return Promise.all(promises);
@@ -123,8 +133,11 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     
     preorder(node: PhpSymbol, spine: PhpSymbol[]) {
         if (SymbolIndex.isNamedSymbol(node)) {
-            this._namedSymbolJobs.push(this._namedSymbols.put(SymbolIndex.getNamedSymbolKey(
-                PhpSymbolIdentifier.create(node)
+            const symbolIdentifier = PhpSymbolIdentifier.create(node);
+
+            this._belongsToUriIds.push(symbolIdentifier);
+            this._namedSymbolJobs.push(this._namedSymbols.put(SymbolIndex.getSymbolKey(
+                symbolIdentifier
             ), node));
 
             if (node.modifiers !== SymbolModifier.Use) {
@@ -185,7 +198,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         });
     }
 
-    static getNamedSymbolKey(identifier: PhpSymbolIdentifier) {
+    static getSymbolKey(identifier: PhpSymbolIdentifier) {
         return identifier.join(SymbolIndex.IDENTIFIER_JOINER);
     }
 

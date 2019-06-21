@@ -5,9 +5,6 @@ import { AbstractLevelDOWN, AbstractIteratorOptions, AbstractBatch } from "abstr
 import { CodecEncoder } from "level-codec";
 import { PhpSymbol } from "../../symbol";
 import { PhpSymbolIdentifier, SymbolIndex } from "../symbolIndex";
-import { SymbolStore, SymbolTable } from "../../symbolStore";
-import { SymbolTableIndex } from "../symbolTableIndex";
-import { CompletionItem, CompletionItemKind } from "vscode-languageserver";
 
 export interface CompletionValue {
     uri: string;
@@ -36,7 +33,7 @@ export class CompletionIndex {
             const indexKey = CompletionIndex.getKey(uri, token);
             inputs.push({
                 type: 'put',
-                key: indexKey + '#' + SymbolIndex.getNamedSymbolKey(symbolIdentifier),
+                key: indexKey + '#' + SymbolIndex.getSymbolKey(symbolIdentifier),
                 value: {
                     uri: uri,
                     identifier: symbolIdentifier,
