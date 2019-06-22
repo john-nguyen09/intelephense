@@ -4,9 +4,6 @@
 
 'use strict';
 
-import { TypeString } from './typeString';
-import { BinarySearch } from './types';
-import { Location, Range } from 'vscode-languageserver-types';
 import { Predicate, HashedLocation } from './types';
 import * as util from './util';
 
@@ -26,6 +23,43 @@ export const enum SymbolKind {
     Constructor = 1 << 11,
     File = 1 << 12,
     GlobalVariable = 1 << 13
+}
+
+export function symbolKindToString(kind: SymbolKind) {
+    switch (kind) {
+        case SymbolKind.None:
+            return 'None';
+        case SymbolKind.Class:
+            return 'Class';
+        case SymbolKind.Interface:
+            return 'Interface';
+        case SymbolKind.Trait:
+            return 'Trait';
+        case SymbolKind.Constant:
+            return 'Constant';
+        case SymbolKind.Property:
+            return 'Property';
+        case SymbolKind.Method:
+            return 'Method';
+        case SymbolKind.Function:
+            return 'Function';
+        case SymbolKind.Parameter:
+            return 'Parameter';
+        case SymbolKind.Variable:
+            return 'Variable';
+        case SymbolKind.Namespace:
+            return 'Namespace';
+        case SymbolKind.ClassConstant :
+            return 'ClassConstant ';
+        case SymbolKind.Constructor :
+            return 'Constructor ';
+        case SymbolKind.File:
+            return 'File';
+        case SymbolKind.GlobalVariable:
+            return 'GlobalVariable';
+        default:
+            return 'Unknown';
+    }
 }
 
 export const enum SymbolModifier {
