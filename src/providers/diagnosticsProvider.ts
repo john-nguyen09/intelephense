@@ -107,8 +107,9 @@ export class DiagnosticsProvider {
         doc.traverse(parseErrorVisitor);
         let parseErrors = parseErrorVisitor.errors;
 
-        for (let n = 0, l = parseErrors.length; n < l; ++n) {
-            diagnostics.push(this._parseErrorToDiagnostic(parseErrors[n], doc));
+        for (const parseError of parseErrors) {
+            console.log(parseError);
+            diagnostics.push(this._parseErrorToDiagnostic(parseError, doc));
         }
 
         return diagnostics.slice(0, this._maxItems);
@@ -120,7 +121,11 @@ export class DiagnosticsProvider {
     }
 
     private _message(err:ParseError) {
-        let msg = `Unexpected ${tokenKindToString(err.unexpected.kind)}.`;
+        let msg = '';
+
+        if (err.unexpected) {
+            msg += `Unexpected ${tokenKindToString(err.unexpected.kind)}.`;
+        }
         if(err.expected) {
             msg += ` Expected ${tokenKindToString(err.expected)}.`;
         }

@@ -4,22 +4,27 @@
 'use strict';
 
 import {
-	IPCMessageReader, IPCMessageWriter,
 	createConnection, IConnection, TextDocumentSyncKind,
-	TextDocuments, TextDocument, Diagnostic, DiagnosticSeverity,
-	InitializeParams, InitializeResult, TextDocumentPositionParams,
-	CompletionItem, CompletionItemKind, RequestType, TextDocumentItem,
-	PublishDiagnosticsParams, SignatureHelp, DidChangeConfigurationParams,
-	Position, TextEdit, Disposable, DocumentRangeFormattingRequest,
-	DocumentFormattingRequest, DocumentSelector, TextDocumentIdentifier
+	InitializeResult, Disposable, DocumentRangeFormattingRequest,
+	DocumentSelector
 } from 'vscode-languageserver';
 
-import { Intelephense, IntelephenseConfig, InitialisationOptions, LanguageRange } from './intelephense';
+import { Intelephense, IntelephenseConfig } from './intelephense';
 import { Log } from './logger';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection();
 Log.console = connection.console;
+const logPath = path.join(os.homedir(), '.intelephense', 'error.log');
+
+process.on('uncaughtException', function (err) {
+	fs.appendFileSync(logPath, (new Date).toUTCString() + ' uncaughtException:' + err.message);
+	fs.appendFileSync(logPath, err.stack);
+	process.exit(1);
+});
 
 const languageId = 'php';
 
