@@ -8,12 +8,10 @@ import * as lsp from 'vscode-languageserver-types';
 import { SymbolKind, PhpSymbol, SymbolModifier } from '../symbol';
 import { SymbolStore } from '../symbolStore';
 import { ParseTreeTraverser } from '../parseTreeTraverser';
-import { TypeString } from '../typeString';
 import { ParsedDocument, ParsedDocumentStore } from '../parsedDocument';
-import { Phrase, PhraseType, Token, TokenType } from 'php7parser';
-import * as util from '../util';
+import { Phrase, PhraseKind, Token, TokenKind } from 'php7parser';
 import { MemberMergeStrategy } from '../typeAggregate';
-import {ReferenceStore} from '../reference';
+import { ReferenceStore } from '../reference';
 
 
 export class SignatureHelpProvider {
@@ -34,13 +32,13 @@ export class SignatureHelpProvider {
             let traverser = new ParseTreeTraverser(doc, table, refTable);
             let token = traverser.position(position);
             let callableExpr = traverser.ancestor(this._isCallablePhrase) as Phrase;
-            if (!callableExpr || !token || token.tokenType === TokenType.CloseParenthesis) {
+            if (!callableExpr || !token || token.kind === TokenKind.CloseParenthesis) {
                 return;
             }
     
             let symbol = await this._getSymbol(traverser.clone());
             let delimFilterFn = (x:Phrase|Token) => {
-                return (<Token>x).tokenType === TokenType.Comma && (<Token>x).offset <= token.offset;
+                return (<Token>x).kind === TokenKind.Comma && (<Token>x).offset <= token.offset;
             };
             let argNumber = ParsedDocument.filterChildren(<Phrase>ParsedDocument.findChild(callableExpr, this._isArgExprList), delimFilterFn).length;
     
@@ -146,26 +144,26 @@ export class SignatureHelpProvider {
 
     private async _getSymbol(traverser:ParseTreeTraverser) {
         let expr = traverser.node as Phrase;
-        switch (expr.phraseType) {
-            case PhraseType.FunctionCallExpression:
+        switch (expr.kind) {
+            case PhraseKind.FunctionCallExpression:
                 if(traverser.child(this._isNamePhrase)){
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference))
                         .shift();
                 }
                 return undefined;
-            case PhraseType.MethodCallExpression:
+            case PhraseKind.MethodCallExpression:
                 if(traverser.child(this._isMemberName) && traverser.child(this._isNameToken)) {
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Documented))
                         .shift();
                 }
                 return undefined;
-            case PhraseType.ScopedCallExpression:
+            case PhraseKind.ScopedCallExpression:
                 if(traverser.child(this._isScopedMemberName) && traverser.child(this._isIdentifier)) {
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Documented))
                         .shift();
                 }
                 return undefined;
-            case PhraseType.ObjectCreationExpression:
+            case PhraseKind.ObjectCreationExpression:
                 if(traverser.child(this._isClassTypeDesignator) && traverser.child(this._isNamePhraseOrRelativeScope)) {
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Override))
                         .shift();
@@ -178,11 +176,11 @@ export class SignatureHelpProvider {
     }
 
     private _isCallablePhrase(node: Phrase | Token) {
-        switch ((<Phrase>node).phraseType) {
-            case PhraseType.FunctionCallExpression:
-            case PhraseType.MethodCallExpression:
-            case PhraseType.ScopedCallExpression:
-            case PhraseType.ObjectCreationExpression:
+        switch ((<Phrase>node).kind) {
+            case PhraseKind.FunctionCallExpression:
+            case PhraseKind.MethodCallExpression:
+            case PhraseKind.ScopedCallExpression:
+            case PhraseKind.ObjectCreationExpression:
                 return true;
             default:
                 return false;
@@ -190,10 +188,10 @@ export class SignatureHelpProvider {
     }
 
     private _isNamePhrase(node:Phrase|Token) {
-        switch((<Phrase>node).phraseType) {
-            case PhraseType.FullyQualifiedName:
-            case PhraseType.RelativeQualifiedName:
-            case PhraseType.QualifiedName:
+        switch((<Phrase>node).kind) {
+            case PhraseKind.FullyQualifiedName:
+            case PhraseKind.RelativeQualifiedName:
+            case PhraseKind.QualifiedName:
                 return true;
             default:
                 return false;
@@ -201,35 +199,35 @@ export class SignatureHelpProvider {
     }
 
     private _isArgExprList(node:Phrase|Token) {
-        return (<Phrase>node).phraseType === PhraseType.ArgumentExpressionList;
+        return (<Phrase>node).kind === PhraseKind.ArgumentExpressionList;
     }
 
     private _isMemberName(node:Phrase|Token) {
-        return (<Phrase>node).phraseType === PhraseType.MemberName;
+        return (<Phrase>node).kind === PhraseKind.MemberName;
     }
 
     private _isScopedMemberName(node:Phrase|Token) {
-        return (<Phrase>node).phraseType === PhraseType.ScopedMemberName;
+        return (<Phrase>node).kind === PhraseKind.ScopedMemberName;
     }
 
     private _isNameToken(node:Phrase|Token) {
-        return (<Token>node).tokenType === TokenType.Name;
+        return (<Token>node).kind === TokenKind.Name;
     }
 
     private _isIdentifier(node:Phrase|Token) {
-        return (<Phrase>node).phraseType === PhraseType.Identifier;
+        return (<Phrase>node).kind === PhraseKind.Identifier;
     }
 
     private _isClassTypeDesignator(node:Phrase|Token) {
-        return (<Phrase>node).phraseType === PhraseType.ClassTypeDesignator;
+        return (<Phrase>node).kind === PhraseKind.ClassTypeDesignator;
     }
 
     private _isNamePhraseOrRelativeScope(node:Phrase|Token) {
-        switch((<Phrase>node).phraseType) {
-            case PhraseType.FullyQualifiedName:
-            case PhraseType.RelativeQualifiedName:
-            case PhraseType.QualifiedName:
-            case PhraseType.RelativeScope:
+        switch((<Phrase>node).kind) {
+            case PhraseKind.FullyQualifiedName:
+            case PhraseKind.RelativeQualifiedName:
+            case PhraseKind.QualifiedName:
+            case PhraseKind.RelativeScope:
                 return true;
             default:
                 return false;

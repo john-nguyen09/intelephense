@@ -6,7 +6,7 @@
 
 import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbol';
 import { Reference } from './reference';
-import { TreeTraverser, Predicate, TreeVisitor, Traversable, BinarySearch, NameIndex, HashedLocation } from './types';
+import { TreeTraverser, Predicate, TreeVisitor, Traversable } from './types';
 import { Position, Location, Range } from 'vscode-languageserver-types';
 import { TypeString } from './typeString';
 import * as builtInSymbols from './builtInSymbols.json';

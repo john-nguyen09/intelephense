@@ -7,11 +7,7 @@
 import { Location, Position } from 'vscode-languageserver-types';
 import { PhpSymbol, SymbolKind } from '../symbol';
 import { SymbolStore } from '../symbolStore';
-import { ParsedDocument, ParsedDocumentStore } from '../parsedDocument';
-import { ParseTreeTraverser } from '../parseTreeTraverser';
-import { TypeString } from '../typeString';
-import { Phrase, PhraseType, Token, TokenType } from 'php7parser';
-import { TreeTraverser } from '../types';
+import { ParsedDocumentStore } from '../parsedDocument';
 import { MemberMergeStrategy } from '../typeAggregate';
 import { ReferenceStore, Reference } from '../reference';
 

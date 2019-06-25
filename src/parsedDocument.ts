@@ -4,20 +4,22 @@
 
 'use strict';
 
-import { Phrase, Token, TokenType, PhraseType, Parser } from 'php7parser';
+import { Phrase, Token, TokenKind, PhraseKind, Parser, Node,
+    isToken as baseIsToken, isPhrase as baseIsPhrase
+} from 'php7parser';
 import { TextDocument } from './textDocument';
 import * as lsp from 'vscode-languageserver-types';
 import {
     TreeVisitor, TreeTraverser, Event, Debounce, Unsubscribe,
-    Predicate, Traversable, HashedLocation
+    Predicate, Traversable
 } from './types';
 import * as AsyncLock from 'async-lock';
 
 const textDocumentChangeDebounceWait = 250;
 
 export interface NodeTransform {
-    phraseType?: PhraseType;
-    tokenType?: TokenType;
+    phraseKind?: PhraseKind;
+    tokenKind?: TokenKind;
     push(transform: NodeTransform): void;
 }
 
@@ -119,21 +121,7 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
         return r;
     }
 
-    nodeHashedLocation(node: Phrase | Token) {
-        if (!node) {
-            return null;
-        }
-
-        let range = this.nodeRange(node);
-
-        if (!range) {
-            return null;
-        }
-
-        return HashedLocation.create(this.uri, range);
-    }
-
-    nodeLocation(node: Phrase | Token) {
+    nodeLocation(node: Node) {
 
         if (!node) {
             return undefined;
@@ -149,14 +137,14 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
 
     }
 
-    nodeRange(node: Phrase | Token) {
+    nodeRange(node: Node) {
 
         if (!node) {
             return null;
         }
 
         if (ParsedDocument.isToken(node)) {
-            return this.tokenRange(<Token>node);
+            return this.tokenRange(node);
         }
 
         let tFirst = ParsedDocument.firstToken(node);
@@ -176,16 +164,16 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
     }
 
     tokenText(t: Token) {
-        return t && t.tokenType !== undefined ? this._textDocument.textAtOffset(t.offset, t.length) : '';
+        return t && t.kind !== undefined ? this._textDocument.textAtOffset(t.offset, t.length) : '';
     }
 
-    nodeText(node: Phrase | Token) {
+    nodeText(node: Node) {
 
         if (!node) {
             return '';
         }
 
-        if ((<Token>node).tokenType !== undefined) {
+        if (ParsedDocument.isToken(node)) {
             return this._textDocument.textAtOffset((<Token>node).offset, (<Token>node).length);
         }
 
@@ -224,9 +212,9 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
 
 export namespace ParsedDocument {
 
-    export function firstToken(node: Phrase | Token) {
+    export function firstToken(node: Node) {
 
-        if (ParsedDocument.isToken(node)) {
+        if (isToken(node)) {
             return node as Token;
         }
 
@@ -241,9 +229,9 @@ export namespace ParsedDocument {
         return null;
     }
 
-    export function lastToken(node: Phrase | Token) {
-        if (ParsedDocument.isToken(node)) {
-            return node as Token;
+    export function lastToken(node: Node) {
+        if (isToken(node)) {
+            return node;
         }
 
         let t: Token;
@@ -257,18 +245,18 @@ export namespace ParsedDocument {
         return null;
     }
 
-    export function isToken(node: Phrase | Token, types?: TokenType[]) {
-        return node && (<Token>node).tokenType !== undefined &&
-            (!types || types.indexOf((<Token>node).tokenType) > -1);
+    export function isToken(node: Node, types?: TokenKind[]): node is Token {
+        return baseIsToken(node) &&
+            (!types || types.indexOf(node.kind) > -1);
     }
 
-    export function isPhrase(node: Phrase | Token, types?: PhraseType[]) {
-        return node && (<Phrase>node).phraseType !== undefined &&
-            (!types || types.indexOf((<Phrase>node).phraseType) > -1);
+    export function isPhrase(node: Node, types?: PhraseKind[]): node is Phrase {
+        return baseIsPhrase(node) &&
+            (!types || types.indexOf(node.kind) > -1);
     }
 
     export function isOffsetInToken(offset: number, t: Token) {
-        return offset > -1 && ParsedDocument.isToken(t) &&
+        return offset > -1 && isToken(t) &&
             t.offset <= offset &&
             t.offset + t.length - 1 >= offset;
     }
@@ -279,7 +267,7 @@ export namespace ParsedDocument {
             return false;
         }
 
-        if (ParsedDocument.isToken(node)) {
+        if (isToken(node)) {
             return ParsedDocument.isOffsetInToken(offset, <Token>node);
         }
 
@@ -294,13 +282,13 @@ export namespace ParsedDocument {
 
     }
 
-    export function findChild(parent: Phrase, fn: Predicate<Phrase | Token>) {
+    export function findChild(parent: Phrase, fn: Predicate<Node>) {
 
         if (!parent || !parent.children) {
             return undefined;
         }
 
-        let child: Phrase | Token;
+        let child: Node;
         for (let n = 0, l = parent.children.length; n < l; ++n) {
             child = parent.children[n];
             if (fn(child)) {
@@ -310,14 +298,14 @@ export namespace ParsedDocument {
         return undefined;
     }
 
-    export function filterChildren(parent: Phrase, fn: Predicate<Phrase | Token>) {
+    export function filterChildren(parent: Phrase, fn: Predicate<Node>) {
 
-        let filtered: (Phrase | Token)[] = [];
+        let filtered: Node[] = [];
         if (!parent || !parent.children) {
             return filtered;
         }
 
-        let child: Phrase | Token;
+        let child: Node;
         for (let n = 0, l = parent.children.length; n < l; ++n) {
             child = parent.children[n];
             if (fn(child)) {
@@ -332,10 +320,10 @@ export namespace ParsedDocument {
             return false;
         }
 
-        switch ((<Phrase>node).phraseType) {
-            case PhraseType.QualifiedName:
-            case PhraseType.RelativeQualifiedName:
-            case PhraseType.FullyQualifiedName:
+        switch (node.kind) {
+            case PhraseKind.QualifiedName:
+            case PhraseKind.RelativeQualifiedName:
+            case PhraseKind.FullyQualifiedName:
                 return true;
             default:
                 return false;
@@ -414,9 +402,9 @@ class ToStringVisitor implements TreeVisitor<Phrase | Token> {
 
     private _text: string;
     private _doc: ParsedDocument;
-    private _ignore: TokenType[];
+    private _ignore: TokenKind[];
 
-    constructor(doc: ParsedDocument, ignore?: TokenType[]) {
+    constructor(doc: ParsedDocument, ignore?: TokenKind[]) {
         this._text = '';
         this._doc = doc;
     }
@@ -427,7 +415,7 @@ class ToStringVisitor implements TreeVisitor<Phrase | Token> {
 
     postorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
 
-        if (ParsedDocument.isToken(node) && (!this._ignore || this._ignore.indexOf((<Token>node).tokenType) < 0)) {
+        if (ParsedDocument.isToken(node) && (!this._ignore || this._ignore.indexOf(node.kind) < 0)) {
             this._text += this._doc.tokenText(<Token>node);
         }
 
@@ -466,15 +454,15 @@ class DocumentLanguageRangesVisitor implements TreeVisitor<Phrase | Token> {
 
     preorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
 
-        switch ((<Token>node).tokenType) {
-            case TokenType.Text:
+        switch (node.kind) {
+            case TokenKind.Text:
                 this._ranges.push({ range: this.doc.tokenRange(<Token>node) });
                 break;
-            case TokenType.OpenTag:
-            case TokenType.OpenTagEcho:
+            case TokenKind.OpenTag:
+            case TokenKind.OpenTagEcho:
                 this._phpOpenPosition = this.doc.tokenRange(<Token>node).start;
                 break;
-            case TokenType.CloseTag:
+            case TokenKind.CloseTag:
                 {
                     let closeTagRange = this.doc.tokenRange(<Token>node);
                     this._ranges.push({
@@ -489,7 +477,7 @@ class DocumentLanguageRangesVisitor implements TreeVisitor<Phrase | Token> {
                 break;
         }
 
-        if ((<Token>node).tokenType !== undefined) {
+        if (ParsedDocument.isToken(node)) {
             this._lastToken = <Token>node;
         }
 

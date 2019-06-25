@@ -54,20 +54,6 @@ export class Event<T> {
 
 }
 
-export interface HashedLocation {
-    uri: string;
-    range: Range;
-}
-
-export namespace HashedLocation {
-    export function create(uri: string, range: Range) {
-        return <HashedLocation>{
-            uri: uri,
-            range: range
-        };
-    }
-}
-
 export interface TreeLike {
     [index: string]: any,
     children?: TreeLike[]

@@ -8,10 +8,14 @@ import { assert } from 'chai';
 import 'mocha';
 import * as fs from 'fs';
 import * as path from 'path';
+import { inspect } from 'util';
 
 function symbolReaderOutput(src: string) {
 
     let parsedDoc = new ParsedDocument('test', src);
+    // console.log(inspect(util.nodeToObject(parsedDoc.tree), {
+    //     depth: 20,
+    // }));
     let sr = new SymbolReader(parsedDoc, new NameResolver());
     parsedDoc.traverse(sr);
     return sr.symbol;
@@ -28,6 +32,7 @@ describe('SymbolReader', () => {
 
         let symbols = symbolReaderOutput(src);
         let defineConstant = symbols.children[0];
+        // console.log({ src, symbols });
         assert.equal(defineConstant.name, 'FOO');
         assert.equal(defineConstant.kind, SymbolKind.Constant);
 

@@ -6,9 +6,8 @@
 
 import { ParsedDocument, ParsedDocumentChangeEventArgs } from '../parsedDocument';
 import { TreeVisitor, Event, Debounce, Unsubscribe } from '../types';
-import { Phrase, Token, ParseError, tokenTypeToString, PhraseType } from 'php7parser';
+import { Phrase, Token, ParseError, tokenKindToString, PhraseKind } from 'php7parser';
 import * as lsp from 'vscode-languageserver-types';
-import { Log } from '../logger';
 
 export interface PublishDiagnosticsEventArgs {
     uri: string;
@@ -121,9 +120,9 @@ export class DiagnosticsProvider {
     }
 
     private _message(err:ParseError) {
-        let msg = `Unexpected ${tokenTypeToString(err.unexpected.tokenType)}.`;
+        let msg = `Unexpected ${tokenKindToString(err.unexpected.kind)}.`;
         if(err.expected) {
-            msg += ` Expected ${tokenTypeToString(err.expected)}.`;
+            msg += ` Expected ${tokenKindToString(err.expected)}.`;
         }
         return msg;
     }
@@ -155,7 +154,7 @@ class ErrorVisitor implements TreeVisitor<Phrase | Token>{
 
     preorder(node: Token | Phrase, spine: (Token | Phrase)[]) {
 
-        if ((<Phrase>node).phraseType === PhraseType.Error) {
+        if ((<Phrase>node).kind === PhraseKind.Error) {
             this._errors.push(<ParseError>node);
             return false;
         }

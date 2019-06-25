@@ -4,8 +4,9 @@
 
 'use strict';
 
-import { Predicate, HashedLocation } from './types';
+import { Predicate } from './types';
 import * as util from './util';
+import { Location } from 'vscode-languageserver';
 
 export const enum SymbolKind {
     None = 0,
@@ -101,7 +102,7 @@ export interface PhpSymbol extends SymbolIdentifier {
     associated?: PhpSymbol[];
     children?: PhpSymbol[];
     value?: string;
-    location?: HashedLocation;
+    location?: Location;
 }
 
 export interface SymbolIdentifier {
@@ -236,7 +237,7 @@ export namespace PhpSymbol {
         return symbols;
     }
 
-    export function create(kind: SymbolKind, name: string, location?: HashedLocation): PhpSymbol {
+    export function create(kind: SymbolKind, name: string, location?: Location): PhpSymbol {
         return {
             kind: kind,
             name: name,

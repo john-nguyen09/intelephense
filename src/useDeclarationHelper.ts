@@ -4,39 +4,38 @@
 
 'use strict';
 
-import {ParsedDocument} from './parsedDocument';
-import {SymbolTable} from './symbolStore';
-import {PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbol';
-import {Position, TextEdit, Range} from 'vscode-languageserver-types';
-import {TreeVisitor} from './types';
-import {Phrase, Token, PhraseType, TokenType} from 'php7parser';
+import { ParsedDocument } from './parsedDocument';
+import { SymbolTable } from './symbolStore';
+import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbol';
+import { Position, TextEdit, Range } from 'vscode-languageserver-types';
+import { TreeVisitor } from './types';
+import { Phrase, Token, PhraseKind, TokenKind } from 'php7parser';
 import * as util from './util';
-import { Reference } from './reference';
 
 export class UseDeclarationHelper {
 
-    private _useDeclarations:PhpSymbol[];
-    private _afterNode:Phrase;
-    private _afterNodeRange:Range;
-    private _cursor:Position;
+    private _useDeclarations: PhpSymbol[];
+    private _afterNode: Phrase;
+    private _afterNodeRange: Range;
+    private _cursor: Position;
 
-    constructor(public doc:ParsedDocument, public table:SymbolTable, cursor:Position) { 
+    constructor(public doc: ParsedDocument, public table: SymbolTable, cursor: Position) {
         this._useDeclarations = table.filter(this._isUseDeclarationSymbol);
         this._cursor = cursor;
     }
 
-    insertDeclarationTextEdit(symbol:SymbolIdentifier, alias?:string) {
+    insertDeclarationTextEdit(symbol: SymbolIdentifier, alias?: string) {
         let afterNode = this._insertAfterNode();
 
         let text = '\n';
-        if(afterNode.phraseType === PhraseType.NamespaceDefinition){
+        if (afterNode.kind === PhraseKind.NamespaceDefinition) {
             text += '\n';
         }
 
         text += util.whitespace(this._insertAfterNodeRange().start.character);
         text += 'use ';
 
-        switch(symbol.kind) {
+        switch (symbol.kind) {
             case SymbolKind.Constant:
                 text += 'const ';
                 break;
@@ -49,13 +48,13 @@ export class UseDeclarationHelper {
 
         text += symbol.name;
 
-        if(alias) {
+        if (alias) {
             text += ' as ' + alias;
         }
 
         text += ';';
 
-        if(afterNode.phraseType !== PhraseType.NamespaceUseDeclaration) {
+        if (afterNode.kind !== PhraseKind.NamespaceUseDeclaration) {
             text += '\n';
         }
 
@@ -63,34 +62,34 @@ export class UseDeclarationHelper {
 
     }
 
-    replaceDeclarationTextEdit(symbol:SymbolIdentifier, alias:string) {
+    replaceDeclarationTextEdit(symbol: SymbolIdentifier, alias: string) {
         let useSymbol = this.findUseSymbolByFqn(symbol.name);
         let node = this.findNamespaceUseClauseByRange(useSymbol.location.range) as Phrase;
         let aliasingClause = ParsedDocument.findChild(node, this._isNamespaceAliasingClause) as Phrase;
 
-        if(aliasingClause) {
+        if (aliasingClause) {
             return TextEdit.replace(this.doc.nodeRange(aliasingClause), `as ${alias}`);
         } else {
             return TextEdit.insert(this.doc.nodeRange(node).end, ` as ${alias}`);
         }
     }
 
-    deleteDeclarationTextEdit(fqn:string) {
+    deleteDeclarationTextEdit(fqn: string) {
 
     }
 
-    findUseSymbolByFqn(fqn:string) {
+    findUseSymbolByFqn(fqn: string) {
         let lcFqn = fqn.toLowerCase();
-        let fn = (x:PhpSymbol) => {
+        let fn = (x: PhpSymbol) => {
             return x.associated && x.associated.length > 0 && x.associated[0].name.toLowerCase() === lcFqn;
         }
         return this._useDeclarations.find(fn);
     }
 
-    findUseSymbolByName(name:string) {
+    findUseSymbolByName(name: string) {
 
         let lcName = name.toLowerCase();
-        let fn = (x:PhpSymbol) => {
+        let fn = (x: PhpSymbol) => {
             return x.name.toLowerCase() === lcName;
         }
 
@@ -98,10 +97,10 @@ export class UseDeclarationHelper {
 
     }
 
-    findNamespaceUseClauseByRange(range:Range) {
+    findNamespaceUseClauseByRange(range: Range) {
 
-        let fn = (x:Phrase | Token) => {
-            return ((<Phrase>x).phraseType === PhraseType.NamespaceUseClause || (<Phrase>x).phraseType === PhraseType.NamespaceUseGroupClause) &&
+        let fn = (x: Phrase | Token) => {
+            return ((<Phrase>x).kind === PhraseKind.NamespaceUseClause || (<Phrase>x).kind === PhraseKind.NamespaceUseGroupClause) &&
                 util.rangeEquality(range, this.doc.nodeRange(x));
         };
 
@@ -109,14 +108,14 @@ export class UseDeclarationHelper {
 
     }
 
-    private _isUseDeclarationSymbol(s:PhpSymbol) {
+    private _isUseDeclarationSymbol(s: PhpSymbol) {
         const mask = SymbolKind.Class | SymbolKind.Function | SymbolKind.Constant;
         return (s.modifiers & SymbolModifier.Use) > 0 && (s.kind & mask) > 0;
     }
 
     private _insertAfterNode() {
 
-        if(this._afterNode) {
+        if (this._afterNode) {
             return this._afterNode;
         }
 
@@ -127,7 +126,7 @@ export class UseDeclarationHelper {
 
     private _insertAfterNodeRange() {
 
-        if(this._afterNodeRange) {
+        if (this._afterNodeRange) {
             return this._afterNodeRange;
         }
 
@@ -139,8 +138,8 @@ export class UseDeclarationHelper {
         return this._insertAfterNodeRange().end;
     }
 
-    private _isNamespaceAliasingClause(node:Phrase|Token) {
-        return (<Phrase>node).phraseType === PhraseType.NamespaceAliasingClause;
+    private _isNamespaceAliasingClause(node: Phrase | Token) {
+        return (<Phrase>node).kind === PhraseKind.NamespaceAliasingClause;
     }
 
 }
@@ -174,20 +173,20 @@ class InsertAfterNodeVisitor implements TreeVisitor<Phrase | Token> {
 
     preorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
 
-        switch ((<Phrase>node).phraseType) {
-            case PhraseType.InlineText:
+        switch ((<Phrase>node).kind) {
+            case PhraseKind.InlineText:
                 if (!this._openingInlineText) {
                     this._openingInlineText = node as Phrase;
                 }
                 break;
 
-            case PhraseType.NamespaceDefinition:
-                if(!ParsedDocument.findChild(<Phrase>node, this._isStatementList)) {
+            case PhraseKind.NamespaceDefinition:
+                if (!ParsedDocument.findChild(<Phrase>node, this._isStatementList)) {
                     this._namespaceDefinition = node as Phrase;
                 }
                 break;
 
-            case PhraseType.NamespaceUseDeclaration:
+            case PhraseKind.NamespaceUseDeclaration:
                 this._lastNamespaceUseDeclaration = node as Phrase;
                 break;
 
@@ -208,8 +207,8 @@ class InsertAfterNodeVisitor implements TreeVisitor<Phrase | Token> {
 
     }
 
-    private _isStatementList(node:Phrase|Token) {
-        return (<Phrase>node).phraseType === PhraseType.StatementList;
+    private _isStatementList(node: Phrase | Token) {
+        return (<Phrase>node).kind === PhraseKind.StatementList;
     }
 
 }

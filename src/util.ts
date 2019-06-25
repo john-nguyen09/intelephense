@@ -4,11 +4,11 @@
 
 'use strict';
 
-import { Position, Range, Location } from 'vscode-languageserver-types';
+import { Position, Range } from 'vscode-languageserver-types';
 import { Predicate } from './types';
 import * as crypto from 'crypto';
-import { URL, parse as parse_url } from 'url';
 import URI from 'vscode-uri/lib';
+import { Node, Phrase, Token, ParseError, tokenKindToString, phraseKindToString, PhraseKind, TokenKind, isPhrase, isToken } from 'php7parser';
 
 export function popMany<T>(array: T[], count: number) {
     let popped: T[] = [];
@@ -209,4 +209,59 @@ export function elapsed(start: [number, number]) {
     }
     let diff = process.hrtime(start);
     return diff[0] * 1000 + diff[1] / 1000000;
+}
+
+export function nodeToObject(node: Node, recursive: boolean = true) {
+    let obj = null;
+
+    if (isPhrase(node)) {
+        obj = phraseToObj(node);
+
+        if (recursive) {
+            for (const child of node.children) {
+                obj.children.push(nodeToObject(child));
+            }
+        }
+    } else if (isToken(node)) {
+        obj = tokenToObj(node);
+    }
+
+    return obj;
+}
+
+function isParseError(p: Phrase): p is ParseError {
+    return 'unexpected' in p;
+}
+
+function tokenToObj(t: Token) {
+    return {
+        kind: 'Token: ' + tokenKindToString(t.kind),
+        offset: t.offset,
+        length: t.length,
+    };
+}
+
+function phraseToObj(p: Phrase): { kind: string, children: any[] } {
+    if (isParseError(p)) {
+        return parseErrorToObject(p);
+    }
+
+    return {
+        kind: 'Phrase: ' + phraseKindToString(p.kind),
+        children: [],
+    }
+}
+
+function parseErrorToObject(p: ParseError): { kind: string, children: any[], unexpected: any, expected?: string } {
+    const obj: any = {
+        kind: 'Phrase: ' + phraseKindToString(p.kind),
+        children: [],
+    };
+    obj.unexpected = tokenToObj(p.unexpected);
+
+    if (p.expected) {
+        obj.expected = tokenKindToString(p.expected);
+    }
+
+    return obj;
 }

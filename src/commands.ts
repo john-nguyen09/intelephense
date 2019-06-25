@@ -10,9 +10,7 @@ import { ParseTreeTraverser } from './parseTreeTraverser';
 import { SymbolStore, SymbolTable } from './symbolStore';
 import { SymbolKind, PhpSymbol } from './symbol';
 import { Reference, ReferenceStore, ReferenceTable} from './reference';
-import { ReferenceReader } from './referenceReader';
-import { NameResolver } from './nameResolver';
-import { Phrase, PhraseType, Token } from 'php7parser';
+import { Phrase, PhraseKind, Token } from 'php7parser';
 import {UseDeclarationHelper} from './useDeclarationHelper';
 import * as util from './util';
 
@@ -85,7 +83,7 @@ export class NameTextEditProvider {
     } 
 
     private _isFullyQualifiedName(node:Phrase|Token) {
-        return (<Phrase>node).phraseType === PhraseType.FullyQualifiedName;        
+        return (<Phrase>node).kind === PhraseKind.FullyQualifiedName;        
     }
 
 }

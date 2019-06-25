@@ -4,18 +4,16 @@
 
 'use strict';
 
-import { PhpSymbol, SymbolKind, SymbolModifier } from './symbol';
-import { Reference, ReferenceTable } from './reference';
-import { SymbolStore, SymbolTable } from './symbolStore';
-import { NameResolver } from './nameResolver';
-import { TreeVisitor, TreeTraverser, Predicate, MultiVisitor } from './types';
-import { TypeString } from './typeString';
+import { ReferenceTable, Reference } from './reference';
+import { SymbolTable } from './symbolStore';
+import { TreeTraverser } from './types';
 import { ParsedDocument } from './parsedDocument';
-import { Position, TextEdit, Range } from 'vscode-languageserver-types';
-import { Phrase, Token, PhraseType, TokenType, } from 'php7parser';
-import * as util from './util';
+import { Position, Range } from 'vscode-languageserver-types';
+import { Phrase, Token, PhraseKind, TokenKind, Node, isToken } from 'php7parser';
+import { PhpSymbol } from './symbol';
+import { NameResolver } from './nameResolver';
 
-export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
+export class ParseTreeTraverser extends TreeTraverser<Node> {
 
     private _doc: ParsedDocument;
     private _symbolTable: SymbolTable;
@@ -73,10 +71,10 @@ export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
      */
     position(pos: Position) {
         let offset = this._doc.offsetAtPosition(pos) - 1;
-        let fn = (x: Phrase | Token) => {
-            return (<Token>x).tokenType !== undefined &&
-                offset < (<Token>x).offset + (<Token>x).length &&
-                offset >= (<Token>x).offset;
+        let fn = (node: Node) => {
+            return isToken(node) &&
+                offset < node.offset + node.length &&
+                offset >= node.offset;
         };
 
         return this.find(fn) as Token;
@@ -92,8 +90,8 @@ export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
     prevToken() {
 
         const spine = this._spine.slice(0);
-        let current:Phrase|Token;
-        let parent:Phrase|Token;
+        let current:Node;
+        let parent:Phrase;
         let prevSiblingIndex:number;
 
         while(spine.length > 1) {
@@ -119,10 +117,10 @@ export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
 
     }
 
-    private _lastToken(spine:(Phrase|Token)[]) {
+    private _lastToken(spine: Node[]) {
 
         let node = spine[spine.length - 1];
-        if((<Token>node).tokenType !== undefined) {
+        if(isToken(node)) {
             return spine;
         }
 
@@ -156,8 +154,8 @@ export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
             return false;
         }
 
-        return ((t.tokenType === TokenType.Name || t.tokenType === TokenType.VariableName) && this._isDeclarationPhrase(parent)) ||
-            (parent.phraseType === PhraseType.Identifier && this._isDeclarationPhrase(<Phrase>traverser.parent()));
+        return ((t.kind === TokenKind.Name || t.kind === TokenKind.VariableName) && this._isDeclarationPhrase(parent)) ||
+            (parent.kind === PhraseKind.Identifier && this._isDeclarationPhrase(<Phrase>traverser.parent()));
 
     }
 
@@ -167,16 +165,16 @@ export class ParseTreeTraverser extends TreeTraverser<Phrase | Token> {
             return false;
         }
 
-        switch (node.phraseType) {
-            case PhraseType.ClassDeclarationHeader:
-            case PhraseType.TraitDeclarationHeader:
-            case PhraseType.InterfaceDeclarationHeader:
-            case PhraseType.PropertyElement:
-            case PhraseType.ConstElement:
-            case PhraseType.ParameterDeclaration:
-            case PhraseType.FunctionDeclarationHeader:
-            case PhraseType.MethodDeclarationHeader:
-            case PhraseType.ClassConstElement:
+        switch (node.kind) {
+            case PhraseKind.ClassDeclarationHeader:
+            case PhraseKind.TraitDeclarationHeader:
+            case PhraseKind.InterfaceDeclarationHeader:
+            case PhraseKind.PropertyElement:
+            case PhraseKind.ConstElement:
+            case PhraseKind.ParameterDeclaration:
+            case PhraseKind.FunctionDeclarationHeader:
+            case PhraseKind.MethodDeclarationHeader:
+            case PhraseKind.ClassConstElement:
                 return true;
             default:
                 return false;
