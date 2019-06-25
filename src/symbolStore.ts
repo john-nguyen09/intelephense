@@ -8,7 +8,7 @@ import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbo
 import { Reference } from './reference';
 import { TreeTraverser, Predicate, TreeVisitor, Traversable } from './types';
 import { Position, Location, Range } from 'vscode-languageserver-types';
-import { TypeString } from './typeString';
+import { TypeString, TypeResolvable } from './typeString';
 import * as builtInSymbols from './builtInSymbols.json';
 import { ParsedDocument, ParsedDocumentChangeEventArgs, ParsedDocumentStore } from './parsedDocument';
 import { SymbolReader } from './symbolReader';
@@ -400,7 +400,7 @@ export class SymbolStore {
     }
 
     private async findMembers(
-        scope: string | Promise<string>, memberMergeStrategy: MemberMergeStrategy, predicate?: Predicate<PhpSymbol>
+        scope: string | TypeResolvable, memberMergeStrategy: MemberMergeStrategy, predicate?: Predicate<PhpSymbol>
     ) {
 
         let fqnArray = TypeString.atomicClassArray(await TypeString.resolve(scope));

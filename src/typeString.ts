@@ -5,8 +5,8 @@
 'use strict';
 
 import {NameResolver} from './nameResolver';
-import * as util from './util';
-import { resolve } from 'dns';
+
+export type TypeResolvable = () => Promise<string>;
 
 export namespace TypeString {
 
@@ -212,21 +212,25 @@ export namespace TypeString {
 
     }
 
-    export async function resolve(type: string | Promise<string>) {
-        if (type instanceof Promise) {
-            return await type;
+    export async function resolve(type: string | TypeResolvable): Promise<string> {
+        if (typeof type === 'undefined') {
+            return '';
+        }
+
+        if (typeof type !== 'string') {
+            return await type();
         }
 
         return type;
     }
 
-    export async function resolveArray(types: (string | Promise<string>)[]) {
+    export async function resolveArray(types: (string | TypeResolvable)[]): Promise<string[]> {
         const promises: Promise<string>[] = [];
 
         for (const type of types) {
             promises.push(resolve(type));
         }
 
-        return Promise.all(promises);
+        return await Promise.all(promises);
     }
 }

@@ -9,12 +9,13 @@ import { SymbolIdentifier, SymbolKind } from './symbol';
 import { Range, Location, Position } from 'vscode-languageserver-types';
 import * as util from './util';
 import { Log } from './logger';
+import { TypeResolvable } from './typeString';
 
 export interface Reference extends SymbolIdentifier {
     location: Location;
-    type?: string | Promise<string>;
+    type?: string | TypeResolvable;
     altName?: string;
-    scope?: string | Promise<string>;
+    scope?: string | TypeResolvable;
 }
 
 export namespace Reference {

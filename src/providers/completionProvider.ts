@@ -932,7 +932,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
             return '';
         }
 
-        let type = await this.symbolStore.referenceToTypeString(ref);
+        let type = await TypeString.resolve(await this.symbolStore.referenceToTypeString(ref));
         while (arrayDereference--) {
             type = TypeString.arrayDereference(type);
         }
