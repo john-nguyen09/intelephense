@@ -4,9 +4,10 @@
 'use strict';
 
 import {
-	createConnection, IConnection, TextDocumentSyncKind,
+	createConnection, TextDocumentSyncKind,
 	InitializeResult, Disposable, DocumentRangeFormattingRequest,
-	DocumentSelector
+	DocumentSelector,
+	InitializeParams
 } from 'vscode-languageserver';
 
 import { Intelephense, IntelephenseConfig } from './intelephense';
@@ -16,7 +17,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
-let connection: IConnection = createConnection();
+const connection = createConnection();
 Log.console = connection.console;
 const logPath = path.join(os.homedir(), '.intelephense', 'error.log');
 
@@ -45,45 +46,40 @@ let config: VscodeConfig = {
 		debounce: 1000,
 		maxItems: 100
 	},
-	file: {
-		maxSize: 1000000
-	},
 	formatProvider: {
 		enable: true
 	}
 };
 
 
-connection.onInitialize((params): Promise<InitializeResult> => {
-	return Intelephense.initialise(params)
-		.then(_ => {
-			Intelephense.onPublishDiagnostics((args) => {
-				connection.sendDiagnostics(args);
-			});
-            return <InitializeResult>{
-                capabilities: {
-                    textDocumentSync: TextDocumentSyncKind.Incremental,
-                    documentSymbolProvider: true,
-                    workspaceSymbolProvider: true,
-                    completionProvider: {
-                        triggerCharacters: [
-                            '$', '>', ':', //php
-                            '.', '<', '/' //html/js
-                        ]
-                    },
-                    signatureHelpProvider: {
-                        triggerCharacters: ['(', ',']
-                    },
-                    definitionProvider: true,
-                    //documentFormattingProvider: true,
-                    documentRangeFormattingProvider: false,
-                    referencesProvider: true,
-                    documentLinkProvider: { resolveProvider: false },
-                    hoverProvider: true,
-                    documentHighlightProvider: true
-                }
-            };
-		});
+connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
+	const _ = await Intelephense.initialise(params);
+	Intelephense.onPublishDiagnostics((args) => {
+		connection.sendDiagnostics(args);
+	});
+	return <InitializeResult>{
+		capabilities: {
+			textDocumentSync: TextDocumentSyncKind.Incremental,
+			documentSymbolProvider: true,
+			workspaceSymbolProvider: true,
+			completionProvider: {
+				triggerCharacters: [
+					'$', '>', ':',
+					'.', '<', '/' //html/js
+				]
+			},
+			signatureHelpProvider: {
+				triggerCharacters: ['(', ',']
+			},
+			definitionProvider: true,
+			//documentFormattingProvider: true,
+			documentRangeFormattingProvider: false,
+			referencesProvider: true,
+			documentLinkProvider: { resolveProvider: false },
+			hoverProvider: true,
+			documentHighlightProvider: true
+		}
+	};
 
 });
 

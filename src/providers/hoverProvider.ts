@@ -10,7 +10,6 @@ import { SymbolKind, PhpSymbol, SymbolModifier } from '../symbol';
 import { ReferenceStore } from '../reference';
 import { Position, Hover, MarkedString } from 'vscode-languageserver-types';
 import { MemberMergeStrategy } from '../typeAggregate';
-import * as turndown from 'turndown';
 import { TypeString } from '../typeString';
 
 export class HoverProvider {

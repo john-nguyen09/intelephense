@@ -412,9 +412,6 @@ export interface IntelephenseConfig {
         maxItems: number,
         addUseDeclaration: boolean,
         backslashPrefix: boolean
-    },
-    file: {
-        maxSize: number
     }
 }
 

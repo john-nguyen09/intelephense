@@ -7,7 +7,7 @@
 import { Position, Range } from 'vscode-languageserver-types';
 import { Predicate } from './types';
 import * as crypto from 'crypto';
-import URI from 'vscode-uri/lib';
+import URI from 'vscode-uri';
 import { Node, Phrase, Token, ParseError, tokenKindToString, phraseKindToString, PhraseKind, TokenKind, isPhrase, isToken } from 'php7parser';
 
 export function popMany<T>(array: T[], count: number) {
