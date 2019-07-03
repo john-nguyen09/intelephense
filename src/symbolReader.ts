@@ -336,7 +336,7 @@ export class SymbolReader implements TreeVisitor<Phrase | Token> {
                     break;
                 
                 case PhraseKind.GlobalDeclaration:
-                    if (this.lastPhpDoc) {
+                    if (this.lastPhpDoc && this.lastPhpDoc.globalTags.length > 0) {
                         this._transformStack.push(new GlobalVariableTransform(
                             this.nameResolver,
                             this.document.nodeLocation(node),
