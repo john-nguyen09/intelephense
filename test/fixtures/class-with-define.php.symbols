@@ -1,0 +1,159 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 31,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Class",
+            "name": "FirstClass",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                "range": {
+                    "start": {
+                        "line": 2,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 14,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "Method",
+                    "name": "thisWorks",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                        "range": {
+                            "start": {
+                                "line": 4,
+                                "character": 1
+                            },
+                            "end": {
+                                "line": 7,
+                                "character": 2
+                            }
+                        }
+                    },
+                    "modifiers": 33,
+                    "children": [],
+                    "type": "function_declaration_body",
+                    "scope": "FirstClass"
+                },
+                {
+                    "kind": "Method",
+                    "name": "__construct",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                        "range": {
+                            "start": {
+                                "line": 9,
+                                "character": 1
+                            },
+                            "end": {
+                                "line": 13,
+                                "character": 2
+                            }
+                        }
+                    },
+                    "modifiers": 1,
+                    "scope": "FirstClass"
+                }
+            ],
+            "associated": [],
+            "modifiers": 0
+        },
+        {
+            "kind": "Constant",
+            "name": "ISSUE_AFTER_THIS",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                "range": {
+                    "start": {
+                        "line": 16,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 16,
+                        "character": 29
+                    }
+                }
+            },
+            "value": "1"
+        },
+        {
+            "kind": "Class",
+            "name": "SecondClass",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                "range": {
+                    "start": {
+                        "line": 18,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 30,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "Method",
+                    "name": "thisDoesNotWork",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                        "range": {
+                            "start": {
+                                "line": 20,
+                                "character": 1
+                            },
+                            "end": {
+                                "line": 23,
+                                "character": 2
+                            }
+                        }
+                    },
+                    "modifiers": 33,
+                    "children": [],
+                    "type": "function_declaration_body",
+                    "scope": "SecondClass"
+                },
+                {
+                    "kind": "Method",
+                    "name": "__construct",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                        "range": {
+                            "start": {
+                                "line": 25,
+                                "character": 1
+                            },
+                            "end": {
+                                "line": 29,
+                                "character": 2
+                            }
+                        }
+                    },
+                    "modifiers": 1,
+                    "scope": "SecondClass"
+                }
+            ],
+            "associated": [],
+            "modifiers": 0
+        }
+    ]
+}

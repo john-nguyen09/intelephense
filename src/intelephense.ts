@@ -25,7 +25,7 @@ export { LanguageRange } from './parsedDocument';
 import { HoverProvider } from './providers/hoverProvider';
 import { HighlightProvider } from './providers/highlightProvider';
 import * as os from 'os';
-import * as util from './util';
+import * as util from './utils';
 import * as fs from 'fs';
 import * as gracefulFs from 'graceful-fs';
 import Uri from 'vscode-uri';

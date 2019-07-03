@@ -1,0 +1,160 @@
+{"type":"program"}
+	{"type":"class_declaration"}
+		{"type":"class"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"static_modifier"}
+				{"type":"static"}
+			
+			{"type":"function_definition"}
+				{"type":"function"}
+				{"type":"name"}
+				{"type":"formal_parameters"}
+					{"type":"("}
+					{"type":")"}
+				
+				{"type":"compound_statement"}
+					{"type":"{"}
+					{"type":"}"}
+				
+			
+		
+		{"type":"constructor_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function"}
+			{"type":"__construct"}
+			{"type":"formal_parameters"}
+				{"type":"("}
+				{"type":")"}
+			
+			{"type":"compound_statement"}
+				{"type":"{"}
+				{"type":"expression_statement"}
+					{"type":"scoped_call_expression"}
+						{"type":"relative_scope"}
+							{"type":"self"}
+						
+						{"type":"::"}
+						{"type":"name"}
+						{"type":"arguments"}
+							{"type":"("}
+							{"type":")"}
+						
+					
+					{"type":";"}
+				
+				{"type":"expression_statement"}
+					{"type":"member_call_expression"}
+						{"type":"dereferencable_expression"}
+							{"type":"variable_name"}
+								{"type":"$"}
+								{"type":"name"}
+							
+						
+						{"type":"->"}
+						{"type":"name"}
+						{"type":"arguments"}
+							{"type":"("}
+							{"type":")"}
+						
+					
+					{"type":";"}
+				
+				{"type":"}"}
+			
+		
+		{"type":"}"}
+	
+	{"type":"expression_statement"}
+		{"type":"function_call_expression"}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+			{"type":"arguments"}
+				{"type":"("}
+				{"type":"string"}
+				{"type":","}
+				{"type":"integer"}
+				{"type":")"}
+			
+		
+		{"type":";"}
+	
+	{"type":"class_declaration"}
+		{"type":"class"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"static_modifier"}
+				{"type":"static"}
+			
+			{"type":"function_definition"}
+				{"type":"function"}
+				{"type":"name"}
+				{"type":"formal_parameters"}
+					{"type":"("}
+					{"type":")"}
+				
+				{"type":"compound_statement"}
+					{"type":"{"}
+					{"type":"}"}
+				
+			
+		
+		{"type":"constructor_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function"}
+			{"type":"__construct"}
+			{"type":"formal_parameters"}
+				{"type":"("}
+				{"type":")"}
+			
+			{"type":"compound_statement"}
+				{"type":"{"}
+				{"type":"expression_statement"}
+					{"type":"scoped_call_expression"}
+						{"type":"relative_scope"}
+							{"type":"self"}
+						
+						{"type":"::"}
+						{"type":"name"}
+						{"type":"arguments"}
+							{"type":"("}
+							{"type":")"}
+						
+					
+					{"type":";"}
+				
+				{"type":"expression_statement"}
+					{"type":"member_call_expression"}
+						{"type":"dereferencable_expression"}
+							{"type":"variable_name"}
+								{"type":"$"}
+								{"type":"name"}
+							
+						
+						{"type":"->"}
+						{"type":"name"}
+						{"type":"arguments"}
+							{"type":"("}
+							{"type":")"}
+						
+					
+					{"type":";"}
+				
+				{"type":"}"}
+			
+		
+		{"type":"}"}
+	

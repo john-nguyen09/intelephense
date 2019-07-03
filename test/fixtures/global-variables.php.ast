@@ -1,0 +1,54 @@
+{"type":"program"}
+	{"type":"comment"}
+	{"type":"global_declaration"}
+		{"type":"global"}
+		{"type":"variable_name"}
+			{"type":"$"}
+			{"type":"name"}
+		
+		{"type":";"}
+	
+	{"type":"comment"}
+	{"type":"expression_statement"}
+		{"type":"assignment_expression"}
+			{"type":"variable_name"}
+				{"type":"$"}
+				{"type":"name"}
+			
+			{"type":"="}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+		
+		{"type":";"}
+	
+	{"type":"interface_declaration"}
+		{"type":"interface"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function"}
+			{"type":"name"}
+			{"type":"formal_parameters"}
+				{"type":"("}
+				{"type":")"}
+			
+			{"type":";"}
+		
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function"}
+			{"type":"name"}
+			{"type":"formal_parameters"}
+				{"type":"("}
+				{"type":")"}
+			
+			{"type":";"}
+		
+		{"type":"}"}
+	

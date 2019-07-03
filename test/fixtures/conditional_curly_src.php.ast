@@ -1,0 +1,20 @@
+{"type":"program"}
+	{"type":"if_statement"}
+		{"type":"if"}
+		{"type":"("}
+		{"type":"qualified_name"}
+			{"type":"name"}
+		
+		{"type":")"}
+		{"type":"compound_statement"}
+			{"type":"{"}
+			{"type":"}"}
+		
+		{"type":"else_clause"}
+			{"type":"else"}
+			{"type":"compound_statement"}
+				{"type":"{"}
+				{"type":"}"}
+			
+		
+	

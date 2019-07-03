@@ -13,7 +13,7 @@ import * as builtInSymbols from './builtInSymbols.json';
 import { ParsedDocument, ParsedDocumentChangeEventArgs, ParsedDocumentStore } from './parsedDocument';
 import { SymbolReader } from './symbolReader';
 import { NameResolver } from './nameResolver';
-import * as util from './util';
+import * as util from './utils';
 import { TypeAggregate, MemberMergeStrategy } from './typeAggregate';
 import { SymbolIndex } from './indexes/symbolIndex';
 import { SymbolTableIndex } from './indexes/symbolTableIndex';

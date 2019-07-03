@@ -76,6 +76,10 @@ export class TreeTraverser<T extends TreeLike> {
     }
 
     traverse(visitor: TreeVisitor<T>) {
+        if (this.node === null) {
+            return;
+        }
+
         this._traverse(this.node, visitor, this._spine.slice(0));
     }
 
@@ -161,6 +165,11 @@ export class TreeTraverser<T extends TreeLike> {
         }
 
         let parent = this._spine[this._spine.length - 2];
+
+        if (parent.children === undefined || this.node === null) {
+            return null;
+        }
+
         let childIndex = parent.children.indexOf(this.node);
 
         if (childIndex > 0) {
@@ -180,6 +189,11 @@ export class TreeTraverser<T extends TreeLike> {
         }
 
         let parent = this._spine[this._spine.length - 2];
+
+        if (parent.children === undefined || this.node === null) {
+            return null;
+        }
+
         let childIndex = parent.children.indexOf(this.node);
 
         if (childIndex < parent.children.length - 1) {
@@ -233,11 +247,12 @@ export class TreeTraverser<T extends TreeLike> {
             }
         }
 
-        if (treeNode.children && descend) {
+        const children = treeNode.children;
+        if (children && descend) {
 
             spine.push(treeNode);
-            for (let n = 0, l = treeNode.children.length; n < l; ++n) {
-                this._traverse(<T>treeNode.children[n], visitor, spine);
+            for (const child of children) {
+                this._traverse(<T>child, visitor, spine);
                 if (visitor.haltTraverse) {
                     return;
                 }
@@ -331,8 +346,8 @@ class FindVisitor<T> implements TreeVisitor<T> {
 export class Debounce<T> {
 
     private _handler: (e: T) => void;
-    private _lastEvent: T;
-    private _timer: number | NodeJS.Timer;
+    private _lastEvent: T | null;
+    private _timer: number | NodeJS.Timer | null;
 
     constructor(handler: (e: T) => void, public wait: number) {
         this._handler = handler;
@@ -412,7 +427,7 @@ export class CountVisitor<T> implements TreeVisitor<T> {
 
 export class MultiVisitor<T> implements TreeVisitor<T> {
 
-    protected _visitors: [TreeVisitor<T>, TreeLike][];
+    protected _visitors: [TreeVisitor<T>, TreeLike | null][];
 
     haltTraverse = false;
 
@@ -428,7 +443,7 @@ export class MultiVisitor<T> implements TreeVisitor<T> {
     }
 
     preorder(node: T, spine: T[]) {
-        let v: [TreeVisitor<T>, TreeLike];
+        let v: [TreeVisitor<T>, TreeLike | null];
         let descend: boolean;
         for (let n = 0; n < this._visitors.length; ++n) {
             v = this._visitors[n];
@@ -444,7 +459,7 @@ export class MultiVisitor<T> implements TreeVisitor<T> {
     }
 
     postorder(node: T, spine: T[]) {
-        let v: [TreeVisitor<T>, TreeLike];
+        let v: [TreeVisitor<T>, TreeLike | null];
         for (let n = 0; n < this._visitors.length; ++n) {
             v = this._visitors[n];
             if (v[1] === node) {
@@ -546,7 +561,11 @@ export class NameIndex<T> {
             if (!this._nameIndex.has(suffixes[n])) {
                 this._nameIndex.set(suffixes[n], [item]);
             } else {
-                this._nameIndex.get(suffixes[n]).push(item);
+                const items = this._nameIndex.get(suffixes[n]);
+
+                if (typeof items !== 'undefined') {
+                    items.push(item);
+                }
             }
 
         }

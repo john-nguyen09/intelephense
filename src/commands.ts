@@ -12,7 +12,7 @@ import { SymbolKind, PhpSymbol } from './symbol';
 import { Reference, ReferenceStore, ReferenceTable} from './reference';
 import { Phrase, PhraseKind, Token } from 'php7parser';
 import {UseDeclarationHelper} from './useDeclarationHelper';
-import * as util from './util';
+import * as util from './utils';
 
 export class NameTextEditProvider {
 

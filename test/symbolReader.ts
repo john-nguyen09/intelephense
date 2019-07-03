@@ -3,7 +3,7 @@ import { SymbolTable } from '../src/symbolStore';
 import { NameResolver } from '../src/nameResolver';
 import { SymbolReader } from '../src/symbolReader';
 import { ParsedDocument } from '../src/parsedDocument';
-import * as util from '../src/util';
+import * as util from '../src/utils';
 import { assert } from 'chai';
 import 'mocha';
 import * as fs from 'fs';

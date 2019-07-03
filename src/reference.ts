@@ -7,7 +7,7 @@
 import { Predicate, TreeVisitor, TreeTraverser, NameIndex, Traversable, SortedList } from './types';
 import { SymbolIdentifier, SymbolKind } from './symbol';
 import { Range, Location, Position } from 'vscode-languageserver-types';
-import * as util from './util';
+import * as util from './utils';
 import { Log } from './logger';
 import { TypeResolvable } from './typeString';
 

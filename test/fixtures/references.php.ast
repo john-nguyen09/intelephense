@@ -1,0 +1,118 @@
+{"type":"program"}
+	{"type":"if_statement"}
+		{"type":"if"}
+		{"type":"("}
+		{"type":"qualified_name"}
+			{"type":"name"}
+		
+		{"type":")"}
+		{"type":"compound_statement"}
+			{"type":"{"}
+			{"type":"expression_statement"}
+				{"type":"assignment_expression"}
+					{"type":"variable_name"}
+						{"type":"$"}
+						{"type":"name"}
+					
+					{"type":"="}
+					{"type":"object_creation_expression"}
+						{"type":"new"}
+						{"type":"qualified_name"}
+							{"type":"name"}
+						
+						{"type":"arguments"}
+							{"type":"("}
+							{"type":")"}
+						
+					
+				
+				{"type":";"}
+			
+			{"type":"}"}
+		
+		{"type":"else_clause"}
+			{"type":"else"}
+			{"type":"if_statement"}
+				{"type":"if"}
+				{"type":"("}
+				{"type":"qualified_name"}
+					{"type":"name"}
+				
+				{"type":")"}
+				{"type":"compound_statement"}
+					{"type":"{"}
+					{"type":"}"}
+				
+				{"type":"else_clause"}
+					{"type":"else"}
+					{"type":"compound_statement"}
+						{"type":"{"}
+						{"type":"}"}
+					
+				
+			
+		
+	
+	{"type":"expression_statement"}
+		{"type":"assignment_expression"}
+			{"type":"variable_name"}
+				{"type":"$"}
+				{"type":"name"}
+			
+			{"type":"="}
+			{"type":"integer"}
+		
+		{"type":";"}
+	
+	{"type":"expression_statement"}
+		{"type":"class_constant_access_expression"}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+			{"type":"::"}
+			{"type":"name"}
+		
+		{"type":";"}
+	
+	{"type":"expression_statement"}
+		{"type":"scoped_call_expression"}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+			{"type":"::"}
+			{"type":"name"}
+			{"type":"arguments"}
+				{"type":"("}
+				{"type":")"}
+			
+		
+		{"type":";"}
+	
+	{"type":"switch_statement"}
+		{"type":"switch"}
+		{"type":"("}
+		{"type":"variable_name"}
+			{"type":"$"}
+			{"type":"name"}
+		
+		{"type":")"}
+		{"type":"{"}
+		{"type":"case_statement"}
+			{"type":"case"}
+			{"type":"integer"}
+			{"type":":"}
+			{"type":"break_statement"}
+				{"type":"break"}
+				{"type":";"}
+			
+		
+		{"type":"default_statement"}
+			{"type":"default"}
+			{"type":":"}
+			{"type":"break_statement"}
+				{"type":"break"}
+				{"type":";"}
+			
+		
+		{"type":"}"}
+	

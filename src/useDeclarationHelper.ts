@@ -10,7 +10,7 @@ import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbo
 import { Position, TextEdit, Range } from 'vscode-languageserver-types';
 import { TreeVisitor } from './types';
 import { Phrase, Token, PhraseKind, TokenKind } from 'php7parser';
-import * as util from './util';
+import * as util from './utils';
 
 export class UseDeclarationHelper {
 
@@ -192,7 +192,7 @@ class InsertAfterNodeVisitor implements TreeVisitor<Phrase | Token> {
 
             case undefined:
                 //tokens
-                if (this.haltAtOffset > -1 && ParsedDocument.isOffsetInToken(this.haltAtOffset, <Token>node)) {
+                if (this.haltAtOffset > -1 && ParsedDocument.isOffsetInNode(this.haltAtOffset, <Token>node)) {
                     this.haltTraverse = true;
                     return false;
                 }

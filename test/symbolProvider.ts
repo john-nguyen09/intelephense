@@ -1,6 +1,6 @@
 import { SymbolStore, SymbolTable } from '../src/symbolStore';
 import { SymbolProvider } from '../src/providers/symbolProvider';
-import * as util from '../src/util';
+import * as util from '../src/utils';
 import { assert } from 'chai';
 import 'mocha';
 import * as fs from 'fs';

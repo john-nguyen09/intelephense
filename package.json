@@ -36,9 +36,10 @@
     "graceful-fs": "^4.1.15",
     "leveldown": "^5.1.0",
     "levelup": "^4.0.2",
-    "php7parser": "file://../nodejs/php7parser",
-    "vscode-languageserver": "^5.2.1",
-    "subleveldown": "^4.0.0"
+    "subleveldown": "^4.0.0",
+    "tree-sitter": "^0.15.7",
+    "tree-sitter-php": "^0.13.1",
+    "vscode-languageserver": "^5.2.1"
   },
   "devDependencies": {
     "memdown": "^4.0.0",

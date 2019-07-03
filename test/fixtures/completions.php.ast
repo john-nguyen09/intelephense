@@ -1,0 +1,37 @@
+{"type":"program"}
+	{"type":"ERROR"}
+		{"type":"function"}
+		{"type":"name"}
+		{"type":"formal_parameters"}
+			{"type":"("}
+			{"type":")"}
+		
+		{"type":"{"}
+		{"type":"global_declaration"}
+			{"type":"global"}
+			{"type":"variable_name"}
+				{"type":"$"}
+				{"type":"name"}
+			
+			{"type":";"}
+		
+		{"type":"dereferencable_expression"}
+			{"type":"member_access_expression"}
+				{"type":"dereferencable_expression"}
+					{"type":"variable_name"}
+						{"type":"$"}
+						{"type":"name"}
+					
+				
+				{"type":"->"}
+				{"type":"ERROR"}
+					{"type":"}"}
+				
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+			
+		
+		{"type":"->"}
+	

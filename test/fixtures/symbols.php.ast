@@ -1,0 +1,632 @@
+{"type":"program"}
+	{"type":"const_declaration"}
+		{"type":"const"}
+		{"type":"const_element"}
+			{"type":"name"}
+			{"type":"="}
+			{"type":"integer"}
+		
+		{"type":";"}
+	
+	{"type":"expression_statement"}
+		{"type":"function_call_expression"}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+			{"type":"arguments"}
+				{"type":"("}
+				{"type":"string"}
+				{"type":","}
+				{"type":"integer"}
+				{"type":")"}
+			
+		
+		{"type":";"}
+	
+	{"type":"expression_statement"}
+		{"type":"assignment_expression"}
+			{"type":"variable_name"}
+				{"type":"$"}
+				{"type":"name"}
+			
+			{"type":"="}
+			{"type":"array_creation_expression"}
+				{"type":"array"}
+				{"type":"("}
+				{"type":")"}
+			
+		
+		{"type":";"}
+	
+	{"type":"function_definition"}
+		{"type":"function"}
+		{"type":"name"}
+		{"type":"formal_parameters"}
+			{"type":"("}
+			{"type":")"}
+		
+		{"type":"compound_statement"}
+			{"type":"{"}
+			{"type":"}"}
+		
+	
+	{"type":"function_definition"}
+		{"type":"function"}
+		{"type":"name"}
+		{"type":"formal_parameters"}
+			{"type":"("}
+			{"type":"simple_parameter"}
+				{"type":"type_declaration"}
+					{"type":"base_type_declaration"}
+						{"type":"scalar_type"}
+							{"type":"int"}
+						
+					
+				
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+			
+			{"type":","}
+			{"type":"simple_parameter"}
+				{"type":"&"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+			
+			{"type":","}
+			{"type":"variadic_parameter"}
+				{"type":"..."}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+			
+			{"type":")"}
+		
+		{"type":"compound_statement"}
+			{"type":"{"}
+			{"type":"return_statement"}
+				{"type":"return"}
+				{"type":"qualified_name"}
+					{"type":"name"}
+				
+				{"type":";"}
+			
+			{"type":"}"}
+		
+	
+	{"type":"class_declaration"}
+		{"type":"class"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"class_const_declaration"}
+			{"type":"const"}
+			{"type":"const_element"}
+				{"type":"name"}
+				{"type":"="}
+				{"type":"integer"}
+			
+			{"type":";"}
+		
+		{"type":"class_const_declaration"}
+			{"type":"const"}
+			{"type":"const_element"}
+				{"type":"name"}
+				{"type":"="}
+				{"type":"integer"}
+			
+			{"type":","}
+			{"type":"const_element"}
+				{"type":"name"}
+				{"type":"="}
+				{"type":"float"}
+			
+			{"type":","}
+			{"type":"const_element"}
+				{"type":"name"}
+				{"type":"="}
+				{"type":"float"}
+			
+			{"type":";"}
+		
+		{"type":"property_declaration"}
+			{"type":"property_modifier"}
+				{"type":"visibility_modifier"}
+					{"type":"public"}
+				
+				{"type":"static_modifier"}
+					{"type":"static"}
+				
+			
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+			
+			{"type":";"}
+		
+		{"type":"property_declaration"}
+			{"type":"property_modifier"}
+				{"type":"visibility_modifier"}
+					{"type":"public"}
+				
+			
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+			
+			{"type":";"}
+		
+		{"type":"property_declaration"}
+			{"type":"property_modifier"}
+				{"type":"visibility_modifier"}
+					{"type":"public"}
+				
+			
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+			
+			{"type":","}
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+			
+			{"type":","}
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+				{"type":"property_initializer"}
+					{"type":"="}
+					{"type":"string"}
+				
+			
+			{"type":";"}
+		
+		{"type":"property_declaration"}
+			{"type":"property_modifier"}
+				{"type":"visibility_modifier"}
+					{"type":"public"}
+				
+			
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+				{"type":"property_initializer"}
+					{"type":"="}
+					{"type":"qualified_name"}
+						{"type":"name"}
+					
+				
+			
+			{"type":";"}
+		
+		{"type":"property_declaration"}
+			{"type":"property_modifier"}
+				{"type":"visibility_modifier"}
+					{"type":"public"}
+				
+			
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+				{"type":"property_initializer"}
+					{"type":"="}
+					{"type":"integer"}
+				
+			
+			{"type":";"}
+		
+		{"type":"property_declaration"}
+			{"type":"property_modifier"}
+				{"type":"visibility_modifier"}
+					{"type":"public"}
+				
+			
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+				{"type":"property_initializer"}
+					{"type":"="}
+					{"type":"float"}
+				
+			
+			{"type":";"}
+		
+		{"type":"property_declaration"}
+			{"type":"property_modifier"}
+				{"type":"visibility_modifier"}
+					{"type":"public"}
+				
+			
+			{"type":"property_element"}
+				{"type":"variable_name"}
+					{"type":"$"}
+					{"type":"name"}
+				
+				{"type":"property_initializer"}
+					{"type":"="}
+					{"type":"object_creation_expression"}
+						{"type":"new"}
+						{"type":"qualified_name"}
+							{"type":"name"}
+						
+						{"type":"arguments"}
+							{"type":"("}
+							{"type":")"}
+						
+					
+				
+			
+			{"type":";"}
+		
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function_definition"}
+				{"type":"function"}
+				{"type":"name"}
+				{"type":"formal_parameters"}
+					{"type":"("}
+					{"type":"simple_parameter"}
+						{"type":"variable_name"}
+							{"type":"$"}
+							{"type":"name"}
+						
+					
+					{"type":")"}
+				
+				{"type":"compound_statement"}
+					{"type":"{"}
+					{"type":"expression_statement"}
+						{"type":"assignment_expression"}
+							{"type":"variable_name"}
+								{"type":"$"}
+								{"type":"name"}
+							
+							{"type":"="}
+							{"type":"array_creation_expression"}
+								{"type":"array"}
+								{"type":"("}
+								{"type":")"}
+							
+						
+						{"type":";"}
+					
+					{"type":"}"}
+				
+			
+		
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function_definition"}
+				{"type":"function"}
+				{"type":"name"}
+				{"type":"formal_parameters"}
+					{"type":"("}
+					{"type":")"}
+				
+				{"type":"compound_statement"}
+					{"type":"{"}
+					{"type":"}"}
+				
+			
+		
+		{"type":"}"}
+	
+	{"type":"class_declaration"}
+		{"type":"class"}
+		{"type":"name"}
+		{"type":"class_base_clause"}
+			{"type":"extends"}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+		
+		{"type":"{"}
+		{"type":"}"}
+	
+	{"type":"interface_declaration"}
+		{"type":"interface"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function"}
+			{"type":"name"}
+			{"type":"formal_parameters"}
+				{"type":"("}
+				{"type":")"}
+			
+			{"type":";"}
+		
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function"}
+			{"type":"name"}
+			{"type":"formal_parameters"}
+				{"type":"("}
+				{"type":")"}
+			
+			{"type":";"}
+		
+		{"type":"}"}
+	
+	{"type":"interface_declaration"}
+		{"type":"interface"}
+		{"type":"name"}
+		{"type":"interface_base_clause"}
+			{"type":"extends"}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+		
+		{"type":"{"}
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function"}
+			{"type":"name"}
+			{"type":"formal_parameters"}
+				{"type":"("}
+				{"type":")"}
+			
+			{"type":";"}
+		
+		{"type":"}"}
+	
+	{"type":"class_declaration"}
+		{"type":"class"}
+		{"type":"name"}
+		{"type":"class_interface_clause"}
+			{"type":"implements"}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+			{"type":","}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+		
+		{"type":"{"}
+		{"type":"}"}
+	
+	{"type":"trait_declaration"}
+		{"type":"trait"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"function_definition"}
+				{"type":"function"}
+				{"type":"name"}
+				{"type":"formal_parameters"}
+					{"type":"("}
+					{"type":")"}
+				
+				{"type":"compound_statement"}
+					{"type":"{"}
+					{"type":"}"}
+				
+			
+		
+		{"type":"}"}
+	
+	{"type":"class_declaration"}
+		{"type":"class"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"trait_use_clause"}
+			{"type":"use"}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+			{"type":";"}
+		
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"static_modifier"}
+				{"type":"static"}
+			
+			{"type":"function_definition"}
+				{"type":"function"}
+				{"type":"name"}
+				{"type":"formal_parameters"}
+					{"type":"("}
+					{"type":")"}
+				
+				{"type":"compound_statement"}
+					{"type":"{"}
+					{"type":"}"}
+				
+			
+		
+		{"type":"}"}
+	
+	{"type":"expression_statement"}
+		{"type":"object_creation_expression"}
+			{"type":"new"}
+			{"type":"class"}
+			{"type":"class_base_clause"}
+				{"type":"extends"}
+				{"type":"qualified_name"}
+					{"type":"name"}
+				
+			
+			{"type":"class_interface_clause"}
+				{"type":"implements"}
+				{"type":"qualified_name"}
+					{"type":"name"}
+				
+			
+			{"type":"{"}
+			{"type":"method_declaration"}
+				{"type":"visibility_modifier"}
+					{"type":"public"}
+				
+				{"type":"function_definition"}
+					{"type":"function"}
+					{"type":"name"}
+					{"type":"formal_parameters"}
+						{"type":"("}
+						{"type":")"}
+					
+					{"type":"compound_statement"}
+						{"type":"{"}
+						{"type":"}"}
+					
+				
+			
+			{"type":"}"}
+		
+		{"type":";"}
+	
+	{"type":"expression_statement"}
+		{"type":"assignment_expression"}
+			{"type":"variable_name"}
+				{"type":"$"}
+				{"type":"name"}
+			
+			{"type":"="}
+			{"type":"object_creation_expression"}
+				{"type":"new"}
+				{"type":"qualified_name"}
+					{"type":"namespace_name_as_prefix"}
+						{"type":"\\"}
+					
+					{"type":"name"}
+				
+				{"type":"arguments"}
+					{"type":"("}
+					{"type":")"}
+				
+			
+		
+		{"type":";"}
+	
+	{"type":"expression_statement"}
+		{"type":"assignment_expression"}
+			{"type":"variable_name"}
+				{"type":"$"}
+				{"type":"name"}
+			
+			{"type":"="}
+			{"type":"anonymous_function_creation_expression"}
+				{"type":"static"}
+				{"type":"function"}
+				{"type":"&"}
+				{"type":"formal_parameters"}
+					{"type":"("}
+					{"type":")"}
+				
+				{"type":"anonymous_function_use_clause"}
+					{"type":"use"}
+					{"type":"("}
+					{"type":"variable_name"}
+						{"type":"$"}
+						{"type":"name"}
+					
+					{"type":","}
+					{"type":"variable_name"}
+						{"type":"$"}
+						{"type":"name"}
+					
+					{"type":")"}
+				
+				{"type":"compound_statement"}
+					{"type":"{"}
+					{"type":"}"}
+				
+			
+		
+		{"type":";"}
+	
+	{"type":"try_statement"}
+		{"type":"try"}
+		{"type":"compound_statement"}
+			{"type":"{"}
+			{"type":"expression_statement"}
+				{"type":"function_call_expression"}
+					{"type":"qualified_name"}
+						{"type":"name"}
+					
+					{"type":"arguments"}
+						{"type":"("}
+						{"type":")"}
+					
+				
+				{"type":";"}
+			
+			{"type":"}"}
+		
+		{"type":"catch_clause"}
+			{"type":"catch"}
+			{"type":"("}
+			{"type":"qualified_name"}
+				{"type":"name"}
+			
+			{"type":"variable_name"}
+				{"type":"$"}
+				{"type":"name"}
+			
+			{"type":")"}
+			{"type":"compound_statement"}
+				{"type":"{"}
+				{"type":"}"}
+			
+		
+	
+	{"type":"class_declaration"}
+		{"type":"class_modifier"}
+			{"type":"abstract"}
+		
+		{"type":"class"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"method_declaration"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"class_modifier"}
+				{"type":"abstract"}
+			
+			{"type":"function"}
+			{"type":"name"}
+			{"type":"formal_parameters"}
+				{"type":"("}
+				{"type":")"}
+			
+			{"type":";"}
+		
+		{"type":"}"}
+	

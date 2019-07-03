@@ -5,8 +5,7 @@
 'use strict';
 
 import { BinarySearch } from './types';
-import { Phrase, Token } from 'php7parser';
-import { Position, Range } from 'vscode-languageserver-types';
+import { Position } from 'vscode-languageserver-types';
 
 export class TextDocument {
 
@@ -114,7 +113,7 @@ export class TextDocument {
         let n = 0;
         let length = text.length;
         let isLineStart = true;
-        let offsets = [];
+        let offsets: number[] = [];
         let c: string;
 
         while (n < length) {

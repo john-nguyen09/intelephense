@@ -14,7 +14,7 @@ import { ParsedDocument, ParsedDocumentStore } from '../parsedDocument';
 import { Predicate } from '../types';
 import { ParseTreeTraverser } from '../parseTreeTraverser';
 import * as lsp from 'vscode-languageserver-types';
-import * as util from '../util';
+import * as util from '../utils';
 import { TypeAggregate, MemberMergeStrategy } from '../typeAggregate';
 import { UseDeclarationHelper } from '../useDeclarationHelper';
 

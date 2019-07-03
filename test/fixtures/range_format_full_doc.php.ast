@@ -1,0 +1,24 @@
+{"type":"program"}
+	{"type":"foreach_statement"}
+		{"type":"foreach"}
+		{"type":"("}
+		{"type":"variable_name"}
+			{"type":"$"}
+			{"type":"name"}
+		
+		{"type":"as"}
+		{"type":"variable_name"}
+			{"type":"$"}
+			{"type":"name"}
+		
+		{"type":")"}
+		{"type":"compound_statement"}
+			{"type":"{"}
+			{"type":"echo_statement"}
+				{"type":"echo"}
+				{"type":"string"}
+				{"type":";"}
+			
+			{"type":"}"}
+		
+	

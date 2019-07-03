@@ -1,0 +1,53 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/references.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/references.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 18,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Variable",
+            "name": "$first",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/references.php",
+                "range": {
+                    "start": {
+                        "line": 3,
+                        "character": 4
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 10
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Variable",
+            "name": "$value",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/references.php",
+                "range": {
+                    "start": {
+                        "line": 10,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 10,
+                        "character": 6
+                    }
+                }
+            }
+        }
+    ]
+}

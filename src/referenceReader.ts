@@ -7,7 +7,6 @@
 import {
     TreeVisitor, TreeTraverser
 } from './types';
-import { Phrase, Token, PhraseKind, TokenKind } from 'php7parser';
 import { SymbolKind, PhpSymbol, SymbolModifier } from './symbol';
 import { SymbolStore, SymbolTable } from './symbolStore';
 import { ParsedDocument, NodeTransform } from './parsedDocument';
@@ -16,16 +15,17 @@ import { Predicate } from './types';
 import * as lsp from 'vscode-languageserver-types';
 import { TypeString, TypeResolvable } from './typeString';
 import { MemberMergeStrategy } from './typeAggregate';
-import * as util from './util';
+import * as util from './utils';
 import { PhpDocParser, Tag } from './phpDoc';
 import { Reference, Scope, ReferenceTable } from './reference';
 import { SymbolIndex } from './indexes/symbolIndex';
+import { SyntaxNode } from 'tree-sitter';
 
 interface TypeNodeTransform extends NodeTransform {
     type: string | TypeResolvable;
 }
 
-interface ReferenceNodeTransform extends NodeTransform {
+export interface ReferenceNodeTransform extends NodeTransform {
     reference: Reference;
 }
 
@@ -41,17 +41,13 @@ function symbolsToTypeReduceFn(prev: string, current: PhpSymbol, index: number, 
     return TypeString.merge(prev, PhpSymbol.type(current));
 }
 
-export class ReferenceReader implements TreeVisitor<Phrase | Token> {
+export class ReferenceReader implements TreeVisitor<SyntaxNode> {
 
-    private _transformStack: NodeTransform[];
+    private _transformStack: (NodeTransform | null)[];
     private _variableTable: VariableTable;
     private _classStack: PhpSymbol[];
     private _scopeStack: Scope[];
     private _symbols: PhpSymbol[];
-    private _symbolFilter: Predicate<PhpSymbol> = (x) => {
-        const mask = SymbolKind.Namespace | SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Method | SymbolKind.Function | SymbolKind.File;
-        return (x.kind & mask) > 0 && !(x.modifiers & SymbolModifier.Magic);
-    };
     private _lastVarTypehints: Tag[];
     private _symbolOffset = 0;
 
@@ -66,13 +62,20 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         this._variableTable = new VariableTable();
         this._classStack = [];
         this._symbols = namedSymbols;
+
+        const fileSymbol = this.shiftSymbol();
+        const fileRange = fileSymbol.location ? fileSymbol.location.range : lsp.Range.create(
+            lsp.Position.create(0, 0), lsp.Position.create(0, 0)
+        );
         this._scopeStack = [
-            Scope.create(lsp.Location.create(
-                this.doc.uri, util.cloneRange(this.shiftSymbol().location.range)
-            ))
+            Scope.create(lsp.Location.create(this.doc.uri, util.cloneRange(fileRange)))
         ]; //file/root node
 
         for (const globalVariable of globalVariables) {
+            if (globalVariable.type === undefined) {
+                continue;
+            }
+
             this._variableTable.setVariable(Variable.create(globalVariable.name, globalVariable.type));
         }
     }
@@ -83,7 +86,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
 
     private shiftSymbol() {
         if (this._symbolOffset >= this._symbols.length) {
-            return undefined;
+            throw new Error('CodingError: symbol tree is not in sync with ReferenceReader');
         }
 
         let result = this._symbols[this._symbolOffset++];
@@ -103,370 +106,367 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         return this._symbols.length - this._symbolOffset;
     }
 
-    preorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
+    preorder(node: SyntaxNode, spine: SyntaxNode[]) {
 
-        let parent = spine.length ? spine[spine.length - 1] : null;
-        let parentTransform = this._transformStack.length ? this._transformStack[this._transformStack.length - 1] : null;
+        const parent = spine.length ? spine[spine.length - 1] : null;
+        const parentTransform = this._transformStack.length ?
+            this._transformStack[this._transformStack.length - 1] : null;
 
-        if (ParsedDocument.isPhrase(node)) {
-            switch (node.kind) {
-    
-                case PhraseKind.Error:
+        switch (node.type) {
+
+            case 'ERROR':
+                this._transformStack.push(null);
+
+            case 'namespace_definition':
+                {
+                    const s = this.shiftSymbol();
+                    this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
+                    this.nameResolver.namespace = s;
+                    this._transformStack.push(new NamespaceDefinitionTransform());
+                }
+                break;
+
+            case 'class_declaration':
+                this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Class));
+                break;
+
+            case 'interface_declaration':
+                this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Interface));
+                break;
+
+            case 'trait_declaration':
+                this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Trait));
+                break;
+
+            case 'function_declaration':
+                this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Function));
+                break;
+
+            case 'function_call_expression':
+                if (parentTransform) {
+                    this._transformStack.push(new FunctionCallExpressionTransform(this._referenceSymbols));
+                } else {
                     this._transformStack.push(null);
-                    return false;
-    
-                case PhraseKind.NamespaceDefinition:
-                    {
-                        let s = this.shiftSymbol();
-                        this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
-                        this.nameResolver.namespace = s;
-                        this._transformStack.push(new NamespaceDefinitionTransform());
+                }
+                break;
+
+            case 'const_element':
+                this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Constant));
+                break;
+
+            case PhraseKind.ClassConstElement:
+                this._transformStack.push(new MemberDeclarationTransform(SymbolKind.ClassConstant, this._currentClassName()));
+                this.shiftSymbol();
+                break;
+
+            case PhraseKind.MethodDeclarationHeader:
+                this._transformStack.push(new MemberDeclarationTransform(SymbolKind.Method, this._currentClassName()));
+                break;
+
+            case PhraseKind.PropertyElement:
+                this._transformStack.push(new PropertyElementTransform(this._currentClassName()));
+                break;
+
+            case PhraseKind.ParameterDeclaration:
+                this._transformStack.push(new ParameterDeclarationTransform());
+                break;
+
+            case PhraseKind.NamespaceUseDeclaration:
+                this._transformStack.push(new NamespaceUseDeclarationTransform());
+                break;
+
+            case PhraseKind.NamespaceUseGroupClauseList:
+            case PhraseKind.NamespaceUseClauseList:
+                this._transformStack.push(new NamespaceUseClauseListTransform(node.kind));
+                break;
+
+            case PhraseKind.NamespaceUseClause:
+            case PhraseKind.NamespaceUseGroupClause:
+                {
+                    if(this.symbolsLength() && (this.currentSymbol().modifiers & SymbolModifier.Use) > 0) {
+                        this.nameResolver.rules.push(this.shiftSymbol());
                     }
+                    this._transformStack.push(new NamespaceUseClauseTransform(node.kind));
                     break;
-    
-                case PhraseKind.ClassDeclarationHeader:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Class));
-                    break;
-    
-                case PhraseKind.InterfaceDeclarationHeader:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Interface));
-                    break;
-    
-                case PhraseKind.TraitDeclarationHeader:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Trait));
-                    break;
-    
-                case PhraseKind.FunctionDeclarationHeader:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Function));
-                    break;
-    
-                case PhraseKind.FunctionCallExpression:
-                    //todo define
-                    if (parentTransform) {
-                        this._transformStack.push(new FunctionCallExpressionTransform(this._referenceSymbols));
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ConstElement:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Constant));
-                    break;
-    
-                case PhraseKind.ClassConstElement:
-                    this._transformStack.push(new MemberDeclarationTransform(SymbolKind.ClassConstant, this._currentClassName()));
+                }
+
+            case PhraseKind.FunctionDeclaration:
+                this._transformStack.push(null);
+                this._functionDeclaration(<Phrase>node);
+                break;
+
+            case PhraseKind.MethodDeclaration:
+                this._transformStack.push(null);
+                this._methodDeclaration(<Phrase>node);
+                break;
+
+            case PhraseKind.ClassDeclaration:
+            case PhraseKind.TraitDeclaration:
+            case PhraseKind.InterfaceDeclaration:
+            case PhraseKind.AnonymousClassDeclaration:
+                {
+                    let s = this.shiftSymbol() || PhpSymbol.create(SymbolKind.Class, '', this.doc.nodeLocation(<Phrase>node));
+                    this._scopeStackPush(Scope.create(this.doc.nodeLocation(<Phrase>node)));
+                    this.nameResolver.pushClass(s);
+                    this._classStack.push(s);
+                    this._variableTable.pushScope();
+                    this._variableTable.setVariable(Variable.create('$this', s.name));
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.AnonymousFunctionCreationExpression:
+                this._anonymousFunctionCreationExpression(<Phrase>node);
+                this._transformStack.push(null);
+                break;
+
+            case PhraseKind.IfStatement:
+            case PhraseKind.SwitchStatement:
+                this._transformStack.push(null);
+                this._variableTable.pushBranch();
+                break;
+
+            case PhraseKind.CaseStatement:
+            case PhraseKind.DefaultStatement:
+            case PhraseKind.ElseIfClause:
+            case PhraseKind.ElseClause:
+                this._transformStack.push(null);
+                this._variableTable.popBranch();
+                this._variableTable.pushBranch();
+                break;
+
+            case PhraseKind.SimpleAssignmentExpression:
+            case PhraseKind.ByRefAssignmentExpression:
+                this._transformStack.push(new SimpleAssignmentExpressionTransform(node.kind, this._lastVarTypehints));
+                break;
+
+            case PhraseKind.InstanceOfExpression:
+                this._transformStack.push(new InstanceOfExpressionTransform());
+                break;
+
+            case PhraseKind.ForeachStatement:
+                this._transformStack.push(new ForeachStatementTransform());
+                break;
+
+            case PhraseKind.ForeachCollection:
+                this._transformStack.push(new ForeachCollectionTransform());
+                break;
+
+            case PhraseKind.ForeachValue:
+                this._transformStack.push(new ForeachValueTransform());
+                break;
+
+            case PhraseKind.CatchClause:
+                this._transformStack.push(new CatchClauseTransform());
+                break;
+
+            case PhraseKind.CatchNameList:
+                this._transformStack.push(new CatchNameListTransform());
+                break;
+
+            case PhraseKind.QualifiedName:
+                if (
+                    parent &&
+                    parent.kind === PhraseKind.FunctionCallExpression &&
+                    this.doc.nodeText(node).toLowerCase() === 'define'
+                ) {
                     this.shiftSymbol();
-                    break;
-    
-                case PhraseKind.MethodDeclarationHeader:
-                    this._transformStack.push(new MemberDeclarationTransform(SymbolKind.Method, this._currentClassName()));
-                    break;
-    
-                case PhraseKind.PropertyElement:
-                    this._transformStack.push(new PropertyElementTransform(this._currentClassName()));
-                    break;
-    
-                case PhraseKind.ParameterDeclaration:
-                    this._transformStack.push(new ParameterDeclarationTransform());
-                    break;
-    
-                case PhraseKind.NamespaceUseDeclaration:
-                    this._transformStack.push(new NamespaceUseDeclarationTransform());
-                    break;
-    
-                case PhraseKind.NamespaceUseGroupClauseList:
-                case PhraseKind.NamespaceUseClauseList:
-                    this._transformStack.push(new NamespaceUseClauseListTransform(node.kind));
-                    break;
-    
-                case PhraseKind.NamespaceUseClause:
-                case PhraseKind.NamespaceUseGroupClause:
-                    {
-                        if(this.symbolsLength() && (this.currentSymbol().modifiers & SymbolModifier.Use) > 0) {
-                            this.nameResolver.rules.push(this.shiftSymbol());
-                        }
-                        this._transformStack.push(new NamespaceUseClauseTransform(node.kind));
+                }
+
+                this._transformStack.push(
+                    new QualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node), this.nameResolver)
+                );
+                break;
+
+            case PhraseKind.FullyQualifiedName:
+                this._transformStack.push(
+                    new FullyQualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node))
+                );
+                break;
+
+            case PhraseKind.RelativeQualifiedName:
+                this._transformStack.push(
+                    new RelativeQualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node), this.nameResolver)
+                );
+                break;
+
+            case PhraseKind.NamespaceName:
+                this._transformStack.push(new NamespaceNameTransform(<Phrase>node, this.doc));
+                break;
+
+            case PhraseKind.SimpleVariable:
+                let isGlobal = false;
+
+                for (let i = spine.length - 1; i >= 0; i--) {
+                    if ((<Phrase>spine[i]).kind == PhraseKind.GlobalDeclaration) {
+                        isGlobal = true;
                         break;
                     }
-    
-                case PhraseKind.FunctionDeclaration:
-                    this._transformStack.push(null);
-                    this._functionDeclaration(<Phrase>node);
-                    break;
-    
-                case PhraseKind.MethodDeclaration:
-                    this._transformStack.push(null);
-                    this._methodDeclaration(<Phrase>node);
-                    break;
-    
-                case PhraseKind.ClassDeclaration:
-                case PhraseKind.TraitDeclaration:
-                case PhraseKind.InterfaceDeclaration:
-                case PhraseKind.AnonymousClassDeclaration:
-                    {
-                        let s = this.shiftSymbol() || PhpSymbol.create(SymbolKind.Class, '', this.doc.nodeLocation(<Phrase>node));
-                        this._scopeStackPush(Scope.create(this.doc.nodeLocation(<Phrase>node)));
-                        this.nameResolver.pushClass(s);
-                        this._classStack.push(s);
-                        this._variableTable.pushScope();
-                        this._variableTable.setVariable(Variable.create('$this', s.name));
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.AnonymousFunctionCreationExpression:
-                    this._anonymousFunctionCreationExpression(<Phrase>node);
-                    this._transformStack.push(null);
-                    break;
-    
-                case PhraseKind.IfStatement:
-                case PhraseKind.SwitchStatement:
-                    this._transformStack.push(null);
-                    this._variableTable.pushBranch();
-                    break;
-    
-                case PhraseKind.CaseStatement:
-                case PhraseKind.DefaultStatement:
-                case PhraseKind.ElseIfClause:
-                case PhraseKind.ElseClause:
-                    this._transformStack.push(null);
-                    this._variableTable.popBranch();
-                    this._variableTable.pushBranch();
-                    break;
-    
-                case PhraseKind.SimpleAssignmentExpression:
-                case PhraseKind.ByRefAssignmentExpression:
-                    this._transformStack.push(new SimpleAssignmentExpressionTransform(node.kind, this._lastVarTypehints));
-                    break;
-    
-                case PhraseKind.InstanceOfExpression:
-                    this._transformStack.push(new InstanceOfExpressionTransform());
-                    break;
-    
-                case PhraseKind.ForeachStatement:
-                    this._transformStack.push(new ForeachStatementTransform());
-                    break;
-    
-                case PhraseKind.ForeachCollection:
-                    this._transformStack.push(new ForeachCollectionTransform());
-                    break;
-    
-                case PhraseKind.ForeachValue:
-                    this._transformStack.push(new ForeachValueTransform());
-                    break;
-    
-                case PhraseKind.CatchClause:
-                    this._transformStack.push(new CatchClauseTransform());
-                    break;
-    
-                case PhraseKind.CatchNameList:
-                    this._transformStack.push(new CatchNameListTransform());
-                    break;
-    
-                case PhraseKind.QualifiedName:
-                    if (
-                        parent &&
-                        parent.kind === PhraseKind.FunctionCallExpression &&
-                        this.doc.nodeText(node).toLowerCase() === 'define'
-                    ) {
-                        this.shiftSymbol();
-                    }
-    
-                    this._transformStack.push(
-                        new QualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node), this.nameResolver)
-                    );
-                    break;
-    
-                case PhraseKind.FullyQualifiedName:
-                    this._transformStack.push(
-                        new FullyQualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node))
-                    );
-                    break;
-    
-                case PhraseKind.RelativeQualifiedName:
-                    this._transformStack.push(
-                        new RelativeQualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node), this.nameResolver)
-                    );
-                    break;
-    
-                case PhraseKind.NamespaceName:
-                    this._transformStack.push(new NamespaceNameTransform(<Phrase>node, this.doc));
-                    break;
-    
-                case PhraseKind.SimpleVariable:
-                    let isGlobal = false;
-    
-                    for (let i = spine.length - 1; i >= 0; i--) {
-                        if ((<Phrase>spine[i]).kind == PhraseKind.GlobalDeclaration) {
-                            isGlobal = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!isGlobal) {
-                        this._transformStack.push(new SimpleVariableTransform(this.doc.nodeLocation(node), this._variableTable));
-                    } else {
-                        this._transformStack.push(new GlobalVariableTransform(this.doc.nodeLocation(node), this._variableTable));
-                    }
-                    break;
-    
-                case PhraseKind.ListIntrinsic:
-                    this._transformStack.push(new ListIntrinsicTransform());
-                    break;
-    
-                case PhraseKind.ArrayInitialiserList:
-                    if (parentTransform) {
-                        this._transformStack.push(new ArrayInititialiserListTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ArrayElement:
-                    if (parentTransform) {
-                        this._transformStack.push(new ArrayElementTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ArrayValue:
-                    if (parentTransform) {
-                        this._transformStack.push(new ArrayValueTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.SubscriptExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new SubscriptExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ScopedCallExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.ScopedCallExpression, SymbolKind.Method, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.ScopedPropertyAccessExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.ScopedPropertyAccessExpression, SymbolKind.Property, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.ClassConstantAccessExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.ClassConstantAccessExpression, SymbolKind.ClassConstant, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.ScopedMemberName:
-                    this._transformStack.push(new ScopedMemberNameTransform(this.doc.nodeLocation(node)));
-                    break;
-    
-                case PhraseKind.Identifier:
-                    if (parentTransform) {
-                        this._transformStack.push(new IdentifierTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.PropertyAccessExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.PropertyAccessExpression, SymbolKind.Property, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.MethodCallExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.MethodCallExpression, SymbolKind.Method, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.MemberName:
-                    this._transformStack.push(new MemberNameTransform(this.doc.nodeLocation(node)));
-                    break;
-    
-                case PhraseKind.AnonymousFunctionUseVariable:
-                    this._transformStack.push(new AnonymousFunctionUseVariableTransform());
-                    break;
-    
-                case PhraseKind.ObjectCreationExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new ObjectCreationExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ClassTypeDesignator:
-                case PhraseKind.InstanceofTypeDesignator:
-                    if (parentTransform) {
-                        this._transformStack.push(new TypeDesignatorTransform(node.kind));
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.RelativeScope:
-                    let context = this._classStack.length ? this._classStack[this._classStack.length - 1] : null;
-                    let name = context ? context.name : '';
-                    this._transformStack.push(new RelativeScopeTransform(name, this.doc.nodeLocation(node)));
-                    break;
-    
-                case PhraseKind.TernaryExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new TernaryExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.CoalesceExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new CoalesceExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.EncapsulatedExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new EncapsulatedExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                default:
-                    this._transformStack.push(null);
-                    break;
-            }
-        } else {
-            if (parentTransform && node.kind > TokenKind.EndOfFile && (<Token>node).kind < TokenKind.Equals) {
-                parentTransform.push(new TokenTransform(<Token>node, this.doc));
-                if (parentTransform.phraseKind === PhraseKind.CatchClause && (<Token>node).kind === TokenKind.VariableName) {
-                    this._variableTable.setVariable((<CatchClauseTransform>parentTransform).variable);
                 }
-            } else if ((<Token>node).kind === TokenKind.DocumentComment) {
-                let phpDoc = PhpDocParser.parse(this.doc.tokenText(<Token>node));
-                if (phpDoc) {
-                    this._lastVarTypehints = phpDoc.varTags;
-                    let varTag: Tag;
-                    for (let n = 0, l = this._lastVarTypehints.length; n < l; ++n) {
-                        varTag = this._lastVarTypehints[n];
-                        varTag.typeString = TypeString.nameResolve(varTag.typeString, this.nameResolver);
-                        this._variableTable.setVariable(Variable.create(varTag.name, varTag.typeString));
-                    }
+                
+                if (!isGlobal) {
+                    this._transformStack.push(new SimpleVariableTransform(this.doc.nodeLocation(node), this._variableTable));
+                } else {
+                    this._transformStack.push(new GlobalVariableTransform(this.doc.nodeLocation(node), this._variableTable));
                 }
-            } else if ((<Token>node).kind === TokenKind.OpenBrace || (<Token>node).kind === TokenKind.CloseBrace || node.kind === TokenKind.Semicolon) {
-                this._lastVarTypehints = undefined;
+                break;
+
+            case PhraseKind.ListIntrinsic:
+                this._transformStack.push(new ListIntrinsicTransform());
+                break;
+
+            case PhraseKind.ArrayInitialiserList:
+                if (parentTransform) {
+                    this._transformStack.push(new ArrayInititialiserListTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.ArrayElement:
+                if (parentTransform) {
+                    this._transformStack.push(new ArrayElementTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.ArrayValue:
+                if (parentTransform) {
+                    this._transformStack.push(new ArrayValueTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.SubscriptExpression:
+                if (parentTransform) {
+                    this._transformStack.push(new SubscriptExpressionTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.ScopedCallExpression:
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform(PhraseKind.ScopedCallExpression, SymbolKind.Method, this._referenceSymbols)
+                );
+                break;
+
+            case PhraseKind.ScopedPropertyAccessExpression:
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform(PhraseKind.ScopedPropertyAccessExpression, SymbolKind.Property, this._referenceSymbols)
+                );
+                break;
+
+            case PhraseKind.ClassConstantAccessExpression:
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform(PhraseKind.ClassConstantAccessExpression, SymbolKind.ClassConstant, this._referenceSymbols)
+                );
+                break;
+
+            case PhraseKind.ScopedMemberName:
+                this._transformStack.push(new ScopedMemberNameTransform(this.doc.nodeLocation(node)));
+                break;
+
+            case PhraseKind.Identifier:
+                if (parentTransform) {
+                    this._transformStack.push(new IdentifierTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.PropertyAccessExpression:
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform(PhraseKind.PropertyAccessExpression, SymbolKind.Property, this._referenceSymbols)
+                );
+                break;
+
+            case PhraseKind.MethodCallExpression:
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform(PhraseKind.MethodCallExpression, SymbolKind.Method, this._referenceSymbols)
+                );
+                break;
+
+            case PhraseKind.MemberName:
+                this._transformStack.push(new MemberNameTransform(this.doc.nodeLocation(node)));
+                break;
+
+            case PhraseKind.AnonymousFunctionUseVariable:
+                this._transformStack.push(new AnonymousFunctionUseVariableTransform());
+                break;
+
+            case PhraseKind.ObjectCreationExpression:
+                if (parentTransform) {
+                    this._transformStack.push(new ObjectCreationExpressionTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.ClassTypeDesignator:
+            case PhraseKind.InstanceofTypeDesignator:
+                if (parentTransform) {
+                    this._transformStack.push(new TypeDesignatorTransform(node.kind));
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.RelativeScope:
+                let context = this._classStack.length ? this._classStack[this._classStack.length - 1] : null;
+                let name = context ? context.name : '';
+                this._transformStack.push(new RelativeScopeTransform(name, this.doc.nodeLocation(node)));
+                break;
+
+            case PhraseKind.TernaryExpression:
+                if (parentTransform) {
+                    this._transformStack.push(new TernaryExpressionTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.CoalesceExpression:
+                if (parentTransform) {
+                    this._transformStack.push(new CoalesceExpressionTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case PhraseKind.EncapsulatedExpression:
+                if (parentTransform) {
+                    this._transformStack.push(new EncapsulatedExpressionTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            default:
+                this._transformStack.push(null);
+                break;
+        }
+        
+        if (parentTransform && node.kind > TokenKind.EndOfFile && (<Token>node).kind < TokenKind.Equals) {
+            parentTransform.push(new TokenTransform(<Token>node, this.doc));
+            if (parentTransform.phraseKind === PhraseKind.CatchClause && (<Token>node).kind === TokenKind.VariableName) {
+                this._variableTable.setVariable((<CatchClauseTransform>parentTransform).variable);
             }
+        } else if ((<Token>node).kind === TokenKind.DocumentComment) {
+            let phpDoc = PhpDocParser.parse(this.doc.tokenText(<Token>node));
+            if (phpDoc) {
+                this._lastVarTypehints = phpDoc.varTags;
+                let varTag: Tag;
+                for (let n = 0, l = this._lastVarTypehints.length; n < l; ++n) {
+                    varTag = this._lastVarTypehints[n];
+                    varTag.typeString = TypeString.nameResolve(varTag.typeString, this.nameResolver);
+                    this._variableTable.setVariable(Variable.create(varTag.name, varTag.typeString));
+                }
+            }
+        } else if ((<Token>node).kind === TokenKind.OpenBrace || (<Token>node).kind === TokenKind.CloseBrace || node.kind === TokenKind.Semicolon) {
+            this._lastVarTypehints = undefined;
         }
 
         return true;
@@ -892,13 +892,13 @@ class ForeachStatementTransform implements NodeTransform {
 
 }
 
-interface Variable {
+export interface Variable {
     name: string;
     arrayDereferenced: number;
     type: string | TypeResolvable;
 }
 
-namespace Variable {
+export namespace Variable {
 
     export function create(name: string, type: string | TypeResolvable) {
         return <Variable>{
@@ -1721,7 +1721,7 @@ class EncapsulatedExpressionTransform implements ReferenceNodeTransform, TypeNod
 
 }
 
-class VariableTable {
+export class VariableTable {
 
     private _typeVariableSetStack: VariableSet[];
 

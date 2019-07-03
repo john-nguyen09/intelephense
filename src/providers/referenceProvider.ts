@@ -12,7 +12,7 @@ import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from '../symb
 import { MemberMergeStrategy, TypeAggregate } from '../typeAggregate';
 import { Reference, ReferenceStore, ReferenceTable, Scope } from '../reference';
 import { Predicate, TreeVisitor, TreeTraverser, AsyncPredicate } from '../types';
-import * as util from '../util';
+import * as util from '../utils';
 import { TypeString } from '../typeString';
 
 

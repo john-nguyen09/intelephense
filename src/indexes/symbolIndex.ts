@@ -6,7 +6,7 @@ import * as Subleveldown from 'subleveldown';
 import { CodecEncoder } from "level-codec";
 import { CompletionIndex, CompletionValue } from "./completionIndex";
 import { Position } from "vscode-languageserver";
-import { elapsed } from "../util";
+import { elapsed } from "../utils";
 
 export type PhpSymbolIdentifier = [string, string, number, number, number, number];
 

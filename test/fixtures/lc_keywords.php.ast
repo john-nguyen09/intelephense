@@ -1,0 +1,20 @@
+{"type":"program"}
+	{"type":"expression_statement"}
+		{"type":"assignment_expression"}
+			{"type":"variable_name"}
+				{"type":"$"}
+				{"type":"name"}
+			
+			{"type":"="}
+			{"type":"function_call_expression"}
+				{"type":"qualified_name"}
+					{"type":"name"}
+				
+				{"type":"arguments"}
+					{"type":"("}
+					{"type":")"}
+				
+			
+		
+		{"type":";"}
+	

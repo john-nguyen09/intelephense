@@ -1,5 +1,5 @@
 import { PhpSymbol, SymbolKind } from '../src/symbol';
-import {acronym} from '../src/util';
+import {acronym} from '../src/utils';
 import { assert } from 'chai';
 import 'mocha';
 

@@ -1,0 +1,13 @@
+{"type":"program"}
+	{"type":"class_declaration"}
+		{"type":"class"}
+		{"type":"name"}
+		{"type":"{"}
+		{"type":"ERROR"}
+			{"type":"visibility_modifier"}
+				{"type":"public"}
+			
+			{"type":"name"}
+		
+		{"type":"}"}
+	

@@ -1,0 +1,53 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/range_format_full_doc.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/range_format_full_doc.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 5,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Variable",
+            "name": "$a",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/range_format_full_doc.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 9
+                    },
+                    "end": {
+                        "line": 1,
+                        "character": 11
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Variable",
+            "name": "$v",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/range_format_full_doc.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 15
+                    },
+                    "end": {
+                        "line": 1,
+                        "character": 17
+                    }
+                }
+            }
+        }
+    ]
+}

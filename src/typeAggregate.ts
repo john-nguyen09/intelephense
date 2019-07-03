@@ -7,7 +7,7 @@
 import { PhpSymbol, SymbolKind, SymbolModifier } from './symbol';
 import { SymbolStore } from './symbolStore';
 import { Predicate } from './types';
-import * as util from './util';
+import * as util from './utils';
 import {TypeString} from './typeString';
 
 export const enum MemberMergeStrategy {

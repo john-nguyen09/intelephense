@@ -262,7 +262,7 @@ class FormatVisitor implements TreeVisitor<Phrase | Token> {
 
         this._nextFormatRule = null;
 
-        if (!this._active && this._startOffset > -1 && ParsedDocument.isOffsetInToken(this._startOffset, <Token>node)) {
+        if (!this._active && this._startOffset > -1 && ParsedDocument.isOffsetInNode(this._startOffset, <Token>node)) {
             this._active = true;
         }
 
@@ -672,7 +672,7 @@ class FormatVisitor implements TreeVisitor<Phrase | Token> {
             }
         }
 
-        if (this._active && this._endOffset > -1 && ParsedDocument.isOffsetInToken(this._endOffset, <Token>node)) {
+        if (this._active && this._endOffset > -1 && ParsedDocument.isOffsetInNode(this._endOffset, <Token>node)) {
             this.haltTraverse = true;
             this._active = false;
         }

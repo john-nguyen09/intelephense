@@ -1,0 +1,150 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 12,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Namespace",
+            "name": "Test\\Namespace\\Test\\Namespace",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 1,
+                        "character": 25
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Class",
+            "name": "",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "range": {
+                    "start": {
+                        "line": 3,
+                        "character": 4
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 27
+                    }
+                }
+            },
+            "modifiers": 4096,
+            "associated": []
+        },
+        {
+            "kind": "Class",
+            "name": "",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 4
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 10
+                    }
+                }
+            },
+            "modifiers": 4096,
+            "associated": []
+        },
+        {
+            "kind": "Class",
+            "name": "",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 12
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 18
+                    }
+                }
+            },
+            "modifiers": 4096,
+            "associated": []
+        },
+        {
+            "kind": "Class",
+            "name": "",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 20
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 26
+                    }
+                }
+            },
+            "modifiers": 4096,
+            "associated": []
+        },
+        {
+            "kind": "Function",
+            "name": "test_function1",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "range": {
+                    "start": {
+                        "line": 6,
+                        "character": 48
+                    },
+                    "end": {
+                        "line": 6,
+                        "character": 62
+                    }
+                }
+            },
+            "modifiers": 4096,
+            "associated": []
+        },
+        {
+            "kind": "Constant",
+            "name": "",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "range": {
+                    "start": {
+                        "line": 7,
+                        "character": 10
+                    },
+                    "end": {
+                        "line": 7,
+                        "character": 38
+                    }
+                }
+            },
+            "modifiers": 4096,
+            "associated": []
+        }
+    ]
+}

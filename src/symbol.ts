@@ -5,7 +5,7 @@
 'use strict';
 
 import { Predicate } from './types';
-import * as util from './util';
+import * as util from './utils';
 import { Location } from 'vscode-languageserver';
 
 export const enum SymbolKind {
@@ -228,9 +228,6 @@ export namespace PhpSymbol {
     }
 
     export function setScope(symbols: PhpSymbol[], scope: string) {
-        if (!symbols) {
-            return symbols;
-        }
         for (let n = 0; n < symbols.length; ++n) {
             symbols[n].scope = scope;
         }

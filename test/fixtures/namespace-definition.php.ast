@@ -1,0 +1,176 @@
+{"type":"program"}
+	{"type":"namespace_definition"}
+		{"type":"namespace"}
+		{"type":"namespace_name"}
+			{"type":"name"}
+			{"type":"\\"}
+			{"type":"name"}
+		
+		{"type":";"}
+	
+	{"type":"namespace_use_declaration"}
+		{"type":"use"}
+		{"type":"namespace_use_clause"}
+			{"type":"qualified_name"}
+				{"type":"namespace_name_as_prefix"}
+					{"type":"namespace_name"}
+						{"type":"name"}
+					
+					{"type":"\\"}
+				
+				{"type":"name"}
+			
+		
+		{"type":";"}
+	
+	{"type":"namespace_use_declaration"}
+		{"type":"use"}
+		{"type":"\\"}
+		{"type":"namespace_name"}
+			{"type":"name"}
+		
+		{"type":"\\"}
+		{"type":"{"}
+		{"type":"namespace_use_group_clause_2"}
+			{"type":"namespace_name"}
+				{"type":"name"}
+			
+		
+		{"type":","}
+		{"type":"namespace_use_group_clause_2"}
+			{"type":"namespace_name"}
+				{"type":"name"}
+			
+		
+		{"type":","}
+		{"type":"namespace_use_group_clause_2"}
+			{"type":"namespace_name"}
+				{"type":"name"}
+			
+		
+		{"type":","}
+		{"type":"namespace_use_group_clause_2"}
+			{"type":"namespace_function_or_const"}
+				{"type":"function"}
+			
+			{"type":"namespace_name"}
+				{"type":"name"}
+			
+		
+		{"type":","}
+		{"type":"namespace_use_group_clause_2"}
+			{"type":"namespace_function_or_const"}
+				{"type":"const"}
+			
+			{"type":"namespace_name"}
+				{"type":"name"}
+			
+		
+		{"type":"}"}
+		{"type":";"}
+	
+	{"type":"namespace_use_declaration"}
+		{"type":"use"}
+		{"type":"namespace_use_clause"}
+			{"type":"qualified_name"}
+				{"type":"namespace_name_as_prefix"}
+					{"type":"\\"}
+					{"type":"namespace_name"}
+						{"type":"name"}
+					
+					{"type":"\\"}
+				
+				{"type":"name"}
+			
+		
+		{"type":","}
+		{"type":"namespace_use_clause"}
+			{"type":"qualified_name"}
+				{"type":"namespace_name_as_prefix"}
+					{"type":"\\"}
+					{"type":"namespace_name"}
+						{"type":"name"}
+					
+					{"type":"\\"}
+				
+				{"type":"name"}
+			
+		
+		{"type":","}
+		{"type":"namespace_use_clause"}
+			{"type":"qualified_name"}
+				{"type":"namespace_name_as_prefix"}
+					{"type":"\\"}
+					{"type":"namespace_name"}
+						{"type":"name"}
+					
+					{"type":"\\"}
+				
+				{"type":"name"}
+			
+		
+		{"type":";"}
+	
+	{"type":"namespace_use_declaration"}
+		{"type":"use"}
+		{"type":"namespace_function_or_const"}
+			{"type":"function"}
+		
+		{"type":"namespace_use_clause"}
+			{"type":"qualified_name"}
+				{"type":"namespace_name_as_prefix"}
+					{"type":"namespace_name"}
+						{"type":"name"}
+					
+					{"type":"\\"}
+				
+				{"type":"name"}
+			
+			{"type":"namespace_aliasing_clause"}
+				{"type":"as"}
+				{"type":"name"}
+			
+		
+		{"type":";"}
+	
+	{"type":"namespace_use_declaration"}
+		{"type":"use"}
+		{"type":"namespace_function_or_const"}
+			{"type":"const"}
+		
+		{"type":"namespace_use_clause"}
+			{"type":"qualified_name"}
+				{"type":"namespace_name_as_prefix"}
+					{"type":"namespace_name"}
+						{"type":"name"}
+					
+					{"type":"\\"}
+				
+				{"type":"name"}
+			
+		
+		{"type":";"}
+	
+	{"type":"namespace_use_declaration"}
+		{"type":"use"}
+		{"type":"namespace_name"}
+			{"type":"name"}
+		
+		{"type":"\\"}
+		{"type":"{"}
+		{"type":"namespace_use_group_clause_2"}
+			{"type":"namespace_name"}
+				{"type":"name"}
+				{"type":"\\"}
+				{"type":"name"}
+			
+		
+		{"type":","}
+		{"type":"namespace_use_group_clause_2"}
+			{"type":"namespace_name"}
+				{"type":"name"}
+			
+		
+		{"type":"}"}
+		{"type":";"}
+	
