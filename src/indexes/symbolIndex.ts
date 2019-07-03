@@ -105,9 +105,11 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     }
 
     async find(key: string) {
-        return await this.findSymbols(this._namedSymbols, {
+        return (await this.findSymbols(this._namedSymbols, {
             gte: key + SymbolIndex.IDENTIFIER_JOINER,
             lte: key + SymbolIndex.IDENTIFIER_JOINER + '\xFF',
+        })).filter(symbol => {
+            return symbol.modifiers !== SymbolModifier.Use;
         });
     }
 

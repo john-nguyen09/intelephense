@@ -89,7 +89,7 @@ export namespace Intelephense {
         documentStore = new ParsedDocumentStore();
         symbolStore = new SymbolStore(level, documentStore);
         refStore = new ReferenceStore();
-        symbolProvider = new SymbolProvider(symbolStore);
+        symbolProvider = new SymbolProvider(symbolStore, documentStore);
         completionProvider = new CompletionProvider(symbolStore, documentStore, refStore);
         diagnosticsProvider = new DiagnosticsProvider();
         signatureHelpProvider = new SignatureHelpProvider(symbolStore, documentStore, refStore);
@@ -185,20 +185,23 @@ export namespace Intelephense {
 
         let parsedDocument = new ParsedDocument(textDocument.uri, textDocument.text, textDocument.version);
         documentStore.add(parsedDocument);
-        let symbolTable = SymbolTable.create(parsedDocument, 0);
-        symbolStore.add(symbolTable)
-            .then(_ => {
-                return ReferenceReader.discoverReferences(parsedDocument, symbolStore);
-            })
-            .then(refTable => {
-                if (refTable) {
-                    refStore.add(refTable);
-                }
-                diagnosticsProvider.add(parsedDocument);
-            })
-            .catch(err => {
-                Log.error(err);
-            });
+
+        documentStore.acquireLock(parsedDocument.uri, async () => {
+            let symbolTable = SymbolTable.create(parsedDocument, 0);
+            await symbolStore.add(symbolTable)
+                .then(_ => {
+                    return ReferenceReader.discoverReferences(parsedDocument, symbolStore);
+                })
+                .then(refTable => {
+                    if (refTable) {
+                        refStore.add(refTable);
+                    }
+                    diagnosticsProvider.add(parsedDocument);
+                })
+                .catch(err => {
+                    Log.error(err);
+                });
+        });
     }
 
     export function closeDocument(textDocument: lsp.TextDocumentIdentifier) {

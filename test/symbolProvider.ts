@@ -21,7 +21,7 @@ describe('symbolProviders', () => {
 
         await symbolStore.add(symbolTable);
 
-        let symbolProvider = new SymbolProvider(symbolStore);
+        let symbolProvider = new SymbolProvider(symbolStore, docStore);
 
         let results = await symbolProvider.provideDocumentSymbols('test');
         let expected = [

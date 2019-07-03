@@ -7,6 +7,7 @@
 import {Location, SymbolInformation, SymbolKind as Kind} from 'vscode-languageserver-types';
 import { PhpSymbol, SymbolKind, SymbolModifier } from '../symbol';
 import {SymbolStore} from '../symbolStore';
+import { ParsedDocumentStore } from '../parsedDocument';
 
 const namespacedSymbolMask =
     SymbolKind.Interface |
@@ -26,23 +27,25 @@ const symbolsDisplayMask =
 
 export class SymbolProvider {
 
-    constructor(public symbolStore: SymbolStore) { }
+    constructor(public symbolStore: SymbolStore, public documentStore: ParsedDocumentStore) { }
 
     /**
      * Excludes magic symbols
      * @param uri 
      */
     async provideDocumentSymbols(uri: string) {
-        let symbolTable = await this.symbolStore.getSymbolTable(uri);
-        let symbols = symbolTable ? symbolTable.symbols : [];
         let symbolInformationList: SymbolInformation[] = [];
-
-        for (let n = 0, l = symbols.length; n < l; ++n) {
-
-            if (symbols[n].location && (symbols[n].kind & symbolsDisplayMask)) {
-                symbolInformationList.push(await this.toSymbolInformation(symbols[n]));
+        await this.documentStore.acquireLock(uri, async () => {
+            let symbolTable = await this.symbolStore.getSymbolTable(uri);
+            let symbols = symbolTable ? symbolTable.symbols : [];
+    
+            for (let n = 0, l = symbols.length; n < l; ++n) {
+    
+                if (symbols[n].location && (symbols[n].kind & symbolsDisplayMask)) {
+                    symbolInformationList.push(await this.toSymbolInformation(symbols[n]));
+                }
             }
-        }
+        });
 
         return symbolInformationList;
     }

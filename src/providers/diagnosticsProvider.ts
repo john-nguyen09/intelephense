@@ -108,7 +108,6 @@ export class DiagnosticsProvider {
         let parseErrors = parseErrorVisitor.errors;
 
         for (const parseError of parseErrors) {
-            console.log(parseError);
             diagnostics.push(this._parseErrorToDiagnostic(parseError, doc));
         }
 
