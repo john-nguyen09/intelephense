@@ -1,8 +1,8 @@
 {
     "kind": "File",
-    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
         "range": {
             "start": {
                 "line": 0,
@@ -19,7 +19,7 @@
             "kind": "Class",
             "name": "FirstClass",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
                 "range": {
                     "start": {
                         "line": 2,
@@ -36,7 +36,7 @@
                     "kind": "Method",
                     "name": "thisWorks",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
                         "range": {
                             "start": {
                                 "line": 4,
@@ -50,14 +50,13 @@
                     },
                     "modifiers": 33,
                     "children": [],
-                    "type": "function_declaration_body",
                     "scope": "FirstClass"
                 },
                 {
                     "kind": "Method",
                     "name": "__construct",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
                         "range": {
                             "start": {
                                 "line": 9,
@@ -80,7 +79,7 @@
             "kind": "Constant",
             "name": "ISSUE_AFTER_THIS",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
                 "range": {
                     "start": {
                         "line": 16,
@@ -98,7 +97,7 @@
             "kind": "Class",
             "name": "SecondClass",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
                 "range": {
                     "start": {
                         "line": 18,
@@ -115,7 +114,7 @@
                     "kind": "Method",
                     "name": "thisDoesNotWork",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
                         "range": {
                             "start": {
                                 "line": 20,
@@ -129,14 +128,13 @@
                     },
                     "modifiers": 33,
                     "children": [],
-                    "type": "function_declaration_body",
                     "scope": "SecondClass"
                 },
                 {
                     "kind": "Method",
                     "name": "__construct",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/class-with-define.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
                         "range": {
                             "start": {
                                 "line": 25,

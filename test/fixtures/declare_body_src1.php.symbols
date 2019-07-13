@@ -1,8 +1,8 @@
 {
     "kind": "File",
-    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/declare_body_src1.php",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/declare_body_src1.php",
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/declare_body_src1.php",
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/declare_body_src1.php",
         "range": {
             "start": {
                 "line": 0,
@@ -19,7 +19,7 @@
             "kind": "Class",
             "name": "Foo",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/declare_body_src1.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/declare_body_src1.php",
                 "range": {
                     "start": {
                         "line": 1,

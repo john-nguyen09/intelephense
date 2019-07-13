@@ -1,8 +1,8 @@
 {
     "kind": "File",
-    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
         "range": {
             "start": {
                 "line": 0,
@@ -19,7 +19,7 @@
             "kind": "Namespace",
             "name": "Test\\Namespace\\Test\\Namespace",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -36,7 +36,7 @@
             "kind": "Class",
             "name": "",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
                     "start": {
                         "line": 3,
@@ -55,7 +55,7 @@
             "kind": "Class",
             "name": "",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -74,7 +74,7 @@
             "kind": "Class",
             "name": "",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -93,7 +93,7 @@
             "kind": "Class",
             "name": "",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -112,7 +112,7 @@
             "kind": "Function",
             "name": "test_function1",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
                     "start": {
                         "line": 6,
@@ -131,7 +131,7 @@
             "kind": "Constant",
             "name": "",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/namespace-definition.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
                     "start": {
                         "line": 7,

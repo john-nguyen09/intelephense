@@ -9,13 +9,13 @@ import { SymbolTable } from './symbolStore';
 import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from './symbol';
 import { Position, TextEdit, Range } from 'vscode-languageserver-types';
 import { TreeVisitor } from './types';
-import { Phrase, Token, PhraseKind, TokenKind } from 'php7parser';
 import * as util from './utils';
+import { SyntaxNode } from 'tree-sitter';
 
 export class UseDeclarationHelper {
 
     private _useDeclarations: PhpSymbol[];
-    private _afterNode: Phrase;
+    private _afterNode: SyntaxNode;
     private _afterNodeRange: Range;
     private _cursor: Position;
 
@@ -28,7 +28,7 @@ export class UseDeclarationHelper {
         let afterNode = this._insertAfterNode();
 
         let text = '\n';
-        if (afterNode.kind === PhraseKind.NamespaceDefinition) {
+        if (afterNode.type === 'namespace_definition') {
             text += '\n';
         }
 
@@ -54,7 +54,7 @@ export class UseDeclarationHelper {
 
         text += ';';
 
-        if (afterNode.kind !== PhraseKind.NamespaceUseDeclaration) {
+        if (afterNode.type !== 'namespace_use_declaration') {
             text += '\n';
         }
 
@@ -64,8 +64,18 @@ export class UseDeclarationHelper {
 
     replaceDeclarationTextEdit(symbol: SymbolIdentifier, alias: string) {
         let useSymbol = this.findUseSymbolByFqn(symbol.name);
-        let node = this.findNamespaceUseClauseByRange(useSymbol.location.range) as Phrase;
-        let aliasingClause = ParsedDocument.findChild(node, this._isNamespaceAliasingClause) as Phrase;
+
+        if (!useSymbol || !useSymbol.location) {
+            return null;
+        }
+
+        let node = this.findNamespaceUseClauseByRange(useSymbol.location.range);
+
+        if (!node) {
+            return null;
+        }
+
+        let aliasingClause = ParsedDocument.findChild(node, this._isNamespaceAliasingClause);
 
         if (aliasingClause) {
             return TextEdit.replace(this.doc.nodeRange(aliasingClause), `as ${alias}`);
@@ -99,8 +109,8 @@ export class UseDeclarationHelper {
 
     findNamespaceUseClauseByRange(range: Range) {
 
-        let fn = (x: Phrase | Token) => {
-            return ((<Phrase>x).kind === PhraseKind.NamespaceUseClause || (<Phrase>x).kind === PhraseKind.NamespaceUseGroupClause) &&
+        let fn = (x: SyntaxNode) => {
+            return (x.type === 'namespace_use_clause' || x.type === 'namespace_use_group_clause_2') &&
                 util.rangeEquality(range, this.doc.nodeRange(x));
         };
 
@@ -110,7 +120,7 @@ export class UseDeclarationHelper {
 
     private _isUseDeclarationSymbol(s: PhpSymbol) {
         const mask = SymbolKind.Class | SymbolKind.Function | SymbolKind.Constant;
-        return (s.modifiers & SymbolModifier.Use) > 0 && (s.kind & mask) > 0;
+        return s.modifiers && (s.modifiers & SymbolModifier.Use) > 0 && (s.kind & mask) > 0;
     }
 
     private _insertAfterNode() {
@@ -138,17 +148,17 @@ export class UseDeclarationHelper {
         return this._insertAfterNodeRange().end;
     }
 
-    private _isNamespaceAliasingClause(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.NamespaceAliasingClause;
+    private _isNamespaceAliasingClause(node: SyntaxNode) {
+        return node.type === 'namespace_aliasing_clause';
     }
 
 }
 
-class InsertAfterNodeVisitor implements TreeVisitor<Phrase | Token> {
+class InsertAfterNodeVisitor implements TreeVisitor<SyntaxNode> {
 
-    private _openingInlineText: Phrase;
-    private _lastNamespaceUseDeclaration: Phrase;
-    private _namespaceDefinition: Phrase;
+    private _openingInlineText: SyntaxNode;
+    private _lastNamespaceUseDeclaration: SyntaxNode;
+    private _namespaceDefinition: SyntaxNode;
 
     haltTraverse = false;
     haltAtOffset = -1;
@@ -171,9 +181,9 @@ class InsertAfterNodeVisitor implements TreeVisitor<Phrase | Token> {
         return this._namespaceDefinition;
     }
 
-    preorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
+    preorder(node: SyntaxNode, spine: SyntaxNode[]) {
 
-        switch ((<Phrase>node).kind) {
+        switch (node.type) {
             case PhraseKind.InlineText:
                 if (!this._openingInlineText) {
                     this._openingInlineText = node as Phrase;

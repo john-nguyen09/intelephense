@@ -1,10 +1,10 @@
-{"type":"program"}
-	{"type":"class_declaration"}
-		{"type":"class"}
-		{"type":"name"}
-		{"type":"{"}
-		{"type":"ERROR"}
-			{"type":"name"}
+{"type":"program","text":"<?php\r\nclass Foo {\r\n    p\r\n}\r\n"}
+	{"type":"class_declaration","text":"class Foo {\r\n    p\r\n}"}
+		{"type":"class","text":"class"}
+		{"type":"name","text":"Foo"}
+		{"type":"{","text":"{"}
+		{"type":"ERROR","text":"p"}
+			{"type":"name","text":"p"}
 		
-		{"type":"}"}
+		{"type":"}","text":"}"}
 	

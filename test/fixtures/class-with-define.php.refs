@@ -1,0 +1,240 @@
+{
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 31,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                "range": {
+                    "start": {
+                        "line": 2,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 14,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                        "range": {
+                            "start": {
+                                "line": 4,
+                                "character": 1
+                            },
+                            "end": {
+                                "line": 7,
+                                "character": 2
+                            }
+                        }
+                    },
+                    "children": []
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                        "range": {
+                            "start": {
+                                "line": 9,
+                                "character": 1
+                            },
+                            "end": {
+                                "line": 13,
+                                "character": 2
+                            }
+                        }
+                    },
+                    "children": [
+                        {
+                            "kind": "Class",
+                            "name": "FirstClass",
+                            "location": {
+                                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                "range": {
+                                    "start": {
+                                        "line": 11,
+                                        "character": 2
+                                    },
+                                    "end": {
+                                        "line": 11,
+                                        "character": 6
+                                    }
+                                }
+                            },
+                            "altName": "static"
+                        },
+                        {
+                            "kind": "Method",
+                            "name": "thisWorks",
+                            "location": {
+                                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                "range": {
+                                    "start": {
+                                        "line": 11,
+                                        "character": 8
+                                    },
+                                    "end": {
+                                        "line": 11,
+                                        "character": 17
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "kind": "Variable",
+                            "name": "$this",
+                            "location": {
+                                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                "range": {
+                                    "start": {
+                                        "line": 12,
+                                        "character": 2
+                                    },
+                                    "end": {
+                                        "line": 12,
+                                        "character": 7
+                                    }
+                                }
+                            },
+                            "type": "FirstClass"
+                        }
+                    ]
+                },
+                {
+                    "kind": "Function",
+                    "name": "",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                        "range": {
+                            "start": {
+                                "line": 16,
+                                "character": 0
+                            },
+                            "end": {
+                                "line": 16,
+                                "character": 6
+                            }
+                        }
+                    }
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                        "range": {
+                            "start": {
+                                "line": 18,
+                                "character": 0
+                            },
+                            "end": {
+                                "line": 30,
+                                "character": 1
+                            }
+                        }
+                    },
+                    "children": [
+                        {
+                            "location": {
+                                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                "range": {
+                                    "start": {
+                                        "line": 20,
+                                        "character": 1
+                                    },
+                                    "end": {
+                                        "line": 23,
+                                        "character": 2
+                                    }
+                                }
+                            },
+                            "children": []
+                        },
+                        {
+                            "location": {
+                                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                "range": {
+                                    "start": {
+                                        "line": 25,
+                                        "character": 1
+                                    },
+                                    "end": {
+                                        "line": 29,
+                                        "character": 2
+                                    }
+                                }
+                            },
+                            "children": [
+                                {
+                                    "kind": "Class",
+                                    "name": "SecondClass",
+                                    "location": {
+                                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                        "range": {
+                                            "start": {
+                                                "line": 27,
+                                                "character": 2
+                                            },
+                                            "end": {
+                                                "line": 27,
+                                                "character": 6
+                                            }
+                                        }
+                                    },
+                                    "altName": "static"
+                                },
+                                {
+                                    "kind": "Method",
+                                    "name": "thisDoesNotWork",
+                                    "location": {
+                                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                        "range": {
+                                            "start": {
+                                                "line": 27,
+                                                "character": 8
+                                            },
+                                            "end": {
+                                                "line": 27,
+                                                "character": 23
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "kind": "Variable",
+                                    "name": "$this",
+                                    "location": {
+                                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                        "range": {
+                                            "start": {
+                                                "line": 28,
+                                                "character": 2
+                                            },
+                                            "end": {
+                                                "line": 28,
+                                                "character": 7
+                                            }
+                                        }
+                                    },
+                                    "type": "SecondClass"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

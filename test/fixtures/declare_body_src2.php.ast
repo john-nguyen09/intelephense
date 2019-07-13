@@ -1,13 +1,13 @@
-{"type":"program"}
-	{"type":"class_declaration"}
-		{"type":"class"}
-		{"type":"name"}
-		{"type":"{"}
-		{"type":"ERROR"}
-			{"type":"visibility_modifier"}
-				{"type":"public"}
+{"type":"program","text":"<?php\r\nclass Foo {\r\n    public f \r\n}\r\n"}
+	{"type":"class_declaration","text":"class Foo {\r\n    public f \r\n}"}
+		{"type":"class","text":"class"}
+		{"type":"name","text":"Foo"}
+		{"type":"{","text":"{"}
+		{"type":"ERROR","text":"public f"}
+			{"type":"visibility_modifier","text":"public"}
+				{"type":"public","text":"public"}
 			
-			{"type":"name"}
+			{"type":"name","text":"f"}
 		
-		{"type":"}"}
+		{"type":"}","text":"}"}
 	

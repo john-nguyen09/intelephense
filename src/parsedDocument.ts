@@ -17,7 +17,7 @@ import { Parser } from './parser';
 const textDocumentChangeDebounceWait = 250;
 
 export interface NodeTransform {
-    kind?: string;
+    kind: string;
     push?(transform: NodeTransform): void;
 }
 

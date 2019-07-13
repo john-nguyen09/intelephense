@@ -1,0 +1,71 @@
+{
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 16,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Variable",
+            "name": "$one",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 1,
+                        "character": 4
+                    }
+                }
+            },
+            "type": ""
+        },
+        {
+            "kind": "Variable",
+            "name": "$two",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+                "range": {
+                    "start": {
+                        "line": 2,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 2,
+                        "character": 4
+                    }
+                }
+            },
+            "type": ""
+        },
+        {
+            "kind": "Variable",
+            "name": "$three",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+                "range": {
+                    "start": {
+                        "line": 3,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 6
+                    }
+                }
+            },
+            "type": ""
+        }
+    ]
+}

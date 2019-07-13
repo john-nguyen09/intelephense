@@ -32,13 +32,15 @@ export namespace PhpSymbolIdentifier {
 export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     public static readonly NAMED_SYMBOL_KIND_MASK = SymbolKind.Namespace |
         SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait |
-        SymbolKind.Method | SymbolKind.Function | SymbolKind.File |
-        SymbolKind.Constant | SymbolKind.ClassConstant;
+        SymbolKind.Method | SymbolKind.Function | SymbolKind.File;
+        // SymbolKind.Constant | SymbolKind.ClassConstant;
     public static readonly NAMED_SYMBOL_EXCLUDE_MODIFIERS = SymbolModifier.Magic;
     public static readonly IDENTIFIER_JOINER = '#';
     
     public static isNamedSymbol(s: PhpSymbol) {
-        return (s.kind & this.NAMED_SYMBOL_KIND_MASK) && !(s.modifiers & this.NAMED_SYMBOL_EXCLUDE_MODIFIERS);
+        return ((s.kind & this.NAMED_SYMBOL_KIND_MASK) > 0) && !(
+            s.modifiers && ((s.modifiers & this.NAMED_SYMBOL_EXCLUDE_MODIFIERS) > 0)
+        );
     }
 
     private _belongsToUri: LevelUp<AbstractLevelDOWN<string, PhpSymbolIdentifier[]>>;
@@ -97,7 +99,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         }
         promises.push((async () => {
             await this.deleteSymbols(this._globalVariables, {}, (s: PhpSymbol) => {
-                return s.location.uri === uri;
+                return typeof s.location !== 'undefined' && s.location.uri === uri;
             });
         })());
 

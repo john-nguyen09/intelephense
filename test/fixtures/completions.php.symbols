@@ -1,8 +1,8 @@
 {
     "kind": "File",
-    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/completions.php",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/completions.php",
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
         "range": {
             "start": {
                 "line": 0,
@@ -19,7 +19,7 @@
             "kind": "Variable",
             "name": "$DB",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/completions.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
                 "range": {
                     "start": {
                         "line": 3,

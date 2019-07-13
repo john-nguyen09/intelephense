@@ -1,0 +1,46 @@
+{"type":"program","text":"<?php\r\n$one = 1;\r\n$two = 2;\r\n$three = 3;\r\n?>\r\n<?\r\n$test = 'This is a short tag example';\r\n?>\r\n<html>\r\n<head>\r\n<title><?= 'Hello world' ?></title>\r\n</head>\r\n</html>\r\n<?php\r\n\r\n// There is no closing tag intentionally to avoid whitespace issues\r\n"}
+	{"type":"expression_statement","text":"$one = 1;"}
+		{"type":"assignment_expression","text":"$one = 1"}
+			{"type":"variable_name","text":"$one"}
+				{"type":"$","text":"$"}
+				{"type":"name","text":"one"}
+			
+			{"type":"=","text":"="}
+			{"type":"integer","text":"1"}
+		
+		{"type":";","text":";"}
+	
+	{"type":"expression_statement","text":"$two = 2;"}
+		{"type":"assignment_expression","text":"$two = 2"}
+			{"type":"variable_name","text":"$two"}
+				{"type":"$","text":"$"}
+				{"type":"name","text":"two"}
+			
+			{"type":"=","text":"="}
+			{"type":"integer","text":"2"}
+		
+		{"type":";","text":";"}
+	
+	{"type":"expression_statement","text":"$three = 3;"}
+		{"type":"assignment_expression","text":"$three = 3"}
+			{"type":"variable_name","text":"$three"}
+				{"type":"$","text":"$"}
+				{"type":"name","text":"three"}
+			
+			{"type":"=","text":"="}
+			{"type":"integer","text":"3"}
+		
+		{"type":";","text":";"}
+	
+	{"type":"?>","text":"?>"}
+	{"type":"text","text":"<?\r\n$test = 'This is a short tag example';\r\n?>\r\n<html>\r\n<head>\r\n<title><?= 'Hello world' ?></title>\r\n</head>\r\n</html>\r\n<?php\r\n\r\n// There is no closing tag intentionally to avoid whitespace issues\r\n"}
+		{"type":"<","text":"<"}
+		{"type":"<","text":"<"}
+		{"type":"<","text":"<"}
+		{"type":"<","text":"<"}
+		{"type":"<","text":"<"}
+		{"type":"<","text":"<"}
+		{"type":"<","text":"<"}
+		{"type":"<","text":"<"}
+		{"type":"<","text":"<"}
+	

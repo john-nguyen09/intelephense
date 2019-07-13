@@ -8,7 +8,8 @@
     "test": "mocha -r ts-node/register test/*.ts",
     "watch": "tsc -w -p tsconfig.build.json",
     "build": "tsc -p tsconfig.build.json && node ./lib/install.js",
-    "bundle": "webpack"
+    "bundle": "webpack",
+    "fake": "tsc -p tsconfig.fake.json && node ./lib/install.js"
   },
   "author": "Ben Mewburn <ben@mewburn.id.au>",
   "license": "ISC",
@@ -38,7 +39,7 @@
     "levelup": "^4.0.2",
     "subleveldown": "^4.0.0",
     "tree-sitter": "^0.15.7",
-    "tree-sitter-php": "^0.13.1",
+    "tree-sitter-php": "file://../tree-sitter-php",
     "vscode-languageserver": "^5.2.1"
   },
   "devDependencies": {

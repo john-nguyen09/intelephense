@@ -133,7 +133,7 @@ export namespace Intelephense {
                 }
 
                 if (rootUri) {
-                    Intelephense.indexDirectory(Uri.parse(params.rootUri).fsPath);
+                    Intelephense.indexDirectory(Uri.parse(rootUri).fsPath);
                 }
             })
             .catch(err => {
@@ -216,7 +216,7 @@ export namespace Intelephense {
 
         let parsedDocument = documentStore.find(textDocument.uri);
         if (parsedDocument) {
-            parsedDocument.version = textDocument.version;
+            parsedDocument.version = textDocument.version || 0;
             parsedDocument.applyChanges(contentChanges);
         }
 

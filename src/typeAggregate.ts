@@ -8,7 +8,7 @@ import { PhpSymbol, SymbolKind, SymbolModifier } from './symbol';
 import { SymbolStore } from './symbolStore';
 import { Predicate } from './types';
 import * as util from './utils';
-import {TypeString} from './typeString';
+import { TypeString } from './typeString';
 
 export const enum MemberMergeStrategy {
     None, //returns all symbols
@@ -23,12 +23,12 @@ export class TypeAggregate {
     private _associated: PhpSymbol[];
     private _excludeTraits = false;
 
-    constructor(public symbolStore: SymbolStore, symbol: PhpSymbol | PhpSymbol[], excludeTraits?:boolean) {
+    constructor(public symbolStore: SymbolStore, symbol: PhpSymbol | PhpSymbol[], excludeTraits?: boolean) {
         if (!symbol) {
             throw new Error('Invalid Argument');
         }
         this._symbol = symbol;
-        this._excludeTraits = excludeTraits;
+        this._excludeTraits = !!excludeTraits;
     }
 
     get type() {
@@ -39,9 +39,9 @@ export class TypeAggregate {
         return Array.isArray(this._symbol) ? this._symbol[0].name : this._symbol.name;
     }
 
-    async isBaseClass(name:string) {
+    async isBaseClass(name: string) {
         let lcName = name.toLowerCase();
-        let fn = (x:PhpSymbol) => {
+        let fn = (x: PhpSymbol) => {
             return x.kind === SymbolKind.Class && lcName === x.name.toLowerCase();
         }
         return !!(await this.associated(fn));
@@ -63,19 +63,19 @@ export class TypeAggregate {
         return filter ? util.filter(assoc, filter) : assoc;
     }
 
-    async firstMember(predicate:Predicate<PhpSymbol>) {
-        let member:PhpSymbol;
+    async firstMember(predicate: Predicate<PhpSymbol>) {
+        let member: PhpSymbol | undefined;
 
         let symbols = Array.isArray(this._symbol) ? this._symbol : [this._symbol];
-        for(let n = 0; n < symbols.length; ++n) {
-            if((member = PhpSymbol.findChild(symbols[n], predicate))) {
+        for (let n = 0; n < symbols.length; ++n) {
+            if ((member = PhpSymbol.findChild(symbols[n], predicate))) {
                 return member;
             }
         }
 
         const associated = await this._associatedIterator();
         for await (const s of associated) {
-            if((member = PhpSymbol.findChild(s, predicate))) {
+            if ((member = PhpSymbol.findChild(s, predicate))) {
                 return member;
             }
         }
@@ -85,10 +85,10 @@ export class TypeAggregate {
     async members(mergeStrategy: MemberMergeStrategy, predicate?: Predicate<PhpSymbol>) {
 
         let associated = await this._getAssociated();
-        let kind:SymbolKind;
-        let name:string;
+        let kind: SymbolKind;
+        let name: string;
 
-        if(Array.isArray(this._symbol)) {
+        if (Array.isArray(this._symbol)) {
             associated.unshift(...this._symbol);
             kind = this._symbol[0].kind;
             name = this._symbol[0].name;
@@ -97,8 +97,8 @@ export class TypeAggregate {
             kind = this._symbol.kind;
             name = this._symbol.name;
         }
-        
-        let members:PhpSymbol[];
+
+        let members: PhpSymbol[];
 
         switch (kind) {
             case SymbolKind.Class:
@@ -120,29 +120,29 @@ export class TypeAggregate {
 
     }
 
-    private _resolveThisAndStaticReturnType(members:PhpSymbol[], name:string) {
+    private _resolveThisAndStaticReturnType(members: PhpSymbol[], name: string) {
 
-        let resolved:PhpSymbol[] = [];
-        let s:PhpSymbol;
-        let type:string;
-        let sClone:PhpSymbol;
+        let resolved: PhpSymbol[] = [];
+        let s: PhpSymbol;
+        let type: string;
+        let sClone: PhpSymbol;
 
-        for(let n = 0; n < members.length; ++n) {
+        for (let n = 0; n < members.length; ++n) {
             s = members[n];
-            if((s.kind & (SymbolKind.Method | SymbolKind.Property)) > 0 && s.doc && s.doc.type) {
+            if ((s.kind & (SymbolKind.Method | SymbolKind.Property)) > 0 && s.doc && s.doc.type) {
                 type = TypeString.resolveThisOrStatic(s.doc.type, name);
-                
-                if(type !== s.doc.type) {
+
+                if (type !== s.doc.type) {
                     //clone the symbol to use resolved type
                     sClone = PhpSymbol.clone(s);
-                    sClone.doc = {description:s.doc.description, type:type}
+                    sClone.doc = { description: s.doc.description, type: type }
                     resolved.push(sClone);
                     continue;
                 }
             }
             resolved.push(s);
         }
-        
+
         return resolved;
 
     }
@@ -152,14 +152,14 @@ export class TypeAggregate {
      * @param associated 
      * @param predicate 
      */
-    private _classMembers(associated: PhpSymbol[], strategy:MemberMergeStrategy, predicate?: Predicate<PhpSymbol>) {
+    private _classMembers(associated: PhpSymbol[], strategy: MemberMergeStrategy, predicate?: Predicate<PhpSymbol>) {
 
         let members: PhpSymbol[] = [];
         let s: PhpSymbol;
         let traits: PhpSymbol[] = [];
         let p = predicate;
         let noPrivate = (x: PhpSymbol) => {
-            return !(x.modifiers & SymbolModifier.Private) && (!predicate || predicate(x));
+            return typeof x.modifiers !== 'undefined' && !(x.modifiers & SymbolModifier.Private) && (!predicate || predicate(x));
         };
 
         for (let n = 0; n < associated.length; ++n) {
@@ -202,7 +202,7 @@ export class TypeAggregate {
 
         let map: { [index: string]: PhpSymbol } = {};
         let s: PhpSymbol;
-        let mapped:PhpSymbol;
+        let mapped: PhpSymbol;
 
         if (strategy === MemberMergeStrategy.None) {
             return symbols;
@@ -213,20 +213,20 @@ export class TypeAggregate {
             mapped = map[s.name];
             if (
                 !mapped ||
-                ((mapped.modifiers & SymbolModifier.Magic) > 0 && !(s.modifiers & SymbolModifier.Magic)) || //always prefer non magic
-                (strategy === MemberMergeStrategy.Documented && (!mapped.doc || this.hasInheritdoc(mapped.doc.description)) && s.doc) ||
+                (mapped.modifiers && (mapped.modifiers & SymbolModifier.Magic) > 0 && s.modifiers && !(s.modifiers & SymbolModifier.Magic)) || //always prefer non magic
+                (strategy === MemberMergeStrategy.Documented && (!mapped.doc || this.hasInheritdoc(mapped.doc.description || '')) && s.doc) ||
                 (strategy === MemberMergeStrategy.Base)
             ) {
                 map[s.name] = s;
-            } 
-            
+            }
+
         }
 
-        return Object.keys(map).map((v:string)=>{ return map[v]; });
+        return Object.keys(map).map((v: string) => { return map[v]; });
     }
 
-    private hasInheritdoc(description:string) {
-        if(!description) {
+    private hasInheritdoc(description: string) {
+        if (!description) {
             return false;
         }
 
@@ -249,8 +249,8 @@ export class TypeAggregate {
 
     }
 
-    private _symbolsAssociatedReduce(accum:PhpSymbol[], current:PhpSymbol) {
-        if(current.associated) {
+    private _symbolsAssociatedReduce(accum: PhpSymbol[], current: PhpSymbol) {
+        if (current.associated) {
             Array.prototype.push.apply(accum, current.associated);
         }
         return accum;
@@ -259,14 +259,14 @@ export class TypeAggregate {
     private async *_associatedIterator() {
 
         let associated = new Set<PhpSymbol>();
-        let symbols:PhpSymbol[] = [];
+        let symbols: PhpSymbol[] = [];
         let queue: PhpSymbol[] = [];
-        let stub: PhpSymbol;
-        let s:PhpSymbol;
-        
-        if(Array.isArray(this._symbol)) {
+        let stub: PhpSymbol | undefined;
+        let s: PhpSymbol;
+
+        if (Array.isArray(this._symbol)) {
             Array.prototype.push.apply(queue, this._symbol.reduce(this._symbolsAssociatedReduce, []));
-        } else if(this._symbol.associated) {
+        } else if (this._symbol.associated) {
             Array.prototype.push.apply(queue, this._symbol.associated);
         }
 
@@ -280,7 +280,7 @@ export class TypeAggregate {
             return false;
         };
 
-        let filterFn = (x:PhpSymbol) => {
+        let filterFn = (x: PhpSymbol) => {
             return PhpSymbol.isClassLike(x) && !associatedContains(x);
         }
 
@@ -295,11 +295,11 @@ export class TypeAggregate {
                 symbolCache.set(stub.name, await this.symbolStore.find(stub.name));
             }
 
-            symbols = symbolCache.get(stub.name).filter(filterFn);
-            for(let n = 0; n < symbols.length; ++n) {
+            symbols = (symbolCache.get(stub.name) || []).filter(filterFn);
+            for (let n = 0; n < symbols.length; ++n) {
                 s = symbols[n];
                 associated.add(s);
-                if(s.associated) {
+                if (s.associated) {
                     Array.prototype.push.apply(queue, s.associated);
                 }
                 yield s;
@@ -317,8 +317,8 @@ export class TypeAggregate {
         let symbols = await symbolStore.find(fqn, PhpSymbol.isClassLike);
         if (!symbols.length) {
             return null;
-        } else if(symbols.length === 1) {
-            return new TypeAggregate(symbolStore, symbols[0]);    
+        } else if (symbols.length === 1) {
+            return new TypeAggregate(symbolStore, symbols[0]);
         } else {
             return new TypeAggregate(symbolStore, symbols);
         }

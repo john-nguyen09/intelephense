@@ -1,0 +1,71 @@
+{
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 9,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "GlobalVariable",
+            "name": "DB",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "range": {
+                    "start": {
+                        "line": 3,
+                        "character": 11
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 14
+                    }
+                }
+            },
+            "type": ""
+        },
+        {
+            "kind": "Variable",
+            "name": "$DB",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 4
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 7
+                    }
+                }
+            },
+            "type": "database"
+        },
+        {
+            "kind": "Variable",
+            "name": "$DB",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "range": {
+                    "start": {
+                        "line": 8,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 8,
+                        "character": 3
+                    }
+                }
+            },
+            "type": "database"
+        }
+    ]
+}

@@ -1,6 +1,4 @@
 {
-    "kind": "File",
-    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/range_format_full_doc.php",
     "location": {
         "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/range_format_full_doc.php",
         "range": {
@@ -30,7 +28,8 @@
                         "character": 11
                     }
                 }
-            }
+            },
+            "type": ""
         },
         {
             "kind": "Variable",
@@ -47,7 +46,8 @@
                         "character": 17
                     }
                 }
-            }
+            },
+            "type": ""
         }
     ]
 }

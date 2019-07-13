@@ -1,8 +1,8 @@
 {
     "kind": "File",
-    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/conditional_curly_src.php",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/conditional_curly_src.php",
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/conditional_curly_src.php",
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/conditional_curly_src.php",
         "range": {
             "start": {
                 "line": 0,

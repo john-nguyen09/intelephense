@@ -14,7 +14,7 @@ export namespace Formatter {
         }
         str += indent(depth);
 
-        str += JSON.stringify({type: node.type});
+        str += JSON.stringify({type: node.type, text: node.text});
         
         if (node.childCount > 0) {
             str += '\n';

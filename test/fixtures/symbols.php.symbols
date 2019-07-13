@@ -1,8 +1,8 @@
 {
     "kind": "File",
-    "name": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,8 +17,9 @@
     "children": [
         {
             "kind": "Constant",
+            "name": "TEST_CONST1",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 2,
@@ -37,7 +38,7 @@
             "kind": "Constant",
             "name": "TEST_CONST",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 3,
@@ -55,7 +56,7 @@
             "kind": "Variable",
             "name": "$array",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -72,7 +73,7 @@
             "kind": "Function",
             "name": "testFunction",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 7,
@@ -84,14 +85,13 @@
                     }
                 }
             },
-            "type": "function_declaration_body",
             "children": []
         },
         {
             "kind": "Function",
             "name": "testFunction2",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 12,
@@ -103,14 +103,13 @@
                     }
                 }
             },
-            "type": "function_declaration_body",
             "children": []
         },
         {
             "kind": "Class",
             "name": "TestClass",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 17,
@@ -125,8 +124,9 @@
             "children": [
                 {
                     "kind": "Constant",
+                    "name": "CLASS_CONSTANT",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 19,
@@ -143,8 +143,9 @@
                 },
                 {
                     "kind": "Constant",
+                    "name": "CONSTANT1",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 20,
@@ -161,8 +162,9 @@
                 },
                 {
                     "kind": "Constant",
+                    "name": "CONSTANT2",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 20,
@@ -179,8 +181,9 @@
                 },
                 {
                     "kind": "Constant",
+                    "name": "PI",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 20,
@@ -199,7 +202,7 @@
                     "kind": "Property",
                     "name": "$staticTestProperty",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 21,
@@ -217,7 +220,7 @@
                     "kind": "Property",
                     "name": "$testProperty",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 22,
@@ -235,7 +238,7 @@
                     "kind": "Property",
                     "name": "$testProp1",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 23,
@@ -253,7 +256,7 @@
                     "kind": "Property",
                     "name": "$testProp2",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 23,
@@ -271,7 +274,7 @@
                     "kind": "Property",
                     "name": "$testProp3",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 23,
@@ -290,7 +293,7 @@
                     "kind": "Property",
                     "name": "$initProp1",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 25,
@@ -309,7 +312,7 @@
                     "kind": "Property",
                     "name": "$initProp2",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 26,
@@ -328,7 +331,7 @@
                     "kind": "Property",
                     "name": "$initProp3",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 27,
@@ -347,7 +350,7 @@
                     "kind": "Property",
                     "name": "$initProp4",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 28,
@@ -366,7 +369,7 @@
                     "kind": "Method",
                     "name": "testMethod",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 30,
@@ -384,7 +387,7 @@
                             "kind": "Variable",
                             "name": "$array",
                             "location": {
-                                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                                 "range": {
                                     "start": {
                                         "line": 32,
@@ -399,14 +402,13 @@
                             "scope": "testMethod"
                         }
                     ],
-                    "type": "function_declaration_body",
                     "scope": "TestClass"
                 },
                 {
                     "kind": "Method",
                     "name": "testMethod2",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 35,
@@ -420,7 +422,6 @@
                     },
                     "modifiers": 1,
                     "children": [],
-                    "type": "function_declaration_body",
                     "scope": "TestClass"
                 }
             ],
@@ -431,7 +432,7 @@
             "kind": "Class",
             "name": "TestClass2",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 41,
@@ -456,7 +457,7 @@
             "kind": "Interface",
             "name": "TestInterface",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 46,
@@ -471,9 +472,9 @@
             "children": [
                 {
                     "kind": "Method",
-                    "name": "",
+                    "name": "testInterfaceMethod",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 48,
@@ -490,9 +491,9 @@
                 },
                 {
                     "kind": "Method",
-                    "name": "",
+                    "name": "testInterfaceMethod2",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 49,
@@ -514,7 +515,7 @@
             "kind": "Interface",
             "name": "TestInterface2",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 52,
@@ -529,9 +530,9 @@
             "children": [
                 {
                     "kind": "Method",
-                    "name": "",
+                    "name": "testInterfaceMethod3",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 54,
@@ -558,7 +559,7 @@
             "kind": "Class",
             "name": "TestClass3",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 57,
@@ -587,7 +588,7 @@
             "kind": "Trait",
             "name": "TestTrait",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 62,
@@ -604,7 +605,7 @@
                     "kind": "Method",
                     "name": "traitMethod1",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 64,
@@ -618,7 +619,6 @@
                     },
                     "modifiers": 1,
                     "children": [],
-                    "type": "function_declaration_body",
                     "scope": "TestTrait"
                 }
             ],
@@ -628,7 +628,7 @@
             "kind": "Class",
             "name": "TestClass4",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 70,
@@ -645,7 +645,7 @@
                     "kind": "Method",
                     "name": "staticMethod1",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 74,
@@ -659,7 +659,6 @@
                     },
                     "modifiers": 33,
                     "children": [],
-                    "type": "function_declaration_body",
                     "scope": "TestClass4"
                 }
             ],
@@ -673,37 +672,58 @@
         },
         {
             "kind": "Class",
-            "name": "TestClass4"
-        },
-        {
-            "kind": "Interface",
-            "name": "TestInterface2"
-        },
-        {
-            "kind": "Method",
-            "name": "testInterfaceMethod3",
+            "name": "#anon#file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php#1164",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
-                        "line": 81,
-                        "character": 4
+                        "line": 80,
+                        "character": 0
                     },
                     "end": {
-                        "line": 84,
-                        "character": 5
+                        "line": 85,
+                        "character": 1
                     }
                 }
             },
-            "modifiers": 1,
-            "children": [],
-            "type": "function_declaration_body"
+            "modifiers": 512,
+            "children": [
+                {
+                    "kind": "Method",
+                    "name": "testInterfaceMethod3",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
+                        "range": {
+                            "start": {
+                                "line": 81,
+                                "character": 4
+                            },
+                            "end": {
+                                "line": 84,
+                                "character": 5
+                            }
+                        }
+                    },
+                    "modifiers": 1,
+                    "children": []
+                }
+            ],
+            "associated": [
+                {
+                    "kind": "Class",
+                    "name": "TestClass4"
+                },
+                {
+                    "kind": "Interface",
+                    "name": "TestInterface2"
+                }
+            ]
         },
         {
             "kind": "Variable",
             "name": "$testObj1",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 87,
@@ -720,7 +740,7 @@
             "kind": "Variable",
             "name": "$testFunction1",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 88,
@@ -735,9 +755,9 @@
         },
         {
             "kind": "Function",
-            "name": "#anon#file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php#1336",
+            "name": "#anon#file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php#1336",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 88,
@@ -755,7 +775,7 @@
                     "kind": "Variable",
                     "name": "testObj1",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 88,
@@ -768,13 +788,13 @@
                         }
                     },
                     "modifiers": 4096,
-                    "scope": "#anon#file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php#1336"
+                    "scope": "#anon#file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php#1336"
                 },
                 {
                     "kind": "Variable",
                     "name": "array",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 88,
@@ -787,7 +807,7 @@
                         }
                     },
                     "modifiers": 4096,
-                    "scope": "#anon#file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php#1336"
+                    "scope": "#anon#file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php#1336"
                 }
             ]
         },
@@ -795,7 +815,7 @@
             "kind": "Variable",
             "name": "$e",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 94,
@@ -812,7 +832,7 @@
             "kind": "Class",
             "name": "TestAbstract1",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                 "range": {
                     "start": {
                         "line": 98,
@@ -827,9 +847,9 @@
             "children": [
                 {
                     "kind": "Method",
-                    "name": "",
+                    "name": "testFunction1",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/intelephense/test/fixtures/symbols.php",
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
                         "range": {
                             "start": {
                                 "line": 100,

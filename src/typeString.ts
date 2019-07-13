@@ -212,7 +212,7 @@ export namespace TypeString {
 
     }
 
-    export async function resolve(type: string | TypeResolvable): Promise<string> {
+    export async function resolve(type: string | TypeResolvable | undefined): Promise<string> {
         if (typeof type === 'undefined') {
             return '';
         }

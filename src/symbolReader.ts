@@ -188,7 +188,7 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
                 break;
 
             case 'object_creation_expression':
-                if (SymbolReader.isAnonymouseClassDeclaration(node, parentNode)) {
+                if (SymbolReader.isAnonymousClassDeclaration(node)) {
                     let t = new AnonymousClassDeclarationTransform(
                         this.document.nodeLocation(node), this.document.createAnonymousName(node)
                     );
@@ -312,24 +312,18 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
 
                 break;
 
+            case 'text':
+                return true;
+
             default:
 
                 if (
                     parentNode !== null &&
-                    (
-                        parentNode.type === 'const_element' ||
-                        parentNode.type === 'formal_parameters' ||
-                        (parentNode.type === 'arguments' && parentTransform)
-                    )
+                    parentTransform !== null
                 ) {
-                    this._transformStack.push(
-                        new DefaultNodeTransform(
-                            node.type,
-                            node.text
-                        )
-                    );
+                    this._transformStack.push(new DefaultNodeTransform(node, this.document));
                 } else {
-                    this._transformStack.push(new GenericNodeTransform(node, this.document));
+                    this._transformStack.push(null);
                 }
                 break;
         }
@@ -339,6 +333,10 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
     }
 
     postorder(node: SyntaxNode, spine: SyntaxNode[]) {
+        if (node.type === 'text') {
+            return;
+        }
+
         const transform = this._transformStack.pop();
 
         if (!transform) {
@@ -354,8 +352,7 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
         }
 
         if (node.type === 'object_creation_expression') {
-            const parentNode = spine[spine.length - 1] || null;
-            if (SymbolReader.isAnonymouseClassDeclaration(node, parentNode)) {
+            if (SymbolReader.isAnonymousClassDeclaration(node)) {
                 this.lastPhpDoc = null;
                 this.lastPhpDocLocation = null;
             }
@@ -452,6 +449,7 @@ interface SymbolsNodeTransform extends NodeTransform {
 
 class FileTransform implements SymbolNodeTransform {
 
+    kind = 'file';
     private _children: UniqueSymbolCollection;
     private _symbol: PhpSymbol;
 
@@ -474,6 +472,7 @@ class FileTransform implements SymbolNodeTransform {
 }
 
 class ProgramTransform implements SymbolsNodeTransform {
+    kind = 'program';
     private _children: UniqueSymbolCollection = new UniqueSymbolCollection();
 
     push(transform: NodeTransform) {
@@ -518,24 +517,6 @@ class DelimiteredListTransform implements NodeTransform {
 
 }
 
-class GenericNodeTransform implements NodeTransform {
-
-    constructor(public node: SyntaxNode, public doc: ParsedDocument) { }
-
-    get text() {
-        return this.node.text;
-    }
-
-    get kind() {
-        return this.node.type;
-    }
-
-    get location() {
-        return this.doc.nodeLocation(this.node);
-    }
-
-}
-
 class NamespaceNameTransform implements TextNodeTransform {
 
     kind = 'namespace_name';
@@ -554,7 +535,7 @@ class NamespaceNameTransform implements TextNodeTransform {
         if (transform.kind === 'namespace_name_as_prefix') {
             this._parts.push((<NamespaceNameAsPrefixTransform>transform).name);
         } else if (transform.kind === 'name') {
-            this._parts.push((<GenericNodeTransform>transform).text);
+            this._parts.push((<DefaultNodeTransform>transform).name);
         }
     }
 
@@ -591,7 +572,7 @@ class QualifiedNameTransform implements NameNodeTransform {
             this.unresolved = (<NamespaceNameTransform>transform).name;
             this.name = this.nameResolver.resolveNotFullyQualified(this.unresolved);
         } else if (transform.kind === 'name') {
-            this.unresolved = (<GenericNodeTransform>transform).text;
+            this.unresolved = (<DefaultNodeTransform>transform).name;
             this.name = this.nameResolver.resolveNotFullyQualified(this.unresolved);
         }
     }
@@ -681,7 +662,7 @@ class SimpleVariableTransform implements SymbolNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this.symbol.name = '$' + (<GenericNodeTransform>transform).text;
+            this.symbol.name = '$' + (<DefaultNodeTransform>transform).name;
         }
     }
 
@@ -713,6 +694,10 @@ class AnonymousClassDeclarationTransform implements SymbolNodeTransform {
             transform.kind === 'class_const_declaration'
         ) {
             Array.prototype.push.apply(this.symbol.children, (<FieldDeclarationTransform>transform).symbols);
+        } else if (transform.kind === 'method_declaration') {
+            if (this.symbol.children) {
+                this.symbol.children.push((<MethodDeclarationTransform>transform).symbol);
+            }
         } else if (transform.kind === 'trait_use_clause') {
             const traitsUseTransform = <TraitUseClauseTransform>transform;
 
@@ -830,7 +815,7 @@ class AnonymousFunctionUseVariableTransform implements SymbolNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this.symbol.name = (<GenericNodeTransform>transform).text;
+            this.symbol.name = (<DefaultNodeTransform>transform).name;
         } else if (transform.kind === '&') {
             this.symbol.modifiers = SymbolModifier.Reference;
         }
@@ -857,7 +842,7 @@ class InterfaceDeclarationTransform implements SymbolNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this.symbol.name = this.nameResolver.resolveRelative((<GenericNodeTransform>transform).text);
+            this.symbol.name = this.nameResolver.resolveRelative((<DefaultNodeTransform>transform).name);
         } else if (transform.kind === 'interface_base_clause') {
             this.symbol.associated = (<InterfaceBaseClauseTransform>transform).symbols;
         } else if (transform.kind === 'method_declaration') {
@@ -893,7 +878,7 @@ class ConstElementTransform implements SymbolNodeTransform {
     push(transform: NodeTransform) {
 
         if (transform.kind === 'name') {
-            this.symbol.name = this.nameResolver.resolveRelative((<GenericNodeTransform>transform).text);
+            this.symbol.name = this.nameResolver.resolveRelative((<DefaultNodeTransform>transform).name);
             SymbolReader.assignPhpDocInfoToSymbol(this.symbol, this._doc, this._docLocation, this.nameResolver);
         } else {
             //expression
@@ -923,7 +908,7 @@ class TraitDeclarationTransform implements SymbolNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this.symbol.name = this.nameResolver.resolveRelative((<GenericNodeTransform>transform).text);
+            this.symbol.name = this.nameResolver.resolveRelative((<DefaultNodeTransform>transform).name);
         } else if (transform.kind === 'property_declaration') {
             for (const symbol of (<FieldDeclarationTransform>transform).symbols) {
                 this.pushChild(symbol);
@@ -1065,7 +1050,7 @@ class ClassDeclarationTransform implements SymbolNodeTransform {
         if (transform.kind === 'static_modifier') {
             this.addModifier((<StaticModifier>transform).modifiers);
         } else if (!this._gotOpen && transform.kind === 'name') {
-            this.symbol.name = this.nameResolver.resolveRelative((<GenericNodeTransform>transform).text);
+            this.symbol.name = this.nameResolver.resolveRelative((<DefaultNodeTransform>transform).name);
         } else if (transform.kind === 'class_base_clause') {
             const symbol = (<ClassBaseClauseTransform>transform).symbol;
             this.pushAssociated(symbol);
@@ -1205,6 +1190,9 @@ class MethodDeclarationTransform implements SymbolNodeTransform {
             this._symbol.type = functionTransform.symbol.type;
         } else if (transform.kind === '__construct') {
             this._symbol.name = '__construct';
+        } else if (transform.kind === 'name') {
+            // Interfaces methods will not have function_definition
+            this._symbol.name = (<DefaultNodeTransform>transform).name;
         }
 
     }
@@ -1266,7 +1254,7 @@ class PropertyInitialiserTransform implements NodeTransform {
             transform.kind === 'integer' ||
             transform.kind === 'float'
         ) {
-            this.text = (<GenericNodeTransform>transform).node.text;
+            this.text = (<DefaultNodeTransform>transform).name;
         } else if (transform.kind === 'qualified_name') {
             this.text = (<QualifiedNameTransform>transform).name;
         }
@@ -1348,7 +1336,7 @@ class FunctionDeclarationTransform implements SymbolNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this._symbol.name = this.nameResolver.resolveRelative((<GenericNodeTransform>transform).text);
+            this._symbol.name = this.nameResolver.resolveRelative((<DefaultNodeTransform>transform).name);
         } else if (transform.kind === 'formal_parameters') {
             const transforms = (<DelimiteredListTransform>transform).transforms;
             const symbols = transforms.filter(transform => {
@@ -1361,7 +1349,6 @@ class FunctionDeclarationTransform implements SymbolNodeTransform {
         } else if (transform.kind === 'function_declaration_body') {
             const functionBody = <FunctionDeclarationBodyTransform>transform;
 
-            this._symbol.type = functionBody.kind;
             this._children.pushMany(functionBody.symbols);
         }
     }
@@ -1375,8 +1362,19 @@ class FunctionDeclarationTransform implements SymbolNodeTransform {
 
 class DefaultNodeTransform implements TextNodeTransform {
 
-    constructor(public kind: string, public name: string) { }
-    push(transform: NodeTransform) { }
+    constructor(public node: SyntaxNode, private doc: ParsedDocument) { }
+
+    get kind(): string {
+        return this.node.type;
+    }
+
+    get name(): string {
+        return this.node.text;
+    }
+
+    get location(): Location {
+        return this.doc.nodeLocation(this.node);
+    }
 
 }
 
@@ -1465,12 +1463,12 @@ export namespace SymbolReader {
         return symbols;
     }
 
-    export function isAnonymouseClassDeclaration(node: SyntaxNode, parentNode: SyntaxNode | null) {
+    export function isAnonymousClassDeclaration(node: SyntaxNode) {
         if (node.type !== 'object_creation_expression') {
             return false;
         }
 
-        const namedChild = node.firstNamedChild;
+        const namedChild = node.child(1);
         
         return namedChild !== null && namedChild.text === 'class';
     }
@@ -1612,19 +1610,6 @@ class NamespaceUseDeclarationTransform implements SymbolsNodeTransform {
         } else if (transform.kind === 'namespace_name') {
             this._prefix = (<NamespaceNameTransform>transform).name;
         }
-
-        // if (transform.phraseKind === PhraseKind.NamespaceUseGroupClauseList) {
-        //     this.symbols = (<NamespaceUseClauseListTransform>transform).symbols;
-        //     let s: PhpSymbol;
-        //     let prefix = this._prefix ? this._prefix + '\\' : '';
-        //     for (let n = 0; n < this.symbols.length; ++n) {
-        //         s = this.symbols[n];
-        //         s.associated[0].name = prefix + s.associated[0].name;
-        //         if (!s.kind) {
-        //             s.kind = s.associated[0].kind = this._kind;
-        //         }
-        //     }
-        // }
     }
 
 }
@@ -1672,8 +1657,8 @@ class NamespaceAliasingClause implements TextNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this.name = (<GenericNodeTransform>transform).text;
-            this.location = (<GenericNodeTransform>transform).location;
+            this.name = (<DefaultNodeTransform>transform).name;
+            this.location = (<DefaultNodeTransform>transform).location;
         }
     }
 
@@ -1681,6 +1666,7 @@ class NamespaceAliasingClause implements TextNodeTransform {
 
 class GlobalVariableTransform implements NodeTransform {
 
+    kind = 'global_variable';
     symbol: PhpSymbol;
 
     constructor(

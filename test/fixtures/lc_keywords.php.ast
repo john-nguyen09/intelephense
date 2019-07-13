@@ -1,20 +1,20 @@
-{"type":"program"}
-	{"type":"expression_statement"}
-		{"type":"assignment_expression"}
-			{"type":"variable_name"}
-				{"type":"$"}
-				{"type":"name"}
+{"type":"program","text":"<?php\r\n$foo = Array();\r\n\r\n"}
+	{"type":"expression_statement","text":"$foo = Array();"}
+		{"type":"assignment_expression","text":"$foo = Array()"}
+			{"type":"variable_name","text":"$foo"}
+				{"type":"$","text":"$"}
+				{"type":"name","text":"foo"}
 			
-			{"type":"="}
-			{"type":"function_call_expression"}
-				{"type":"qualified_name"}
-					{"type":"name"}
+			{"type":"=","text":"="}
+			{"type":"function_call_expression","text":"Array()"}
+				{"type":"qualified_name","text":"Array"}
+					{"type":"name","text":"Array"}
 				
-				{"type":"arguments"}
-					{"type":"("}
-					{"type":")"}
+				{"type":"arguments","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
 				
 			
 		
-		{"type":";"}
+		{"type":";","text":";"}
 	
