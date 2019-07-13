@@ -1,502 +1,330 @@
 {"type":"program","text":"<?php\n\nconst TEST_CONST1 = 2;\ndefine('TEST_CONST', 1);\n\n$array = array();\n\nfunction testFunction()\n{\n\n}\n\nfunction testFunction2(int $value, &$ref, ...$ref2)\n{\n    return false;\n}\n\nclass TestClass\n{\n    const CLASS_CONSTANT = 5;\n    const CONSTANT1 = 4, CONSTANT2 = 3.1, PI = 3.14;\n    public static $staticTestProperty;\n    public $testProperty;\n    public $testProp1, $testProp2, $testProp3 = 'prop3';\n\n    public $initProp1 = true;\n    public $initProp2 = 5;\n    public $initProp3 = 5.1;\n    public $initProp4 = new TestClass();\n\n    public function testMethod($testParameter)\n    {\n        $array = array();\n    }\n\n    public function testMethod2()\n    {\n        \n    }\n}\n\nclass TestClass2 extends TestClass\n{\n\n}\n\ninterface TestInterface\n{\n    public function testInterfaceMethod();\n    public function testInterfaceMethod2();\n}\n\ninterface TestInterface2 extends TestInterface\n{\n    public function testInterfaceMethod3();\n}\n\nclass TestClass3 implements TestInterface, TestInterface2\n{\n    \n}\n\ntrait TestTrait\n{\n    public function traitMethod1()\n    {\n\n    }\n}\n\nclass TestClass4\n{\n    use TestTrait;\n\n    public static function staticMethod1()\n    {\n\n    }\n}\n\nnew class extends TestClass4 implements TestInterface2 {\n    public function testInterfaceMethod3()\n    {\n        \n    }\n};\n\n$testObj1 = new \\TestClass();\n$testFunction1 = static function&() use ($testObj1, $array) {\n\n};\n\ntry {\n    testFunction();\n} catch (Exception $e) {\n\n}\n\nabstract class TestAbstract1\n{\n    public abstract function testFunction1();\n}"}
-	{"type":"const_declaration","text":"const TEST_CONST1 = 2;"}
-		{"type":"const","text":"const"}
-		{"type":"const_element","text":"TEST_CONST1 = 2"}
-			{"type":"name","text":"TEST_CONST1"}
-			{"type":"=","text":"="}
-			{"type":"integer","text":"2"}
-		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"define('TEST_CONST', 1);"}
-		{"type":"function_call_expression","text":"define('TEST_CONST', 1)"}
-			{"type":"qualified_name","text":"define"}
-				{"type":"name","text":"define"}
+	{"type":"script_section","text":"<?php\n\nconst TEST_CONST1 = 2;\ndefine('TEST_CONST', 1);\n\n$array = array();\n\nfunction testFunction()\n{\n\n}\n\nfunction testFunction2(int $value, &$ref, ...$ref2)\n{\n    return false;\n}\n\nclass TestClass\n{\n    const CLASS_CONSTANT = 5;\n    const CONSTANT1 = 4, CONSTANT2 = 3.1, PI = 3.14;\n    public static $staticTestProperty;\n    public $testProperty;\n    public $testProp1, $testProp2, $testProp3 = 'prop3';\n\n    public $initProp1 = true;\n    public $initProp2 = 5;\n    public $initProp3 = 5.1;\n    public $initProp4 = new TestClass();\n\n    public function testMethod($testParameter)\n    {\n        $array = array();\n    }\n\n    public function testMethod2()\n    {\n        \n    }\n}\n\nclass TestClass2 extends TestClass\n{\n\n}\n\ninterface TestInterface\n{\n    public function testInterfaceMethod();\n    public function testInterfaceMethod2();\n}\n\ninterface TestInterface2 extends TestInterface\n{\n    public function testInterfaceMethod3();\n}\n\nclass TestClass3 implements TestInterface, TestInterface2\n{\n    \n}\n\ntrait TestTrait\n{\n    public function traitMethod1()\n    {\n\n    }\n}\n\nclass TestClass4\n{\n    use TestTrait;\n\n    public static function staticMethod1()\n    {\n\n    }\n}\n\nnew class extends TestClass4 implements TestInterface2 {\n    public function testInterfaceMethod3()\n    {\n        \n    }\n};\n\n$testObj1 = new \\TestClass();\n$testFunction1 = static function&() use ($testObj1, $array) {\n\n};\n\ntry {\n    testFunction();\n} catch (Exception $e) {\n\n}\n\nabstract class TestAbstract1\n{\n    public abstract function testFunction1();\n}"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"const_declaration","text":"const TEST_CONST1 = 2;"}
+			{"type":"const","text":"const"}
+			{"type":"const_element","text":"TEST_CONST1 = 2"}
+				{"type":"name","text":"TEST_CONST1"}
+				{"type":"=","text":"="}
+				{"type":"integer","text":"2"}
 			
-			{"type":"arguments","text":"('TEST_CONST', 1)"}
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"define('TEST_CONST', 1);"}
+			{"type":"function_call_expression","text":"define('TEST_CONST', 1)"}
+				{"type":"qualified_name","text":"define"}
+					{"type":"name","text":"define"}
+				
+				{"type":"arguments","text":"('TEST_CONST', 1)"}
+					{"type":"(","text":"("}
+					{"type":"string","text":"'TEST_CONST'"}
+					{"type":",","text":","}
+					{"type":"integer","text":"1"}
+					{"type":")","text":")"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"$array = array();"}
+			{"type":"assignment_expression","text":"$array = array()"}
+				{"type":"variable_name","text":"$array"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"array"}
+				
+				{"type":"=","text":"="}
+				{"type":"array_creation_expression","text":"array()"}
+					{"type":"array","text":"array"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"function_definition","text":"function testFunction()\n{\n\n}"}
+			{"type":"function","text":"function"}
+			{"type":"name","text":"testFunction"}
+			{"type":"formal_parameters","text":"()"}
 				{"type":"(","text":"("}
-				{"type":"string","text":"'TEST_CONST'"}
-				{"type":",","text":","}
-				{"type":"integer","text":"1"}
 				{"type":")","text":")"}
 			
-		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"$array = array();"}
-		{"type":"assignment_expression","text":"$array = array()"}
-			{"type":"variable_name","text":"$array"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"array"}
+			{"type":"compound_statement","text":"{\n\n}"}
+				{"type":"{","text":"{"}
+				{"type":"}","text":"}"}
 			
-			{"type":"=","text":"="}
-			{"type":"array_creation_expression","text":"array()"}
-				{"type":"array","text":"array"}
+		
+		{"type":"function_definition","text":"function testFunction2(int $value, &$ref, ...$ref2)\n{\n    return false;\n}"}
+			{"type":"function","text":"function"}
+			{"type":"name","text":"testFunction2"}
+			{"type":"formal_parameters","text":"(int $value, &$ref, ...$ref2)"}
 				{"type":"(","text":"("}
-				{"type":")","text":")"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"function_definition","text":"function testFunction()\n{\n\n}"}
-		{"type":"function","text":"function"}
-		{"type":"name","text":"testFunction"}
-		{"type":"formal_parameters","text":"()"}
-			{"type":"(","text":"("}
-			{"type":")","text":")"}
-		
-		{"type":"compound_statement","text":"{\n\n}"}
-			{"type":"{","text":"{"}
-			{"type":"}","text":"}"}
-		
-	
-	{"type":"function_definition","text":"function testFunction2(int $value, &$ref, ...$ref2)\n{\n    return false;\n}"}
-		{"type":"function","text":"function"}
-		{"type":"name","text":"testFunction2"}
-		{"type":"formal_parameters","text":"(int $value, &$ref, ...$ref2)"}
-			{"type":"(","text":"("}
-			{"type":"simple_parameter","text":"int $value"}
-				{"type":"type_declaration","text":"int"}
-					{"type":"base_type_declaration","text":"int"}
-						{"type":"scalar_type","text":"int"}
-							{"type":"int","text":"int"}
+				{"type":"simple_parameter","text":"int $value"}
+					{"type":"type_declaration","text":"int"}
+						{"type":"base_type_declaration","text":"int"}
+							{"type":"scalar_type","text":"int"}
+								{"type":"int","text":"int"}
+							
 						
 					
-				
-				{"type":"variable_name","text":"$value"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"value"}
-				
-			
-			{"type":",","text":","}
-			{"type":"simple_parameter","text":"&$ref"}
-				{"type":"&","text":"&"}
-				{"type":"variable_name","text":"$ref"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"ref"}
-				
-			
-			{"type":",","text":","}
-			{"type":"variadic_parameter","text":"...$ref2"}
-				{"type":"...","text":"..."}
-				{"type":"variable_name","text":"$ref2"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"ref2"}
-				
-			
-			{"type":")","text":")"}
-		
-		{"type":"compound_statement","text":"{\n    return false;\n}"}
-			{"type":"{","text":"{"}
-			{"type":"return_statement","text":"return false;"}
-				{"type":"return","text":"return"}
-				{"type":"qualified_name","text":"false"}
-					{"type":"name","text":"false"}
-				
-				{"type":";","text":";"}
-			
-			{"type":"}","text":"}"}
-		
-	
-	{"type":"class_declaration","text":"class TestClass\n{\n    const CLASS_CONSTANT = 5;\n    const CONSTANT1 = 4, CONSTANT2 = 3.1, PI = 3.14;\n    public static $staticTestProperty;\n    public $testProperty;\n    public $testProp1, $testProp2, $testProp3 = 'prop3';\n\n    public $initProp1 = true;\n    public $initProp2 = 5;\n    public $initProp3 = 5.1;\n    public $initProp4 = new TestClass();\n\n    public function testMethod($testParameter)\n    {\n        $array = array();\n    }\n\n    public function testMethod2()\n    {\n        \n    }\n}"}
-		{"type":"class","text":"class"}
-		{"type":"name","text":"TestClass"}
-		{"type":"{","text":"{"}
-		{"type":"class_const_declaration","text":"const CLASS_CONSTANT = 5;"}
-			{"type":"const","text":"const"}
-			{"type":"const_element","text":"CLASS_CONSTANT = 5"}
-				{"type":"name","text":"CLASS_CONSTANT"}
-				{"type":"=","text":"="}
-				{"type":"integer","text":"5"}
-			
-			{"type":";","text":";"}
-		
-		{"type":"class_const_declaration","text":"const CONSTANT1 = 4, CONSTANT2 = 3.1, PI = 3.14;"}
-			{"type":"const","text":"const"}
-			{"type":"const_element","text":"CONSTANT1 = 4"}
-				{"type":"name","text":"CONSTANT1"}
-				{"type":"=","text":"="}
-				{"type":"integer","text":"4"}
-			
-			{"type":",","text":","}
-			{"type":"const_element","text":"CONSTANT2 = 3.1"}
-				{"type":"name","text":"CONSTANT2"}
-				{"type":"=","text":"="}
-				{"type":"float","text":"3.1"}
-			
-			{"type":",","text":","}
-			{"type":"const_element","text":"PI = 3.14"}
-				{"type":"name","text":"PI"}
-				{"type":"=","text":"="}
-				{"type":"float","text":"3.14"}
-			
-			{"type":";","text":";"}
-		
-		{"type":"property_declaration","text":"public static $staticTestProperty;"}
-			{"type":"property_modifier","text":"public static"}
-				{"type":"visibility_modifier","text":"public"}
-					{"type":"public","text":"public"}
-				
-				{"type":"static_modifier","text":"static"}
-					{"type":"static","text":"static"}
-				
-			
-			{"type":"property_element","text":"$staticTestProperty"}
-				{"type":"variable_name","text":"$staticTestProperty"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"staticTestProperty"}
-				
-			
-			{"type":";","text":";"}
-		
-		{"type":"property_declaration","text":"public $testProperty;"}
-			{"type":"property_modifier","text":"public"}
-				{"type":"visibility_modifier","text":"public"}
-					{"type":"public","text":"public"}
-				
-			
-			{"type":"property_element","text":"$testProperty"}
-				{"type":"variable_name","text":"$testProperty"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"testProperty"}
-				
-			
-			{"type":";","text":";"}
-		
-		{"type":"property_declaration","text":"public $testProp1, $testProp2, $testProp3 = 'prop3';"}
-			{"type":"property_modifier","text":"public"}
-				{"type":"visibility_modifier","text":"public"}
-					{"type":"public","text":"public"}
-				
-			
-			{"type":"property_element","text":"$testProp1"}
-				{"type":"variable_name","text":"$testProp1"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"testProp1"}
-				
-			
-			{"type":",","text":","}
-			{"type":"property_element","text":"$testProp2"}
-				{"type":"variable_name","text":"$testProp2"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"testProp2"}
-				
-			
-			{"type":",","text":","}
-			{"type":"property_element","text":"$testProp3 = 'prop3'"}
-				{"type":"variable_name","text":"$testProp3"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"testProp3"}
-				
-				{"type":"property_initializer","text":"= 'prop3'"}
-					{"type":"=","text":"="}
-					{"type":"string","text":"'prop3'"}
-				
-			
-			{"type":";","text":";"}
-		
-		{"type":"property_declaration","text":"public $initProp1 = true;"}
-			{"type":"property_modifier","text":"public"}
-				{"type":"visibility_modifier","text":"public"}
-					{"type":"public","text":"public"}
-				
-			
-			{"type":"property_element","text":"$initProp1 = true"}
-				{"type":"variable_name","text":"$initProp1"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"initProp1"}
-				
-				{"type":"property_initializer","text":"= true"}
-					{"type":"=","text":"="}
-					{"type":"qualified_name","text":"true"}
-						{"type":"name","text":"true"}
+					{"type":"variable_name","text":"$value"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"value"}
 					
 				
+				{"type":",","text":","}
+				{"type":"simple_parameter","text":"&$ref"}
+					{"type":"&","text":"&"}
+					{"type":"variable_name","text":"$ref"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"ref"}
+					
+				
+				{"type":",","text":","}
+				{"type":"variadic_parameter","text":"...$ref2"}
+					{"type":"...","text":"..."}
+					{"type":"variable_name","text":"$ref2"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"ref2"}
+					
+				
+				{"type":")","text":")"}
 			
-			{"type":";","text":";"}
+			{"type":"compound_statement","text":"{\n    return false;\n}"}
+				{"type":"{","text":"{"}
+				{"type":"return_statement","text":"return false;"}
+					{"type":"return","text":"return"}
+					{"type":"qualified_name","text":"false"}
+						{"type":"name","text":"false"}
+					
+					{"type":";","text":";"}
+				
+				{"type":"}","text":"}"}
+			
 		
-		{"type":"property_declaration","text":"public $initProp2 = 5;"}
-			{"type":"property_modifier","text":"public"}
-				{"type":"visibility_modifier","text":"public"}
-					{"type":"public","text":"public"}
-				
-			
-			{"type":"property_element","text":"$initProp2 = 5"}
-				{"type":"variable_name","text":"$initProp2"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"initProp2"}
-				
-				{"type":"property_initializer","text":"= 5"}
+		{"type":"class_declaration","text":"class TestClass\n{\n    const CLASS_CONSTANT = 5;\n    const CONSTANT1 = 4, CONSTANT2 = 3.1, PI = 3.14;\n    public static $staticTestProperty;\n    public $testProperty;\n    public $testProp1, $testProp2, $testProp3 = 'prop3';\n\n    public $initProp1 = true;\n    public $initProp2 = 5;\n    public $initProp3 = 5.1;\n    public $initProp4 = new TestClass();\n\n    public function testMethod($testParameter)\n    {\n        $array = array();\n    }\n\n    public function testMethod2()\n    {\n        \n    }\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"TestClass"}
+			{"type":"{","text":"{"}
+			{"type":"class_const_declaration","text":"const CLASS_CONSTANT = 5;"}
+				{"type":"const","text":"const"}
+				{"type":"const_element","text":"CLASS_CONSTANT = 5"}
+					{"type":"name","text":"CLASS_CONSTANT"}
 					{"type":"=","text":"="}
 					{"type":"integer","text":"5"}
 				
+				{"type":";","text":";"}
 			
-			{"type":";","text":";"}
-		
-		{"type":"property_declaration","text":"public $initProp3 = 5.1;"}
-			{"type":"property_modifier","text":"public"}
-				{"type":"visibility_modifier","text":"public"}
-					{"type":"public","text":"public"}
-				
-			
-			{"type":"property_element","text":"$initProp3 = 5.1"}
-				{"type":"variable_name","text":"$initProp3"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"initProp3"}
-				
-				{"type":"property_initializer","text":"= 5.1"}
+			{"type":"class_const_declaration","text":"const CONSTANT1 = 4, CONSTANT2 = 3.1, PI = 3.14;"}
+				{"type":"const","text":"const"}
+				{"type":"const_element","text":"CONSTANT1 = 4"}
+					{"type":"name","text":"CONSTANT1"}
 					{"type":"=","text":"="}
-					{"type":"float","text":"5.1"}
+					{"type":"integer","text":"4"}
 				
-			
-			{"type":";","text":";"}
-		
-		{"type":"property_declaration","text":"public $initProp4 = new TestClass();"}
-			{"type":"property_modifier","text":"public"}
-				{"type":"visibility_modifier","text":"public"}
-					{"type":"public","text":"public"}
-				
-			
-			{"type":"property_element","text":"$initProp4 = new TestClass()"}
-				{"type":"variable_name","text":"$initProp4"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"initProp4"}
-				
-				{"type":"property_initializer","text":"= new TestClass()"}
+				{"type":",","text":","}
+				{"type":"const_element","text":"CONSTANT2 = 3.1"}
+					{"type":"name","text":"CONSTANT2"}
 					{"type":"=","text":"="}
-					{"type":"object_creation_expression","text":"new TestClass()"}
-						{"type":"new","text":"new"}
-						{"type":"qualified_name","text":"TestClass"}
-							{"type":"name","text":"TestClass"}
-						
-						{"type":"arguments","text":"()"}
-							{"type":"(","text":"("}
-							{"type":")","text":")"}
+					{"type":"float","text":"3.1"}
+				
+				{"type":",","text":","}
+				{"type":"const_element","text":"PI = 3.14"}
+					{"type":"name","text":"PI"}
+					{"type":"=","text":"="}
+					{"type":"float","text":"3.14"}
+				
+				{"type":";","text":";"}
+			
+			{"type":"property_declaration","text":"public static $staticTestProperty;"}
+				{"type":"property_modifier","text":"public static"}
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
+					
+					{"type":"static_modifier","text":"static"}
+						{"type":"static","text":"static"}
+					
+				
+				{"type":"property_element","text":"$staticTestProperty"}
+					{"type":"variable_name","text":"$staticTestProperty"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"staticTestProperty"}
+					
+				
+				{"type":";","text":";"}
+			
+			{"type":"property_declaration","text":"public $testProperty;"}
+				{"type":"property_modifier","text":"public"}
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
+					
+				
+				{"type":"property_element","text":"$testProperty"}
+					{"type":"variable_name","text":"$testProperty"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"testProperty"}
+					
+				
+				{"type":";","text":";"}
+			
+			{"type":"property_declaration","text":"public $testProp1, $testProp2, $testProp3 = 'prop3';"}
+				{"type":"property_modifier","text":"public"}
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
+					
+				
+				{"type":"property_element","text":"$testProp1"}
+					{"type":"variable_name","text":"$testProp1"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"testProp1"}
+					
+				
+				{"type":",","text":","}
+				{"type":"property_element","text":"$testProp2"}
+					{"type":"variable_name","text":"$testProp2"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"testProp2"}
+					
+				
+				{"type":",","text":","}
+				{"type":"property_element","text":"$testProp3 = 'prop3'"}
+					{"type":"variable_name","text":"$testProp3"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"testProp3"}
+					
+					{"type":"property_initializer","text":"= 'prop3'"}
+						{"type":"=","text":"="}
+						{"type":"string","text":"'prop3'"}
+					
+				
+				{"type":";","text":";"}
+			
+			{"type":"property_declaration","text":"public $initProp1 = true;"}
+				{"type":"property_modifier","text":"public"}
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
+					
+				
+				{"type":"property_element","text":"$initProp1 = true"}
+					{"type":"variable_name","text":"$initProp1"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"initProp1"}
+					
+					{"type":"property_initializer","text":"= true"}
+						{"type":"=","text":"="}
+						{"type":"qualified_name","text":"true"}
+							{"type":"name","text":"true"}
 						
 					
 				
+				{"type":";","text":";"}
 			
-			{"type":";","text":";"}
-		
-		{"type":"method_declaration","text":"public function testMethod($testParameter)\n    {\n        $array = array();\n    }"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"function_definition","text":"function testMethod($testParameter)\n    {\n        $array = array();\n    }"}
-				{"type":"function","text":"function"}
-				{"type":"name","text":"testMethod"}
-				{"type":"formal_parameters","text":"($testParameter)"}
-					{"type":"(","text":"("}
-					{"type":"simple_parameter","text":"$testParameter"}
-						{"type":"variable_name","text":"$testParameter"}
-							{"type":"$","text":"$"}
-							{"type":"name","text":"testParameter"}
-						
+			{"type":"property_declaration","text":"public $initProp2 = 5;"}
+				{"type":"property_modifier","text":"public"}
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
 					
-					{"type":")","text":")"}
 				
-				{"type":"compound_statement","text":"{\n        $array = array();\n    }"}
-					{"type":"{","text":"{"}
-					{"type":"expression_statement","text":"$array = array();"}
-						{"type":"assignment_expression","text":"$array = array()"}
-							{"type":"variable_name","text":"$array"}
-								{"type":"$","text":"$"}
-								{"type":"name","text":"array"}
+				{"type":"property_element","text":"$initProp2 = 5"}
+					{"type":"variable_name","text":"$initProp2"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"initProp2"}
+					
+					{"type":"property_initializer","text":"= 5"}
+						{"type":"=","text":"="}
+						{"type":"integer","text":"5"}
+					
+				
+				{"type":";","text":";"}
+			
+			{"type":"property_declaration","text":"public $initProp3 = 5.1;"}
+				{"type":"property_modifier","text":"public"}
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
+					
+				
+				{"type":"property_element","text":"$initProp3 = 5.1"}
+					{"type":"variable_name","text":"$initProp3"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"initProp3"}
+					
+					{"type":"property_initializer","text":"= 5.1"}
+						{"type":"=","text":"="}
+						{"type":"float","text":"5.1"}
+					
+				
+				{"type":";","text":";"}
+			
+			{"type":"property_declaration","text":"public $initProp4 = new TestClass();"}
+				{"type":"property_modifier","text":"public"}
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
+					
+				
+				{"type":"property_element","text":"$initProp4 = new TestClass()"}
+					{"type":"variable_name","text":"$initProp4"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"initProp4"}
+					
+					{"type":"property_initializer","text":"= new TestClass()"}
+						{"type":"=","text":"="}
+						{"type":"object_creation_expression","text":"new TestClass()"}
+							{"type":"new","text":"new"}
+							{"type":"qualified_name","text":"TestClass"}
+								{"type":"name","text":"TestClass"}
 							
-							{"type":"=","text":"="}
-							{"type":"array_creation_expression","text":"array()"}
-								{"type":"array","text":"array"}
+							{"type":"arguments","text":"()"}
 								{"type":"(","text":"("}
 								{"type":")","text":")"}
 							
 						
-						{"type":";","text":";"}
 					
-					{"type":"}","text":"}"}
 				
+				{"type":";","text":";"}
 			
-		
-		{"type":"method_declaration","text":"public function testMethod2()\n    {\n        \n    }"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"function_definition","text":"function testMethod2()\n    {\n        \n    }"}
-				{"type":"function","text":"function"}
-				{"type":"name","text":"testMethod2"}
-				{"type":"formal_parameters","text":"()"}
-					{"type":"(","text":"("}
-					{"type":")","text":")"}
-				
-				{"type":"compound_statement","text":"{\n        \n    }"}
-					{"type":"{","text":"{"}
-					{"type":"}","text":"}"}
-				
-			
-		
-		{"type":"}","text":"}"}
-	
-	{"type":"class_declaration","text":"class TestClass2 extends TestClass\n{\n\n}"}
-		{"type":"class","text":"class"}
-		{"type":"name","text":"TestClass2"}
-		{"type":"class_base_clause","text":"extends TestClass"}
-			{"type":"extends","text":"extends"}
-			{"type":"qualified_name","text":"TestClass"}
-				{"type":"name","text":"TestClass"}
-			
-		
-		{"type":"{","text":"{"}
-		{"type":"}","text":"}"}
-	
-	{"type":"interface_declaration","text":"interface TestInterface\n{\n    public function testInterfaceMethod();\n    public function testInterfaceMethod2();\n}"}
-		{"type":"interface","text":"interface"}
-		{"type":"name","text":"TestInterface"}
-		{"type":"{","text":"{"}
-		{"type":"method_declaration","text":"public function testInterfaceMethod();"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"function","text":"function"}
-			{"type":"name","text":"testInterfaceMethod"}
-			{"type":"formal_parameters","text":"()"}
-				{"type":"(","text":"("}
-				{"type":")","text":")"}
-			
-			{"type":";","text":";"}
-		
-		{"type":"method_declaration","text":"public function testInterfaceMethod2();"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"function","text":"function"}
-			{"type":"name","text":"testInterfaceMethod2"}
-			{"type":"formal_parameters","text":"()"}
-				{"type":"(","text":"("}
-				{"type":")","text":")"}
-			
-			{"type":";","text":";"}
-		
-		{"type":"}","text":"}"}
-	
-	{"type":"interface_declaration","text":"interface TestInterface2 extends TestInterface\n{\n    public function testInterfaceMethod3();\n}"}
-		{"type":"interface","text":"interface"}
-		{"type":"name","text":"TestInterface2"}
-		{"type":"interface_base_clause","text":"extends TestInterface"}
-			{"type":"extends","text":"extends"}
-			{"type":"qualified_name","text":"TestInterface"}
-				{"type":"name","text":"TestInterface"}
-			
-		
-		{"type":"{","text":"{"}
-		{"type":"method_declaration","text":"public function testInterfaceMethod3();"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"function","text":"function"}
-			{"type":"name","text":"testInterfaceMethod3"}
-			{"type":"formal_parameters","text":"()"}
-				{"type":"(","text":"("}
-				{"type":")","text":")"}
-			
-			{"type":";","text":";"}
-		
-		{"type":"}","text":"}"}
-	
-	{"type":"class_declaration","text":"class TestClass3 implements TestInterface, TestInterface2\n{\n    \n}"}
-		{"type":"class","text":"class"}
-		{"type":"name","text":"TestClass3"}
-		{"type":"class_interface_clause","text":"implements TestInterface, TestInterface2"}
-			{"type":"implements","text":"implements"}
-			{"type":"qualified_name","text":"TestInterface"}
-				{"type":"name","text":"TestInterface"}
-			
-			{"type":",","text":","}
-			{"type":"qualified_name","text":"TestInterface2"}
-				{"type":"name","text":"TestInterface2"}
-			
-		
-		{"type":"{","text":"{"}
-		{"type":"}","text":"}"}
-	
-	{"type":"trait_declaration","text":"trait TestTrait\n{\n    public function traitMethod1()\n    {\n\n    }\n}"}
-		{"type":"trait","text":"trait"}
-		{"type":"name","text":"TestTrait"}
-		{"type":"{","text":"{"}
-		{"type":"method_declaration","text":"public function traitMethod1()\n    {\n\n    }"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"function_definition","text":"function traitMethod1()\n    {\n\n    }"}
-				{"type":"function","text":"function"}
-				{"type":"name","text":"traitMethod1"}
-				{"type":"formal_parameters","text":"()"}
-					{"type":"(","text":"("}
-					{"type":")","text":")"}
-				
-				{"type":"compound_statement","text":"{\n\n    }"}
-					{"type":"{","text":"{"}
-					{"type":"}","text":"}"}
-				
-			
-		
-		{"type":"}","text":"}"}
-	
-	{"type":"class_declaration","text":"class TestClass4\n{\n    use TestTrait;\n\n    public static function staticMethod1()\n    {\n\n    }\n}"}
-		{"type":"class","text":"class"}
-		{"type":"name","text":"TestClass4"}
-		{"type":"{","text":"{"}
-		{"type":"trait_use_clause","text":"use TestTrait;"}
-			{"type":"use","text":"use"}
-			{"type":"qualified_name","text":"TestTrait"}
-				{"type":"name","text":"TestTrait"}
-			
-			{"type":";","text":";"}
-		
-		{"type":"method_declaration","text":"public static function staticMethod1()\n    {\n\n    }"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"static_modifier","text":"static"}
-				{"type":"static","text":"static"}
-			
-			{"type":"function_definition","text":"function staticMethod1()\n    {\n\n    }"}
-				{"type":"function","text":"function"}
-				{"type":"name","text":"staticMethod1"}
-				{"type":"formal_parameters","text":"()"}
-					{"type":"(","text":"("}
-					{"type":")","text":")"}
-				
-				{"type":"compound_statement","text":"{\n\n    }"}
-					{"type":"{","text":"{"}
-					{"type":"}","text":"}"}
-				
-			
-		
-		{"type":"}","text":"}"}
-	
-	{"type":"expression_statement","text":"new class extends TestClass4 implements TestInterface2 {\n    public function testInterfaceMethod3()\n    {\n        \n    }\n};"}
-		{"type":"object_creation_expression","text":"new class extends TestClass4 implements TestInterface2 {\n    public function testInterfaceMethod3()\n    {\n        \n    }\n}"}
-			{"type":"new","text":"new"}
-			{"type":"class","text":"class"}
-			{"type":"class_base_clause","text":"extends TestClass4"}
-				{"type":"extends","text":"extends"}
-				{"type":"qualified_name","text":"TestClass4"}
-					{"type":"name","text":"TestClass4"}
-				
-			
-			{"type":"class_interface_clause","text":"implements TestInterface2"}
-				{"type":"implements","text":"implements"}
-				{"type":"qualified_name","text":"TestInterface2"}
-					{"type":"name","text":"TestInterface2"}
-				
-			
-			{"type":"{","text":"{"}
-			{"type":"method_declaration","text":"public function testInterfaceMethod3()\n    {\n        \n    }"}
+			{"type":"method_declaration","text":"public function testMethod($testParameter)\n    {\n        $array = array();\n    }"}
 				{"type":"visibility_modifier","text":"public"}
 					{"type":"public","text":"public"}
 				
-				{"type":"function_definition","text":"function testInterfaceMethod3()\n    {\n        \n    }"}
+				{"type":"function_definition","text":"function testMethod($testParameter)\n    {\n        $array = array();\n    }"}
 					{"type":"function","text":"function"}
-					{"type":"name","text":"testInterfaceMethod3"}
+					{"type":"name","text":"testMethod"}
+					{"type":"formal_parameters","text":"($testParameter)"}
+						{"type":"(","text":"("}
+						{"type":"simple_parameter","text":"$testParameter"}
+							{"type":"variable_name","text":"$testParameter"}
+								{"type":"$","text":"$"}
+								{"type":"name","text":"testParameter"}
+							
+						
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{\n        $array = array();\n    }"}
+						{"type":"{","text":"{"}
+						{"type":"expression_statement","text":"$array = array();"}
+							{"type":"assignment_expression","text":"$array = array()"}
+								{"type":"variable_name","text":"$array"}
+									{"type":"$","text":"$"}
+									{"type":"name","text":"array"}
+								
+								{"type":"=","text":"="}
+								{"type":"array_creation_expression","text":"array()"}
+									{"type":"array","text":"array"}
+									{"type":"(","text":"("}
+									{"type":")","text":")"}
+								
+							
+							{"type":";","text":";"}
+						
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"method_declaration","text":"public function testMethod2()\n    {\n        \n    }"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"function_definition","text":"function testMethod2()\n    {\n        \n    }"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"testMethod2"}
 					{"type":"formal_parameters","text":"()"}
 						{"type":"(","text":"("}
 						{"type":")","text":")"}
@@ -509,124 +337,300 @@
 			
 			{"type":"}","text":"}"}
 		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"$testObj1 = new \\TestClass();"}
-		{"type":"assignment_expression","text":"$testObj1 = new \\TestClass()"}
-			{"type":"variable_name","text":"$testObj1"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"testObj1"}
-			
-			{"type":"=","text":"="}
-			{"type":"object_creation_expression","text":"new \\TestClass()"}
-				{"type":"new","text":"new"}
-				{"type":"qualified_name","text":"\\TestClass"}
-					{"type":"namespace_name_as_prefix","text":"\\"}
-						{"type":"\\","text":"\\"}
-					
+		{"type":"class_declaration","text":"class TestClass2 extends TestClass\n{\n\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"TestClass2"}
+			{"type":"class_base_clause","text":"extends TestClass"}
+				{"type":"extends","text":"extends"}
+				{"type":"qualified_name","text":"TestClass"}
 					{"type":"name","text":"TestClass"}
 				
-				{"type":"arguments","text":"()"}
-					{"type":"(","text":"("}
-					{"type":")","text":")"}
-				
 			
+			{"type":"{","text":"{"}
+			{"type":"}","text":"}"}
 		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"$testFunction1 = static function&() use ($testObj1, $array) {\n\n};"}
-		{"type":"assignment_expression","text":"$testFunction1 = static function&() use ($testObj1, $array) {\n\n}"}
-			{"type":"variable_name","text":"$testFunction1"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"testFunction1"}
-			
-			{"type":"=","text":"="}
-			{"type":"anonymous_function_creation_expression","text":"static function&() use ($testObj1, $array) {\n\n}"}
-				{"type":"static","text":"static"}
+		{"type":"interface_declaration","text":"interface TestInterface\n{\n    public function testInterfaceMethod();\n    public function testInterfaceMethod2();\n}"}
+			{"type":"interface","text":"interface"}
+			{"type":"name","text":"TestInterface"}
+			{"type":"{","text":"{"}
+			{"type":"method_declaration","text":"public function testInterfaceMethod();"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
 				{"type":"function","text":"function"}
-				{"type":"&","text":"&"}
+				{"type":"name","text":"testInterfaceMethod"}
 				{"type":"formal_parameters","text":"()"}
 					{"type":"(","text":"("}
 					{"type":")","text":")"}
 				
-				{"type":"anonymous_function_use_clause","text":"use ($testObj1, $array)"}
-					{"type":"use","text":"use"}
+				{"type":";","text":";"}
+			
+			{"type":"method_declaration","text":"public function testInterfaceMethod2();"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"function","text":"function"}
+				{"type":"name","text":"testInterfaceMethod2"}
+				{"type":"formal_parameters","text":"()"}
 					{"type":"(","text":"("}
-					{"type":"variable_name","text":"$testObj1"}
-						{"type":"$","text":"$"}
-						{"type":"name","text":"testObj1"}
-					
-					{"type":",","text":","}
-					{"type":"variable_name","text":"$array"}
-						{"type":"$","text":"$"}
-						{"type":"name","text":"array"}
-					
 					{"type":")","text":")"}
 				
-				{"type":"compound_statement","text":"{\n\n}"}
-					{"type":"{","text":"{"}
-					{"type":"}","text":"}"}
+				{"type":";","text":";"}
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"interface_declaration","text":"interface TestInterface2 extends TestInterface\n{\n    public function testInterfaceMethod3();\n}"}
+			{"type":"interface","text":"interface"}
+			{"type":"name","text":"TestInterface2"}
+			{"type":"interface_base_clause","text":"extends TestInterface"}
+				{"type":"extends","text":"extends"}
+				{"type":"qualified_name","text":"TestInterface"}
+					{"type":"name","text":"TestInterface"}
 				
 			
-		
-		{"type":";","text":";"}
-	
-	{"type":"try_statement","text":"try {\n    testFunction();\n} catch (Exception $e) {\n\n}"}
-		{"type":"try","text":"try"}
-		{"type":"compound_statement","text":"{\n    testFunction();\n}"}
 			{"type":"{","text":"{"}
-			{"type":"expression_statement","text":"testFunction();"}
-				{"type":"function_call_expression","text":"testFunction()"}
-					{"type":"qualified_name","text":"testFunction"}
-						{"type":"name","text":"testFunction"}
+			{"type":"method_declaration","text":"public function testInterfaceMethod3();"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"function","text":"function"}
+				{"type":"name","text":"testInterfaceMethod3"}
+				{"type":"formal_parameters","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+				{"type":";","text":";"}
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"class_declaration","text":"class TestClass3 implements TestInterface, TestInterface2\n{\n    \n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"TestClass3"}
+			{"type":"class_interface_clause","text":"implements TestInterface, TestInterface2"}
+				{"type":"implements","text":"implements"}
+				{"type":"qualified_name","text":"TestInterface"}
+					{"type":"name","text":"TestInterface"}
+				
+				{"type":",","text":","}
+				{"type":"qualified_name","text":"TestInterface2"}
+					{"type":"name","text":"TestInterface2"}
+				
+			
+			{"type":"{","text":"{"}
+			{"type":"}","text":"}"}
+		
+		{"type":"trait_declaration","text":"trait TestTrait\n{\n    public function traitMethod1()\n    {\n\n    }\n}"}
+			{"type":"trait","text":"trait"}
+			{"type":"name","text":"TestTrait"}
+			{"type":"{","text":"{"}
+			{"type":"method_declaration","text":"public function traitMethod1()\n    {\n\n    }"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"function_definition","text":"function traitMethod1()\n    {\n\n    }"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"traitMethod1"}
+					{"type":"formal_parameters","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{\n\n    }"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"class_declaration","text":"class TestClass4\n{\n    use TestTrait;\n\n    public static function staticMethod1()\n    {\n\n    }\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"TestClass4"}
+			{"type":"{","text":"{"}
+			{"type":"trait_use_clause","text":"use TestTrait;"}
+				{"type":"use","text":"use"}
+				{"type":"qualified_name","text":"TestTrait"}
+					{"type":"name","text":"TestTrait"}
+				
+				{"type":";","text":";"}
+			
+			{"type":"method_declaration","text":"public static function staticMethod1()\n    {\n\n    }"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"static_modifier","text":"static"}
+					{"type":"static","text":"static"}
+				
+				{"type":"function_definition","text":"function staticMethod1()\n    {\n\n    }"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"staticMethod1"}
+					{"type":"formal_parameters","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{\n\n    }"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"expression_statement","text":"new class extends TestClass4 implements TestInterface2 {\n    public function testInterfaceMethod3()\n    {\n        \n    }\n};"}
+			{"type":"object_creation_expression","text":"new class extends TestClass4 implements TestInterface2 {\n    public function testInterfaceMethod3()\n    {\n        \n    }\n}"}
+				{"type":"new","text":"new"}
+				{"type":"class","text":"class"}
+				{"type":"class_base_clause","text":"extends TestClass4"}
+					{"type":"extends","text":"extends"}
+					{"type":"qualified_name","text":"TestClass4"}
+						{"type":"name","text":"TestClass4"}
+					
+				
+				{"type":"class_interface_clause","text":"implements TestInterface2"}
+					{"type":"implements","text":"implements"}
+					{"type":"qualified_name","text":"TestInterface2"}
+						{"type":"name","text":"TestInterface2"}
+					
+				
+				{"type":"{","text":"{"}
+				{"type":"method_declaration","text":"public function testInterfaceMethod3()\n    {\n        \n    }"}
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
+					
+					{"type":"function_definition","text":"function testInterfaceMethod3()\n    {\n        \n    }"}
+						{"type":"function","text":"function"}
+						{"type":"name","text":"testInterfaceMethod3"}
+						{"type":"formal_parameters","text":"()"}
+							{"type":"(","text":"("}
+							{"type":")","text":")"}
+						
+						{"type":"compound_statement","text":"{\n        \n    }"}
+							{"type":"{","text":"{"}
+							{"type":"}","text":"}"}
+						
+					
+				
+				{"type":"}","text":"}"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"$testObj1 = new \\TestClass();"}
+			{"type":"assignment_expression","text":"$testObj1 = new \\TestClass()"}
+				{"type":"variable_name","text":"$testObj1"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"testObj1"}
+				
+				{"type":"=","text":"="}
+				{"type":"object_creation_expression","text":"new \\TestClass()"}
+					{"type":"new","text":"new"}
+					{"type":"qualified_name","text":"\\TestClass"}
+						{"type":"namespace_name_as_prefix","text":"\\"}
+							{"type":"\\","text":"\\"}
+						
+						{"type":"name","text":"TestClass"}
 					
 					{"type":"arguments","text":"()"}
 						{"type":"(","text":"("}
 						{"type":")","text":")"}
 					
 				
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"$testFunction1 = static function&() use ($testObj1, $array) {\n\n};"}
+			{"type":"assignment_expression","text":"$testFunction1 = static function&() use ($testObj1, $array) {\n\n}"}
+				{"type":"variable_name","text":"$testFunction1"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"testFunction1"}
+				
+				{"type":"=","text":"="}
+				{"type":"anonymous_function_creation_expression","text":"static function&() use ($testObj1, $array) {\n\n}"}
+					{"type":"static","text":"static"}
+					{"type":"function","text":"function"}
+					{"type":"&","text":"&"}
+					{"type":"formal_parameters","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+					{"type":"anonymous_function_use_clause","text":"use ($testObj1, $array)"}
+						{"type":"use","text":"use"}
+						{"type":"(","text":"("}
+						{"type":"variable_name","text":"$testObj1"}
+							{"type":"$","text":"$"}
+							{"type":"name","text":"testObj1"}
+						
+						{"type":",","text":","}
+						{"type":"variable_name","text":"$array"}
+							{"type":"$","text":"$"}
+							{"type":"name","text":"array"}
+						
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{\n\n}"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"try_statement","text":"try {\n    testFunction();\n} catch (Exception $e) {\n\n}"}
+			{"type":"try","text":"try"}
+			{"type":"compound_statement","text":"{\n    testFunction();\n}"}
+				{"type":"{","text":"{"}
+				{"type":"expression_statement","text":"testFunction();"}
+					{"type":"function_call_expression","text":"testFunction()"}
+						{"type":"qualified_name","text":"testFunction"}
+							{"type":"name","text":"testFunction"}
+						
+						{"type":"arguments","text":"()"}
+							{"type":"(","text":"("}
+							{"type":")","text":")"}
+						
+					
+					{"type":";","text":";"}
+				
+				{"type":"}","text":"}"}
+			
+			{"type":"catch_clause","text":"catch (Exception $e) {\n\n}"}
+				{"type":"catch","text":"catch"}
+				{"type":"(","text":"("}
+				{"type":"qualified_name","text":"Exception"}
+					{"type":"name","text":"Exception"}
+				
+				{"type":"variable_name","text":"$e"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"e"}
+				
+				{"type":")","text":")"}
+				{"type":"compound_statement","text":"{\n\n}"}
+					{"type":"{","text":"{"}
+					{"type":"}","text":"}"}
+				
+			
+		
+		{"type":"class_declaration","text":"abstract class TestAbstract1\n{\n    public abstract function testFunction1();\n}"}
+			{"type":"class_modifier","text":"abstract"}
+				{"type":"abstract","text":"abstract"}
+			
+			{"type":"class","text":"class"}
+			{"type":"name","text":"TestAbstract1"}
+			{"type":"{","text":"{"}
+			{"type":"method_declaration","text":"public abstract function testFunction1();"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"class_modifier","text":"abstract"}
+					{"type":"abstract","text":"abstract"}
+				
+				{"type":"function","text":"function"}
+				{"type":"name","text":"testFunction1"}
+				{"type":"formal_parameters","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
 				{"type":";","text":";"}
 			
 			{"type":"}","text":"}"}
 		
-		{"type":"catch_clause","text":"catch (Exception $e) {\n\n}"}
-			{"type":"catch","text":"catch"}
-			{"type":"(","text":"("}
-			{"type":"qualified_name","text":"Exception"}
-				{"type":"name","text":"Exception"}
-			
-			{"type":"variable_name","text":"$e"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"e"}
-			
-			{"type":")","text":")"}
-			{"type":"compound_statement","text":"{\n\n}"}
-				{"type":"{","text":"{"}
-				{"type":"}","text":"}"}
-			
-		
-	
-	{"type":"class_declaration","text":"abstract class TestAbstract1\n{\n    public abstract function testFunction1();\n}"}
-		{"type":"class_modifier","text":"abstract"}
-			{"type":"abstract","text":"abstract"}
-		
-		{"type":"class","text":"class"}
-		{"type":"name","text":"TestAbstract1"}
-		{"type":"{","text":"{"}
-		{"type":"method_declaration","text":"public abstract function testFunction1();"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"class_modifier","text":"abstract"}
-				{"type":"abstract","text":"abstract"}
-			
-			{"type":"function","text":"function"}
-			{"type":"name","text":"testFunction1"}
-			{"type":"formal_parameters","text":"()"}
-				{"type":"(","text":"("}
-				{"type":")","text":")"}
-			
-			{"type":";","text":";"}
-		
-		{"type":"}","text":"}"}
+		{"type":"end_tag","text":""}
 	

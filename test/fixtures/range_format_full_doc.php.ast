@@ -1,28 +1,32 @@
 {"type":"program","text":"<?php\r\nforeach ($a as $v) {\r\necho 'HELLO WORLD';\r\n}\r\n\r\n"}
-	{"type":"foreach_statement","text":"foreach ($a as $v) {\r\necho 'HELLO WORLD';\r\n}"}
-		{"type":"foreach","text":"foreach"}
-		{"type":"(","text":"("}
-		{"type":"foreach_collection","text":"$a"}
-			{"type":"variable_name","text":"$a"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"a"}
+	{"type":"script_section","text":"<?php\r\nforeach ($a as $v) {\r\necho 'HELLO WORLD';\r\n}"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"foreach_statement","text":"foreach ($a as $v) {\r\necho 'HELLO WORLD';\r\n}"}
+			{"type":"foreach","text":"foreach"}
+			{"type":"(","text":"("}
+			{"type":"foreach_collection","text":"$a"}
+				{"type":"variable_name","text":"$a"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"a"}
+				
+			
+			{"type":"as","text":"as"}
+			{"type":"foreach_value","text":"$v"}
+				{"type":"variable_name","text":"$v"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"v"}
+				
+			
+			{"type":")","text":")"}
+			{"type":"compound_statement","text":"{\r\necho 'HELLO WORLD';\r\n}"}
+				{"type":"{","text":"{"}
+				{"type":"echo_statement","text":"echo 'HELLO WORLD';"}
+					{"type":"echo","text":"echo"}
+					{"type":"string","text":"'HELLO WORLD'"}
+					{"type":";","text":";"}
+				
+				{"type":"}","text":"}"}
 			
 		
-		{"type":"as","text":"as"}
-		{"type":"foreach_value","text":"$v"}
-			{"type":"variable_name","text":"$v"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"v"}
-			
-		
-		{"type":")","text":")"}
-		{"type":"compound_statement","text":"{\r\necho 'HELLO WORLD';\r\n}"}
-			{"type":"{","text":"{"}
-			{"type":"echo_statement","text":"echo 'HELLO WORLD';"}
-				{"type":"echo","text":"echo"}
-				{"type":"string","text":"'HELLO WORLD'"}
-				{"type":";","text":";"}
-			
-			{"type":"}","text":"}"}
-		
+		{"type":"end_tag","text":""}
 	

@@ -1,13 +1,17 @@
 {"type":"program","text":"<?php\r\nclass Foo {\r\n    public f \r\n}\r\n"}
-	{"type":"class_declaration","text":"class Foo {\r\n    public f \r\n}"}
-		{"type":"class","text":"class"}
-		{"type":"name","text":"Foo"}
-		{"type":"{","text":"{"}
-		{"type":"ERROR","text":"public f"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
+	{"type":"script_section","text":"<?php\r\nclass Foo {\r\n    public f \r\n}"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"class_declaration","text":"class Foo {\r\n    public f \r\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"Foo"}
+			{"type":"{","text":"{"}
+			{"type":"ERROR","text":"public f"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"name","text":"f"}
 			
-			{"type":"name","text":"f"}
+			{"type":"}","text":"}"}
 		
-		{"type":"}","text":"}"}
+		{"type":"end_tag","text":""}
 	

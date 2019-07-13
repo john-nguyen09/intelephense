@@ -1,5 +1,6 @@
 {"type":"program","text":"<?php\n\nfunction scoped() {\n    global $DB;\n\n    $DB->\n}\n\n$DB->\n"}
-	{"type":"ERROR","text":"function scoped() {\n    global $DB;\n\n    $DB->\n}\n\n$DB->"}
+	{"type":"ERROR","text":"<?php\n\nfunction scoped() {\n    global $DB;\n\n    $DB->\n}\n\n$DB->"}
+		{"type":"start_tag","text":"<?php"}
 		{"type":"function","text":"function"}
 		{"type":"name","text":"scoped"}
 		{"type":"formal_parameters","text":"()"}

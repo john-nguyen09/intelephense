@@ -1,20 +1,24 @@
 {"type":"program","text":"<?php\nif (true) \n{\n}\nelse \n{\n}\n\n"}
-	{"type":"if_statement","text":"if (true) \n{\n}\nelse \n{\n}"}
-		{"type":"if","text":"if"}
-		{"type":"(","text":"("}
-		{"type":"qualified_name","text":"true"}
-			{"type":"name","text":"true"}
-		
-		{"type":")","text":")"}
-		{"type":"compound_statement","text":"{\n}"}
-			{"type":"{","text":"{"}
-			{"type":"}","text":"}"}
-		
-		{"type":"else_clause","text":"else \n{\n}"}
-			{"type":"else","text":"else"}
+	{"type":"script_section","text":"<?php\nif (true) \n{\n}\nelse \n{\n}"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"if_statement","text":"if (true) \n{\n}\nelse \n{\n}"}
+			{"type":"if","text":"if"}
+			{"type":"(","text":"("}
+			{"type":"qualified_name","text":"true"}
+				{"type":"name","text":"true"}
+			
+			{"type":")","text":")"}
 			{"type":"compound_statement","text":"{\n}"}
 				{"type":"{","text":"{"}
 				{"type":"}","text":"}"}
 			
+			{"type":"else_clause","text":"else \n{\n}"}
+				{"type":"else","text":"else"}
+				{"type":"compound_statement","text":"{\n}"}
+					{"type":"{","text":"{"}
+					{"type":"}","text":"}"}
+				
+			
 		
+		{"type":"end_tag","text":""}
 	

@@ -65,6 +65,23 @@
                     }
                 }
             }
+        },
+        {
+            "kind": "Variable",
+            "name": "$test",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+                "range": {
+                    "start": {
+                        "line": 6,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 6,
+                        "character": 5
+                    }
+                }
+            }
         }
     ]
 }

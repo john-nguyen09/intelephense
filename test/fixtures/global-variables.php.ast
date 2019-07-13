@@ -1,54 +1,58 @@
 {"type":"program","text":"<?php\n\n/**\n * Database connection. Used for all access to the database.\n * @global database $DB\n * @name $DB\n */\nglobal $DB;\n\n/**\n * @var database $test_class\n */\n$test_class = null;\n\ninterface database {\n    public function read_records();\n    public function write_records();\n}\n"}
-	{"type":"comment","text":"/**\n * Database connection. Used for all access to the database.\n * @global database $DB\n * @name $DB\n */"}
-	{"type":"global_declaration","text":"global $DB;"}
-		{"type":"global","text":"global"}
-		{"type":"variable_name","text":"$DB"}
-			{"type":"$","text":"$"}
-			{"type":"name","text":"DB"}
-		
-		{"type":";","text":";"}
-	
-	{"type":"comment","text":"/**\n * @var database $test_class\n */"}
-	{"type":"expression_statement","text":"$test_class = null;"}
-		{"type":"assignment_expression","text":"$test_class = null"}
-			{"type":"variable_name","text":"$test_class"}
+	{"type":"script_section","text":"<?php\n\n/**\n * Database connection. Used for all access to the database.\n * @global database $DB\n * @name $DB\n */\nglobal $DB;\n\n/**\n * @var database $test_class\n */\n$test_class = null;\n\ninterface database {\n    public function read_records();\n    public function write_records();\n}"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"comment","text":"/**\n * Database connection. Used for all access to the database.\n * @global database $DB\n * @name $DB\n */"}
+		{"type":"global_declaration","text":"global $DB;"}
+			{"type":"global","text":"global"}
+			{"type":"variable_name","text":"$DB"}
 				{"type":"$","text":"$"}
-				{"type":"name","text":"test_class"}
-			
-			{"type":"=","text":"="}
-			{"type":"qualified_name","text":"null"}
-				{"type":"name","text":"null"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"interface_declaration","text":"interface database {\n    public function read_records();\n    public function write_records();\n}"}
-		{"type":"interface","text":"interface"}
-		{"type":"name","text":"database"}
-		{"type":"{","text":"{"}
-		{"type":"method_declaration","text":"public function read_records();"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"function","text":"function"}
-			{"type":"name","text":"read_records"}
-			{"type":"formal_parameters","text":"()"}
-				{"type":"(","text":"("}
-				{"type":")","text":")"}
+				{"type":"name","text":"DB"}
 			
 			{"type":";","text":";"}
 		
-		{"type":"method_declaration","text":"public function write_records();"}
-			{"type":"visibility_modifier","text":"public"}
-				{"type":"public","text":"public"}
-			
-			{"type":"function","text":"function"}
-			{"type":"name","text":"write_records"}
-			{"type":"formal_parameters","text":"()"}
-				{"type":"(","text":"("}
-				{"type":")","text":")"}
+		{"type":"comment","text":"/**\n * @var database $test_class\n */"}
+		{"type":"expression_statement","text":"$test_class = null;"}
+			{"type":"assignment_expression","text":"$test_class = null"}
+				{"type":"variable_name","text":"$test_class"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"test_class"}
+				
+				{"type":"=","text":"="}
+				{"type":"qualified_name","text":"null"}
+					{"type":"name","text":"null"}
+				
 			
 			{"type":";","text":";"}
 		
-		{"type":"}","text":"}"}
+		{"type":"interface_declaration","text":"interface database {\n    public function read_records();\n    public function write_records();\n}"}
+			{"type":"interface","text":"interface"}
+			{"type":"name","text":"database"}
+			{"type":"{","text":"{"}
+			{"type":"method_declaration","text":"public function read_records();"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"function","text":"function"}
+				{"type":"name","text":"read_records"}
+				{"type":"formal_parameters","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+				{"type":";","text":";"}
+			
+			{"type":"method_declaration","text":"public function write_records();"}
+				{"type":"visibility_modifier","text":"public"}
+					{"type":"public","text":"public"}
+				
+				{"type":"function","text":"function"}
+				{"type":"name","text":"write_records"}
+				{"type":"formal_parameters","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+				{"type":";","text":";"}
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"end_tag","text":""}
 	

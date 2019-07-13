@@ -1,176 +1,180 @@
 {"type":"program","text":"<?php\r\nnamespace Test\\Namespace;\r\n\r\nuse AnotherNamespace\\Class1;\r\nuse \\NS\\{C11, C12, I10, function fn1, const CONST1};\r\nuse \\NS1\\C, \\NS1\\I, \\NS1\\T;\r\nuse function AnotherNamespace1\\test_function as test_function1;\r\nuse const AnotherNamespace1\\TEST_CONST;\r\nuse Nested1\\{\r\n    Nested2\\Target,\r\n    Nested3\r\n};\r\n"}
-	{"type":"namespace_definition","text":"namespace Test\\Namespace;"}
-		{"type":"namespace","text":"namespace"}
-		{"type":"namespace_name","text":"Test\\Namespace"}
-			{"type":"name","text":"Test"}
-			{"type":"\\","text":"\\"}
-			{"type":"name","text":"Namespace"}
+	{"type":"script_section","text":"<?php\r\nnamespace Test\\Namespace;\r\n\r\nuse AnotherNamespace\\Class1;\r\nuse \\NS\\{C11, C12, I10, function fn1, const CONST1};\r\nuse \\NS1\\C, \\NS1\\I, \\NS1\\T;\r\nuse function AnotherNamespace1\\test_function as test_function1;\r\nuse const AnotherNamespace1\\TEST_CONST;\r\nuse Nested1\\{\r\n    Nested2\\Target,\r\n    Nested3\r\n};"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"namespace_definition","text":"namespace Test\\Namespace;"}
+			{"type":"namespace","text":"namespace"}
+			{"type":"namespace_name","text":"Test\\Namespace"}
+				{"type":"name","text":"Test"}
+				{"type":"\\","text":"\\"}
+				{"type":"name","text":"Namespace"}
+			
+			{"type":";","text":";"}
 		
-		{"type":";","text":";"}
-	
-	{"type":"namespace_use_declaration","text":"use AnotherNamespace\\Class1;"}
-		{"type":"use","text":"use"}
-		{"type":"namespace_use_clause","text":"AnotherNamespace\\Class1"}
-			{"type":"qualified_name","text":"AnotherNamespace\\Class1"}
-				{"type":"namespace_name_as_prefix","text":"AnotherNamespace\\"}
-					{"type":"namespace_name","text":"AnotherNamespace"}
-						{"type":"name","text":"AnotherNamespace"}
+		{"type":"namespace_use_declaration","text":"use AnotherNamespace\\Class1;"}
+			{"type":"use","text":"use"}
+			{"type":"namespace_use_clause","text":"AnotherNamespace\\Class1"}
+				{"type":"qualified_name","text":"AnotherNamespace\\Class1"}
+					{"type":"namespace_name_as_prefix","text":"AnotherNamespace\\"}
+						{"type":"namespace_name","text":"AnotherNamespace"}
+							{"type":"name","text":"AnotherNamespace"}
+						
+						{"type":"\\","text":"\\"}
 					
-					{"type":"\\","text":"\\"}
+					{"type":"name","text":"Class1"}
 				
-				{"type":"name","text":"Class1"}
 			
+			{"type":";","text":";"}
 		
-		{"type":";","text":";"}
-	
-	{"type":"namespace_use_declaration","text":"use \\NS\\{C11, C12, I10, function fn1, const CONST1};"}
-		{"type":"use","text":"use"}
-		{"type":"\\","text":"\\"}
-		{"type":"namespace_name","text":"NS"}
-			{"type":"name","text":"NS"}
-		
-		{"type":"\\","text":"\\"}
-		{"type":"{","text":"{"}
-		{"type":"namespace_use_group_clause_2","text":"C11"}
-			{"type":"namespace_name","text":"C11"}
-				{"type":"name","text":"C11"}
+		{"type":"namespace_use_declaration","text":"use \\NS\\{C11, C12, I10, function fn1, const CONST1};"}
+			{"type":"use","text":"use"}
+			{"type":"\\","text":"\\"}
+			{"type":"namespace_name","text":"NS"}
+				{"type":"name","text":"NS"}
 			
-		
-		{"type":",","text":","}
-		{"type":"namespace_use_group_clause_2","text":"C12"}
-			{"type":"namespace_name","text":"C12"}
-				{"type":"name","text":"C12"}
+			{"type":"\\","text":"\\"}
+			{"type":"{","text":"{"}
+			{"type":"namespace_use_group_clause_2","text":"C11"}
+				{"type":"namespace_name","text":"C11"}
+					{"type":"name","text":"C11"}
+				
 			
-		
-		{"type":",","text":","}
-		{"type":"namespace_use_group_clause_2","text":"I10"}
-			{"type":"namespace_name","text":"I10"}
-				{"type":"name","text":"I10"}
+			{"type":",","text":","}
+			{"type":"namespace_use_group_clause_2","text":"C12"}
+				{"type":"namespace_name","text":"C12"}
+					{"type":"name","text":"C12"}
+				
 			
+			{"type":",","text":","}
+			{"type":"namespace_use_group_clause_2","text":"I10"}
+				{"type":"namespace_name","text":"I10"}
+					{"type":"name","text":"I10"}
+				
+			
+			{"type":",","text":","}
+			{"type":"namespace_use_group_clause_2","text":"function fn1"}
+				{"type":"namespace_function_or_const","text":"function"}
+					{"type":"function","text":"function"}
+				
+				{"type":"namespace_name","text":"fn1"}
+					{"type":"name","text":"fn1"}
+				
+			
+			{"type":",","text":","}
+			{"type":"namespace_use_group_clause_2","text":"const CONST1"}
+				{"type":"namespace_function_or_const","text":"const"}
+					{"type":"const","text":"const"}
+				
+				{"type":"namespace_name","text":"CONST1"}
+					{"type":"name","text":"CONST1"}
+				
+			
+			{"type":"}","text":"}"}
+			{"type":";","text":";"}
 		
-		{"type":",","text":","}
-		{"type":"namespace_use_group_clause_2","text":"function fn1"}
+		{"type":"namespace_use_declaration","text":"use \\NS1\\C, \\NS1\\I, \\NS1\\T;"}
+			{"type":"use","text":"use"}
+			{"type":"namespace_use_clause","text":"\\NS1\\C"}
+				{"type":"qualified_name","text":"\\NS1\\C"}
+					{"type":"namespace_name_as_prefix","text":"\\NS1\\"}
+						{"type":"\\","text":"\\"}
+						{"type":"namespace_name","text":"NS1"}
+							{"type":"name","text":"NS1"}
+						
+						{"type":"\\","text":"\\"}
+					
+					{"type":"name","text":"C"}
+				
+			
+			{"type":",","text":","}
+			{"type":"namespace_use_clause","text":"\\NS1\\I"}
+				{"type":"qualified_name","text":"\\NS1\\I"}
+					{"type":"namespace_name_as_prefix","text":"\\NS1\\"}
+						{"type":"\\","text":"\\"}
+						{"type":"namespace_name","text":"NS1"}
+							{"type":"name","text":"NS1"}
+						
+						{"type":"\\","text":"\\"}
+					
+					{"type":"name","text":"I"}
+				
+			
+			{"type":",","text":","}
+			{"type":"namespace_use_clause","text":"\\NS1\\T"}
+				{"type":"qualified_name","text":"\\NS1\\T"}
+					{"type":"namespace_name_as_prefix","text":"\\NS1\\"}
+						{"type":"\\","text":"\\"}
+						{"type":"namespace_name","text":"NS1"}
+							{"type":"name","text":"NS1"}
+						
+						{"type":"\\","text":"\\"}
+					
+					{"type":"name","text":"T"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"namespace_use_declaration","text":"use function AnotherNamespace1\\test_function as test_function1;"}
+			{"type":"use","text":"use"}
 			{"type":"namespace_function_or_const","text":"function"}
 				{"type":"function","text":"function"}
 			
-			{"type":"namespace_name","text":"fn1"}
-				{"type":"name","text":"fn1"}
+			{"type":"namespace_use_clause","text":"AnotherNamespace1\\test_function as test_function1"}
+				{"type":"qualified_name","text":"AnotherNamespace1\\test_function"}
+					{"type":"namespace_name_as_prefix","text":"AnotherNamespace1\\"}
+						{"type":"namespace_name","text":"AnotherNamespace1"}
+							{"type":"name","text":"AnotherNamespace1"}
+						
+						{"type":"\\","text":"\\"}
+					
+					{"type":"name","text":"test_function"}
+				
+				{"type":"namespace_aliasing_clause","text":"as test_function1"}
+					{"type":"as","text":"as"}
+					{"type":"name","text":"test_function1"}
+				
 			
+			{"type":";","text":";"}
 		
-		{"type":",","text":","}
-		{"type":"namespace_use_group_clause_2","text":"const CONST1"}
+		{"type":"namespace_use_declaration","text":"use const AnotherNamespace1\\TEST_CONST;"}
+			{"type":"use","text":"use"}
 			{"type":"namespace_function_or_const","text":"const"}
 				{"type":"const","text":"const"}
 			
-			{"type":"namespace_name","text":"CONST1"}
-				{"type":"name","text":"CONST1"}
-			
-		
-		{"type":"}","text":"}"}
-		{"type":";","text":";"}
-	
-	{"type":"namespace_use_declaration","text":"use \\NS1\\C, \\NS1\\I, \\NS1\\T;"}
-		{"type":"use","text":"use"}
-		{"type":"namespace_use_clause","text":"\\NS1\\C"}
-			{"type":"qualified_name","text":"\\NS1\\C"}
-				{"type":"namespace_name_as_prefix","text":"\\NS1\\"}
-					{"type":"\\","text":"\\"}
-					{"type":"namespace_name","text":"NS1"}
-						{"type":"name","text":"NS1"}
+			{"type":"namespace_use_clause","text":"AnotherNamespace1\\TEST_CONST"}
+				{"type":"qualified_name","text":"AnotherNamespace1\\TEST_CONST"}
+					{"type":"namespace_name_as_prefix","text":"AnotherNamespace1\\"}
+						{"type":"namespace_name","text":"AnotherNamespace1"}
+							{"type":"name","text":"AnotherNamespace1"}
+						
+						{"type":"\\","text":"\\"}
 					
-					{"type":"\\","text":"\\"}
+					{"type":"name","text":"TEST_CONST"}
 				
-				{"type":"name","text":"C"}
 			
+			{"type":";","text":";"}
 		
-		{"type":",","text":","}
-		{"type":"namespace_use_clause","text":"\\NS1\\I"}
-			{"type":"qualified_name","text":"\\NS1\\I"}
-				{"type":"namespace_name_as_prefix","text":"\\NS1\\"}
+		{"type":"namespace_use_declaration","text":"use Nested1\\{\r\n    Nested2\\Target,\r\n    Nested3\r\n};"}
+			{"type":"use","text":"use"}
+			{"type":"namespace_name","text":"Nested1"}
+				{"type":"name","text":"Nested1"}
+			
+			{"type":"\\","text":"\\"}
+			{"type":"{","text":"{"}
+			{"type":"namespace_use_group_clause_2","text":"Nested2\\Target"}
+				{"type":"namespace_name","text":"Nested2\\Target"}
+					{"type":"name","text":"Nested2"}
 					{"type":"\\","text":"\\"}
-					{"type":"namespace_name","text":"NS1"}
-						{"type":"name","text":"NS1"}
-					
-					{"type":"\\","text":"\\"}
+					{"type":"name","text":"Target"}
 				
-				{"type":"name","text":"I"}
 			
-		
-		{"type":",","text":","}
-		{"type":"namespace_use_clause","text":"\\NS1\\T"}
-			{"type":"qualified_name","text":"\\NS1\\T"}
-				{"type":"namespace_name_as_prefix","text":"\\NS1\\"}
-					{"type":"\\","text":"\\"}
-					{"type":"namespace_name","text":"NS1"}
-						{"type":"name","text":"NS1"}
-					
-					{"type":"\\","text":"\\"}
+			{"type":",","text":","}
+			{"type":"namespace_use_group_clause_2","text":"Nested3"}
+				{"type":"namespace_name","text":"Nested3"}
+					{"type":"name","text":"Nested3"}
 				
-				{"type":"name","text":"T"}
 			
+			{"type":"}","text":"}"}
+			{"type":";","text":";"}
 		
-		{"type":";","text":";"}
-	
-	{"type":"namespace_use_declaration","text":"use function AnotherNamespace1\\test_function as test_function1;"}
-		{"type":"use","text":"use"}
-		{"type":"namespace_function_or_const","text":"function"}
-			{"type":"function","text":"function"}
-		
-		{"type":"namespace_use_clause","text":"AnotherNamespace1\\test_function as test_function1"}
-			{"type":"qualified_name","text":"AnotherNamespace1\\test_function"}
-				{"type":"namespace_name_as_prefix","text":"AnotherNamespace1\\"}
-					{"type":"namespace_name","text":"AnotherNamespace1"}
-						{"type":"name","text":"AnotherNamespace1"}
-					
-					{"type":"\\","text":"\\"}
-				
-				{"type":"name","text":"test_function"}
-			
-			{"type":"namespace_aliasing_clause","text":"as test_function1"}
-				{"type":"as","text":"as"}
-				{"type":"name","text":"test_function1"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"namespace_use_declaration","text":"use const AnotherNamespace1\\TEST_CONST;"}
-		{"type":"use","text":"use"}
-		{"type":"namespace_function_or_const","text":"const"}
-			{"type":"const","text":"const"}
-		
-		{"type":"namespace_use_clause","text":"AnotherNamespace1\\TEST_CONST"}
-			{"type":"qualified_name","text":"AnotherNamespace1\\TEST_CONST"}
-				{"type":"namespace_name_as_prefix","text":"AnotherNamespace1\\"}
-					{"type":"namespace_name","text":"AnotherNamespace1"}
-						{"type":"name","text":"AnotherNamespace1"}
-					
-					{"type":"\\","text":"\\"}
-				
-				{"type":"name","text":"TEST_CONST"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"namespace_use_declaration","text":"use Nested1\\{\r\n    Nested2\\Target,\r\n    Nested3\r\n};"}
-		{"type":"use","text":"use"}
-		{"type":"namespace_name","text":"Nested1"}
-			{"type":"name","text":"Nested1"}
-		
-		{"type":"\\","text":"\\"}
-		{"type":"{","text":"{"}
-		{"type":"namespace_use_group_clause_2","text":"Nested2\\Target"}
-			{"type":"namespace_name","text":"Nested2\\Target"}
-				{"type":"name","text":"Nested2"}
-				{"type":"\\","text":"\\"}
-				{"type":"name","text":"Target"}
-			
-		
-		{"type":",","text":","}
-		{"type":"namespace_use_group_clause_2","text":"Nested3"}
-			{"type":"namespace_name","text":"Nested3"}
-				{"type":"name","text":"Nested3"}
-			
-		
-		{"type":"}","text":"}"}
-		{"type":";","text":";"}
+		{"type":"end_tag","text":""}
 	

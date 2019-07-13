@@ -1,448 +1,454 @@
 {"type":"program","text":"<?php\r\n\r\nif (true) {\r\n    $first = new TestClass();\r\n    $first->initProp1;\r\n    $first->testMethod();\r\n} else if (true) {\r\n\r\n} else {\r\n    \r\n}\r\n\r\n/**\r\n * @return TestClass\r\n */\r\nfunction refFunction1() {\r\n}\r\n\r\n$value = 1;\r\n$value2 = &$value;\r\n\r\nTestClass::$staticTestProperty;\r\nTestClass::CLASS_CONSTANT;\r\nTestClass4::staticMethod1();\r\n\r\nif ($value instanceof TestClass) {\r\n\r\n}\r\n\r\nforeach ($value as $key => $val) {\r\n\r\n}\r\n\r\ntry {\r\n    throw new Exception();\r\n} catch (Exception | Throwable | TestClass $ex) {\r\n\r\n} catch (Exception $ex) {\r\n\r\n} catch (Expception | $ex) {\r\n\r\n} catch (|Exception $e1) {\r\n\r\n} catch (Exception | Throwable $ex) {\r\n    \r\n}\r\n\r\nswitch ($value) {\r\n    case 1:\r\n        break;\r\n    default:\r\n        break;\r\n}\r\n\r\ntestFunction();\r\n\r\nlist ($firstValue, $secondValue) = ['one', 1];\r\n$array1 = ['PI', 3.14];\r\n\r\necho $array1[0];\r\n"}
-	{"type":"if_statement","text":"if (true) {\r\n    $first = new TestClass();\r\n    $first->initProp1;\r\n    $first->testMethod();\r\n} else if (true) {\r\n\r\n} else {\r\n    \r\n}"}
-		{"type":"if","text":"if"}
-		{"type":"(","text":"("}
-		{"type":"qualified_name","text":"true"}
-			{"type":"name","text":"true"}
-		
-		{"type":")","text":")"}
-		{"type":"compound_statement","text":"{\r\n    $first = new TestClass();\r\n    $first->initProp1;\r\n    $first->testMethod();\r\n}"}
-			{"type":"{","text":"{"}
-			{"type":"expression_statement","text":"$first = new TestClass();"}
-				{"type":"assignment_expression","text":"$first = new TestClass()"}
-					{"type":"variable_name","text":"$first"}
-						{"type":"$","text":"$"}
-						{"type":"name","text":"first"}
+	{"type":"script_section","text":"<?php\r\n\r\nif (true) {\r\n    $first = new TestClass();\r\n    $first->initProp1;\r\n    $first->testMethod();\r\n} else if (true) {\r\n\r\n} else {\r\n    \r\n}\r\n\r\n/**\r\n * @return TestClass\r\n */\r\nfunction refFunction1() {\r\n}\r\n\r\n$value = 1;\r\n$value2 = &$value;\r\n\r\nTestClass::$staticTestProperty;\r\nTestClass::CLASS_CONSTANT;\r\nTestClass4::staticMethod1();\r\n\r\nif ($value instanceof TestClass) {\r\n\r\n}\r\n\r\nforeach ($value as $key => $val) {\r\n\r\n}\r\n\r\ntry {\r\n    throw new Exception();\r\n} catch (Exception | Throwable | TestClass $ex) {\r\n\r\n} catch (Exception $ex) {\r\n\r\n} catch (Expception | $ex) {\r\n\r\n} catch (|Exception $e1) {\r\n\r\n} catch (Exception | Throwable $ex) {\r\n    \r\n}\r\n\r\nswitch ($value) {\r\n    case 1:\r\n        break;\r\n    default:\r\n        break;\r\n}\r\n\r\ntestFunction();\r\n\r\nlist ($firstValue, $secondValue) = ['one', 1];\r\n$array1 = ['PI', 3.14];\r\n\r\necho $array1[0];"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"if_statement","text":"if (true) {\r\n    $first = new TestClass();\r\n    $first->initProp1;\r\n    $first->testMethod();\r\n} else if (true) {\r\n\r\n} else {\r\n    \r\n}"}
+			{"type":"if","text":"if"}
+			{"type":"(","text":"("}
+			{"type":"qualified_name","text":"true"}
+				{"type":"name","text":"true"}
+			
+			{"type":")","text":")"}
+			{"type":"compound_statement","text":"{\r\n    $first = new TestClass();\r\n    $first->initProp1;\r\n    $first->testMethod();\r\n}"}
+				{"type":"{","text":"{"}
+				{"type":"expression_statement","text":"$first = new TestClass();"}
+					{"type":"assignment_expression","text":"$first = new TestClass()"}
+						{"type":"variable_name","text":"$first"}
+							{"type":"$","text":"$"}
+							{"type":"name","text":"first"}
+						
+						{"type":"=","text":"="}
+						{"type":"object_creation_expression","text":"new TestClass()"}
+							{"type":"new","text":"new"}
+							{"type":"qualified_name","text":"TestClass"}
+								{"type":"name","text":"TestClass"}
+							
+							{"type":"arguments","text":"()"}
+								{"type":"(","text":"("}
+								{"type":")","text":")"}
+							
+						
 					
-					{"type":"=","text":"="}
-					{"type":"object_creation_expression","text":"new TestClass()"}
-						{"type":"new","text":"new"}
-						{"type":"qualified_name","text":"TestClass"}
-							{"type":"name","text":"TestClass"}
+					{"type":";","text":";"}
+				
+				{"type":"expression_statement","text":"$first->initProp1;"}
+					{"type":"member_access_expression","text":"$first->initProp1"}
+						{"type":"dereferencable_expression","text":"$first"}
+							{"type":"variable_name","text":"$first"}
+								{"type":"$","text":"$"}
+								{"type":"name","text":"first"}
+							
+						
+						{"type":"->","text":"->"}
+						{"type":"member_name","text":"initProp1"}
+							{"type":"name","text":"initProp1"}
+						
+					
+					{"type":";","text":";"}
+				
+				{"type":"expression_statement","text":"$first->testMethod();"}
+					{"type":"member_call_expression","text":"$first->testMethod()"}
+						{"type":"dereferencable_expression","text":"$first"}
+							{"type":"variable_name","text":"$first"}
+								{"type":"$","text":"$"}
+								{"type":"name","text":"first"}
+							
+						
+						{"type":"->","text":"->"}
+						{"type":"member_name","text":"testMethod"}
+							{"type":"name","text":"testMethod"}
 						
 						{"type":"arguments","text":"()"}
 							{"type":"(","text":"("}
 							{"type":")","text":")"}
 						
 					
+					{"type":";","text":";"}
 				
-				{"type":";","text":";"}
+				{"type":"}","text":"}"}
 			
-			{"type":"expression_statement","text":"$first->initProp1;"}
-				{"type":"member_access_expression","text":"$first->initProp1"}
-					{"type":"dereferencable_expression","text":"$first"}
-						{"type":"variable_name","text":"$first"}
-							{"type":"$","text":"$"}
-							{"type":"name","text":"first"}
+			{"type":"else_clause","text":"else if (true) {\r\n\r\n} else {\r\n    \r\n}"}
+				{"type":"else","text":"else"}
+				{"type":"if_statement","text":"if (true) {\r\n\r\n} else {\r\n    \r\n}"}
+					{"type":"if","text":"if"}
+					{"type":"(","text":"("}
+					{"type":"qualified_name","text":"true"}
+						{"type":"name","text":"true"}
+					
+					{"type":")","text":")"}
+					{"type":"compound_statement","text":"{\r\n\r\n}"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+					{"type":"else_clause","text":"else {\r\n    \r\n}"}
+						{"type":"else","text":"else"}
+						{"type":"compound_statement","text":"{\r\n    \r\n}"}
+							{"type":"{","text":"{"}
+							{"type":"}","text":"}"}
 						
 					
-					{"type":"->","text":"->"}
-					{"type":"member_name","text":"initProp1"}
-						{"type":"name","text":"initProp1"}
-					
 				
-				{"type":";","text":";"}
 			
-			{"type":"expression_statement","text":"$first->testMethod();"}
-				{"type":"member_call_expression","text":"$first->testMethod()"}
-					{"type":"dereferencable_expression","text":"$first"}
-						{"type":"variable_name","text":"$first"}
-							{"type":"$","text":"$"}
-							{"type":"name","text":"first"}
-						
-					
-					{"type":"->","text":"->"}
-					{"type":"member_name","text":"testMethod"}
-						{"type":"name","text":"testMethod"}
-					
-					{"type":"arguments","text":"()"}
-						{"type":"(","text":"("}
-						{"type":")","text":")"}
-					
-				
-				{"type":";","text":";"}
-			
-			{"type":"}","text":"}"}
 		
-		{"type":"else_clause","text":"else if (true) {\r\n\r\n} else {\r\n    \r\n}"}
-			{"type":"else","text":"else"}
-			{"type":"if_statement","text":"if (true) {\r\n\r\n} else {\r\n    \r\n}"}
-				{"type":"if","text":"if"}
+		{"type":"comment","text":"/**\r\n * @return TestClass\r\n */"}
+		{"type":"function_definition","text":"function refFunction1() {\r\n}"}
+			{"type":"function","text":"function"}
+			{"type":"name","text":"refFunction1"}
+			{"type":"formal_parameters","text":"()"}
 				{"type":"(","text":"("}
-				{"type":"qualified_name","text":"true"}
-					{"type":"name","text":"true"}
+				{"type":")","text":")"}
+			
+			{"type":"compound_statement","text":"{\r\n}"}
+				{"type":"{","text":"{"}
+				{"type":"}","text":"}"}
+			
+		
+		{"type":"expression_statement","text":"$value = 1;"}
+			{"type":"assignment_expression","text":"$value = 1"}
+				{"type":"variable_name","text":"$value"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"value"}
+				
+				{"type":"=","text":"="}
+				{"type":"integer","text":"1"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"$value2 = &$value;"}
+			{"type":"assignment_expression","text":"$value2 = &$value"}
+				{"type":"variable_name","text":"$value2"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"value2"}
+				
+				{"type":"=","text":"="}
+				{"type":"&","text":"&"}
+				{"type":"variable_name","text":"$value"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"value"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"TestClass::$staticTestProperty;"}
+			{"type":"scoped_property_access_expression","text":"TestClass::$staticTestProperty"}
+				{"type":"qualified_name","text":"TestClass"}
+					{"type":"name","text":"TestClass"}
+				
+				{"type":"::","text":"::"}
+				{"type":"variable_name","text":"$staticTestProperty"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"staticTestProperty"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"TestClass::CLASS_CONSTANT;"}
+			{"type":"class_constant_access_expression","text":"TestClass::CLASS_CONSTANT"}
+				{"type":"qualified_name","text":"TestClass"}
+					{"type":"name","text":"TestClass"}
+				
+				{"type":"::","text":"::"}
+				{"type":"name","text":"CLASS_CONSTANT"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"TestClass4::staticMethod1();"}
+			{"type":"scoped_call_expression","text":"TestClass4::staticMethod1()"}
+				{"type":"qualified_name","text":"TestClass4"}
+					{"type":"name","text":"TestClass4"}
+				
+				{"type":"::","text":"::"}
+				{"type":"member_name","text":"staticMethod1"}
+					{"type":"name","text":"staticMethod1"}
+				
+				{"type":"arguments","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"if_statement","text":"if ($value instanceof TestClass) {\r\n\r\n}"}
+			{"type":"if","text":"if"}
+			{"type":"(","text":"("}
+			{"type":"binary_expression","text":"$value instanceof TestClass"}
+				{"type":"variable_name","text":"$value"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"value"}
+				
+				{"type":"instanceof","text":"instanceof"}
+				{"type":"qualified_name","text":"TestClass"}
+					{"type":"name","text":"TestClass"}
+				
+			
+			{"type":")","text":")"}
+			{"type":"compound_statement","text":"{\r\n\r\n}"}
+				{"type":"{","text":"{"}
+				{"type":"}","text":"}"}
+			
+		
+		{"type":"foreach_statement","text":"foreach ($value as $key => $val) {\r\n\r\n}"}
+			{"type":"foreach","text":"foreach"}
+			{"type":"(","text":"("}
+			{"type":"foreach_collection","text":"$value"}
+				{"type":"variable_name","text":"$value"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"value"}
+				
+			
+			{"type":"as","text":"as"}
+			{"type":"pair","text":"$key => $val"}
+				{"type":"variable_name","text":"$key"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"key"}
+				
+				{"type":"=>","text":"=>"}
+				{"type":"foreach_value","text":"$val"}
+					{"type":"variable_name","text":"$val"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"val"}
+					
+				
+			
+			{"type":")","text":")"}
+			{"type":"compound_statement","text":"{\r\n\r\n}"}
+				{"type":"{","text":"{"}
+				{"type":"}","text":"}"}
+			
+		
+		{"type":"try_statement","text":"try {\r\n    throw new Exception();\r\n} catch (Exception | Throwable | TestClass $ex) {\r\n\r\n} catch (Exception $ex) {\r\n\r\n} catch (Expception | $ex) {\r\n\r\n} catch (|Exception $e1) {\r\n\r\n} catch (Exception | Throwable $ex) {\r\n    \r\n}"}
+			{"type":"try","text":"try"}
+			{"type":"compound_statement","text":"{\r\n    throw new Exception();\r\n}"}
+				{"type":"{","text":"{"}
+				{"type":"throw_statement","text":"throw new Exception();"}
+					{"type":"throw","text":"throw"}
+					{"type":"object_creation_expression","text":"new Exception()"}
+						{"type":"new","text":"new"}
+						{"type":"qualified_name","text":"Exception"}
+							{"type":"name","text":"Exception"}
+						
+						{"type":"arguments","text":"()"}
+							{"type":"(","text":"("}
+							{"type":")","text":")"}
+						
+					
+					{"type":";","text":";"}
+				
+				{"type":"}","text":"}"}
+			
+			{"type":"catch_clause","text":"catch (Exception | Throwable | TestClass $ex) {\r\n\r\n}"}
+				{"type":"catch","text":"catch"}
+				{"type":"(","text":"("}
+				{"type":"catch_name_list","text":"Exception | Throwable | TestClass"}
+					{"type":"qualified_name","text":"Exception"}
+						{"type":"name","text":"Exception"}
+					
+					{"type":"|","text":"|"}
+					{"type":"qualified_name","text":"Throwable"}
+						{"type":"name","text":"Throwable"}
+					
+					{"type":"|","text":"|"}
+					{"type":"qualified_name","text":"TestClass"}
+						{"type":"name","text":"TestClass"}
+					
+				
+				{"type":"variable_name","text":"$ex"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"ex"}
 				
 				{"type":")","text":")"}
 				{"type":"compound_statement","text":"{\r\n\r\n}"}
 					{"type":"{","text":"{"}
 					{"type":"}","text":"}"}
 				
-				{"type":"else_clause","text":"else {\r\n    \r\n}"}
-					{"type":"else","text":"else"}
-					{"type":"compound_statement","text":"{\r\n    \r\n}"}
-						{"type":"{","text":"{"}
-						{"type":"}","text":"}"}
+			
+			{"type":"catch_clause","text":"catch (Exception $ex) {\r\n\r\n}"}
+				{"type":"catch","text":"catch"}
+				{"type":"(","text":"("}
+				{"type":"qualified_name","text":"Exception"}
+					{"type":"name","text":"Exception"}
+				
+				{"type":"variable_name","text":"$ex"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"ex"}
+				
+				{"type":")","text":")"}
+				{"type":"compound_statement","text":"{\r\n\r\n}"}
+					{"type":"{","text":"{"}
+					{"type":"}","text":"}"}
+				
+			
+			{"type":"catch_clause","text":"catch (Expception | $ex) {\r\n\r\n}"}
+				{"type":"catch","text":"catch"}
+				{"type":"(","text":"("}
+				{"type":"catch_name_list","text":"Expception |"}
+					{"type":"qualified_name","text":"Expception"}
+						{"type":"name","text":"Expception"}
+					
+					{"type":"|","text":"|"}
+					{"type":"qualified_name","text":""}
+						{"type":"name","text":""}
+							{"type":"static","text":""}
+						
 					
 				
-			
-		
-	
-	{"type":"comment","text":"/**\r\n * @return TestClass\r\n */"}
-	{"type":"function_definition","text":"function refFunction1() {\r\n}"}
-		{"type":"function","text":"function"}
-		{"type":"name","text":"refFunction1"}
-		{"type":"formal_parameters","text":"()"}
-			{"type":"(","text":"("}
-			{"type":")","text":")"}
-		
-		{"type":"compound_statement","text":"{\r\n}"}
-			{"type":"{","text":"{"}
-			{"type":"}","text":"}"}
-		
-	
-	{"type":"expression_statement","text":"$value = 1;"}
-		{"type":"assignment_expression","text":"$value = 1"}
-			{"type":"variable_name","text":"$value"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"value"}
-			
-			{"type":"=","text":"="}
-			{"type":"integer","text":"1"}
-		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"$value2 = &$value;"}
-		{"type":"assignment_expression","text":"$value2 = &$value"}
-			{"type":"variable_name","text":"$value2"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"value2"}
-			
-			{"type":"=","text":"="}
-			{"type":"&","text":"&"}
-			{"type":"variable_name","text":"$value"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"value"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"TestClass::$staticTestProperty;"}
-		{"type":"scoped_property_access_expression","text":"TestClass::$staticTestProperty"}
-			{"type":"qualified_name","text":"TestClass"}
-				{"type":"name","text":"TestClass"}
-			
-			{"type":"::","text":"::"}
-			{"type":"variable_name","text":"$staticTestProperty"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"staticTestProperty"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"TestClass::CLASS_CONSTANT;"}
-		{"type":"class_constant_access_expression","text":"TestClass::CLASS_CONSTANT"}
-			{"type":"qualified_name","text":"TestClass"}
-				{"type":"name","text":"TestClass"}
-			
-			{"type":"::","text":"::"}
-			{"type":"name","text":"CLASS_CONSTANT"}
-		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"TestClass4::staticMethod1();"}
-		{"type":"scoped_call_expression","text":"TestClass4::staticMethod1()"}
-			{"type":"qualified_name","text":"TestClass4"}
-				{"type":"name","text":"TestClass4"}
-			
-			{"type":"::","text":"::"}
-			{"type":"member_name","text":"staticMethod1"}
-				{"type":"name","text":"staticMethod1"}
-			
-			{"type":"arguments","text":"()"}
-				{"type":"(","text":"("}
-				{"type":")","text":")"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"if_statement","text":"if ($value instanceof TestClass) {\r\n\r\n}"}
-		{"type":"if","text":"if"}
-		{"type":"(","text":"("}
-		{"type":"binary_expression","text":"$value instanceof TestClass"}
-			{"type":"variable_name","text":"$value"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"value"}
-			
-			{"type":"instanceof","text":"instanceof"}
-			{"type":"qualified_name","text":"TestClass"}
-				{"type":"name","text":"TestClass"}
-			
-		
-		{"type":")","text":")"}
-		{"type":"compound_statement","text":"{\r\n\r\n}"}
-			{"type":"{","text":"{"}
-			{"type":"}","text":"}"}
-		
-	
-	{"type":"foreach_statement","text":"foreach ($value as $key => $val) {\r\n\r\n}"}
-		{"type":"foreach","text":"foreach"}
-		{"type":"(","text":"("}
-		{"type":"foreach_collection","text":"$value"}
-			{"type":"variable_name","text":"$value"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"value"}
-			
-		
-		{"type":"as","text":"as"}
-		{"type":"pair","text":"$key => $val"}
-			{"type":"variable_name","text":"$key"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"key"}
-			
-			{"type":"=>","text":"=>"}
-			{"type":"foreach_value","text":"$val"}
-				{"type":"variable_name","text":"$val"}
+				{"type":"variable_name","text":"$ex"}
 					{"type":"$","text":"$"}
-					{"type":"name","text":"val"}
+					{"type":"name","text":"ex"}
+				
+				{"type":")","text":")"}
+				{"type":"compound_statement","text":"{\r\n\r\n}"}
+					{"type":"{","text":"{"}
+					{"type":"}","text":"}"}
 				
 			
-		
-		{"type":")","text":")"}
-		{"type":"compound_statement","text":"{\r\n\r\n}"}
-			{"type":"{","text":"{"}
-			{"type":"}","text":"}"}
-		
-	
-	{"type":"try_statement","text":"try {\r\n    throw new Exception();\r\n} catch (Exception | Throwable | TestClass $ex) {\r\n\r\n} catch (Exception $ex) {\r\n\r\n} catch (Expception | $ex) {\r\n\r\n} catch (|Exception $e1) {\r\n\r\n} catch (Exception | Throwable $ex) {\r\n    \r\n}"}
-		{"type":"try","text":"try"}
-		{"type":"compound_statement","text":"{\r\n    throw new Exception();\r\n}"}
-			{"type":"{","text":"{"}
-			{"type":"throw_statement","text":"throw new Exception();"}
-				{"type":"throw","text":"throw"}
-				{"type":"object_creation_expression","text":"new Exception()"}
-					{"type":"new","text":"new"}
+			{"type":"catch_clause","text":"catch (|Exception $e1) {\r\n\r\n}"}
+				{"type":"catch","text":"catch"}
+				{"type":"(","text":"("}
+				{"type":"ERROR","text":"|"}
+					{"type":"|","text":"|"}
+				
+				{"type":"qualified_name","text":"Exception"}
+					{"type":"name","text":"Exception"}
+				
+				{"type":"variable_name","text":"$e1"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"e1"}
+				
+				{"type":")","text":")"}
+				{"type":"compound_statement","text":"{\r\n\r\n}"}
+					{"type":"{","text":"{"}
+					{"type":"}","text":"}"}
+				
+			
+			{"type":"catch_clause","text":"catch (Exception | Throwable $ex) {\r\n    \r\n}"}
+				{"type":"catch","text":"catch"}
+				{"type":"(","text":"("}
+				{"type":"catch_name_list","text":"Exception | Throwable"}
 					{"type":"qualified_name","text":"Exception"}
 						{"type":"name","text":"Exception"}
 					
-					{"type":"arguments","text":"()"}
-						{"type":"(","text":"("}
-						{"type":")","text":")"}
+					{"type":"|","text":"|"}
+					{"type":"qualified_name","text":"Throwable"}
+						{"type":"name","text":"Throwable"}
 					
 				
-				{"type":";","text":";"}
+				{"type":"variable_name","text":"$ex"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"ex"}
+				
+				{"type":")","text":")"}
+				{"type":"compound_statement","text":"{\r\n    \r\n}"}
+					{"type":"{","text":"{"}
+					{"type":"}","text":"}"}
+				
+			
+		
+		{"type":"switch_statement","text":"switch ($value) {\r\n    case 1:\r\n        break;\r\n    default:\r\n        break;\r\n}"}
+			{"type":"switch","text":"switch"}
+			{"type":"(","text":"("}
+			{"type":"variable_name","text":"$value"}
+				{"type":"$","text":"$"}
+				{"type":"name","text":"value"}
+			
+			{"type":")","text":")"}
+			{"type":"{","text":"{"}
+			{"type":"case_statement","text":"case 1:\r\n        break;"}
+				{"type":"case","text":"case"}
+				{"type":"integer","text":"1"}
+				{"type":":","text":":"}
+				{"type":"break_statement","text":"break;"}
+					{"type":"break","text":"break"}
+					{"type":";","text":";"}
+				
+			
+			{"type":"default_statement","text":"default:\r\n        break;"}
+				{"type":"default","text":"default"}
+				{"type":":","text":":"}
+				{"type":"break_statement","text":"break;"}
+					{"type":"break","text":"break"}
+					{"type":";","text":";"}
+				
 			
 			{"type":"}","text":"}"}
 		
-		{"type":"catch_clause","text":"catch (Exception | Throwable | TestClass $ex) {\r\n\r\n}"}
-			{"type":"catch","text":"catch"}
-			{"type":"(","text":"("}
-			{"type":"catch_name_list","text":"Exception | Throwable | TestClass"}
-				{"type":"qualified_name","text":"Exception"}
-					{"type":"name","text":"Exception"}
+		{"type":"expression_statement","text":"testFunction();"}
+			{"type":"function_call_expression","text":"testFunction()"}
+				{"type":"qualified_name","text":"testFunction"}
+					{"type":"name","text":"testFunction"}
 				
-				{"type":"|","text":"|"}
-				{"type":"qualified_name","text":"Throwable"}
-					{"type":"name","text":"Throwable"}
-				
-				{"type":"|","text":"|"}
-				{"type":"qualified_name","text":"TestClass"}
-					{"type":"name","text":"TestClass"}
+				{"type":"arguments","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
 				
 			
-			{"type":"variable_name","text":"$ex"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"ex"}
-			
-			{"type":")","text":")"}
-			{"type":"compound_statement","text":"{\r\n\r\n}"}
-				{"type":"{","text":"{"}
-				{"type":"}","text":"}"}
-			
+			{"type":";","text":";"}
 		
-		{"type":"catch_clause","text":"catch (Exception $ex) {\r\n\r\n}"}
-			{"type":"catch","text":"catch"}
-			{"type":"(","text":"("}
-			{"type":"qualified_name","text":"Exception"}
-				{"type":"name","text":"Exception"}
-			
-			{"type":"variable_name","text":"$ex"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"ex"}
-			
-			{"type":")","text":")"}
-			{"type":"compound_statement","text":"{\r\n\r\n}"}
-				{"type":"{","text":"{"}
-				{"type":"}","text":"}"}
-			
-		
-		{"type":"catch_clause","text":"catch (Expception | $ex) {\r\n\r\n}"}
-			{"type":"catch","text":"catch"}
-			{"type":"(","text":"("}
-			{"type":"catch_name_list","text":"Expception |"}
-				{"type":"qualified_name","text":"Expception"}
-					{"type":"name","text":"Expception"}
+		{"type":"expression_statement","text":"list ($firstValue, $secondValue) = ['one', 1];"}
+			{"type":"assignment_expression","text":"list ($firstValue, $secondValue) = ['one', 1]"}
+				{"type":"list_literal","text":"list ($firstValue, $secondValue)"}
+					{"type":"list","text":"list"}
+					{"type":"(","text":"("}
+					{"type":"variable_name","text":"$firstValue"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"firstValue"}
+					
+					{"type":",","text":","}
+					{"type":"variable_name","text":"$secondValue"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"secondValue"}
+					
+					{"type":")","text":")"}
 				
-				{"type":"|","text":"|"}
-				{"type":"qualified_name","text":""}
-					{"type":"name","text":""}
-				
-			
-			{"type":"variable_name","text":"$ex"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"ex"}
-			
-			{"type":")","text":")"}
-			{"type":"compound_statement","text":"{\r\n\r\n}"}
-				{"type":"{","text":"{"}
-				{"type":"}","text":"}"}
-			
-		
-		{"type":"catch_clause","text":"catch (|Exception $e1) {\r\n\r\n}"}
-			{"type":"catch","text":"catch"}
-			{"type":"(","text":"("}
-			{"type":"ERROR","text":"|"}
-				{"type":"|","text":"|"}
-			
-			{"type":"qualified_name","text":"Exception"}
-				{"type":"name","text":"Exception"}
-			
-			{"type":"variable_name","text":"$e1"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"e1"}
-			
-			{"type":")","text":")"}
-			{"type":"compound_statement","text":"{\r\n\r\n}"}
-				{"type":"{","text":"{"}
-				{"type":"}","text":"}"}
-			
-		
-		{"type":"catch_clause","text":"catch (Exception | Throwable $ex) {\r\n    \r\n}"}
-			{"type":"catch","text":"catch"}
-			{"type":"(","text":"("}
-			{"type":"catch_name_list","text":"Exception | Throwable"}
-				{"type":"qualified_name","text":"Exception"}
-					{"type":"name","text":"Exception"}
-				
-				{"type":"|","text":"|"}
-				{"type":"qualified_name","text":"Throwable"}
-					{"type":"name","text":"Throwable"}
+				{"type":"=","text":"="}
+				{"type":"array_creation_expression","text":"['one', 1]"}
+					{"type":"[","text":"["}
+					{"type":"array_element_initializer","text":"'one'"}
+						{"type":"string","text":"'one'"}
+					
+					{"type":",","text":","}
+					{"type":"array_element_initializer","text":"1"}
+						{"type":"integer","text":"1"}
+					
+					{"type":"]","text":"]"}
 				
 			
-			{"type":"variable_name","text":"$ex"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"ex"}
-			
-			{"type":")","text":")"}
-			{"type":"compound_statement","text":"{\r\n    \r\n}"}
-				{"type":"{","text":"{"}
-				{"type":"}","text":"}"}
-			
+			{"type":";","text":";"}
 		
-	
-	{"type":"switch_statement","text":"switch ($value) {\r\n    case 1:\r\n        break;\r\n    default:\r\n        break;\r\n}"}
-		{"type":"switch","text":"switch"}
-		{"type":"(","text":"("}
-		{"type":"variable_name","text":"$value"}
-			{"type":"$","text":"$"}
-			{"type":"name","text":"value"}
-		
-		{"type":")","text":")"}
-		{"type":"{","text":"{"}
-		{"type":"case_statement","text":"case 1:\r\n        break;"}
-			{"type":"case","text":"case"}
-			{"type":"integer","text":"1"}
-			{"type":":","text":":"}
-			{"type":"break_statement","text":"break;"}
-				{"type":"break","text":"break"}
-				{"type":";","text":";"}
-			
-		
-		{"type":"default_statement","text":"default:\r\n        break;"}
-			{"type":"default","text":"default"}
-			{"type":":","text":":"}
-			{"type":"break_statement","text":"break;"}
-				{"type":"break","text":"break"}
-				{"type":";","text":";"}
-			
-		
-		{"type":"}","text":"}"}
-	
-	{"type":"expression_statement","text":"testFunction();"}
-		{"type":"function_call_expression","text":"testFunction()"}
-			{"type":"qualified_name","text":"testFunction"}
-				{"type":"name","text":"testFunction"}
-			
-			{"type":"arguments","text":"()"}
-				{"type":"(","text":"("}
-				{"type":")","text":")"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"list ($firstValue, $secondValue) = ['one', 1];"}
-		{"type":"assignment_expression","text":"list ($firstValue, $secondValue) = ['one', 1]"}
-			{"type":"list_literal","text":"list ($firstValue, $secondValue)"}
-				{"type":"list","text":"list"}
-				{"type":"(","text":"("}
-				{"type":"variable_name","text":"$firstValue"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"firstValue"}
-				
-				{"type":",","text":","}
-				{"type":"variable_name","text":"$secondValue"}
-					{"type":"$","text":"$"}
-					{"type":"name","text":"secondValue"}
-				
-				{"type":")","text":")"}
-			
-			{"type":"=","text":"="}
-			{"type":"array_creation_expression","text":"['one', 1]"}
-				{"type":"[","text":"["}
-				{"type":"array_element_initializer","text":"'one'"}
-					{"type":"string","text":"'one'"}
-				
-				{"type":",","text":","}
-				{"type":"array_element_initializer","text":"1"}
-					{"type":"integer","text":"1"}
-				
-				{"type":"]","text":"]"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"expression_statement","text":"$array1 = ['PI', 3.14];"}
-		{"type":"assignment_expression","text":"$array1 = ['PI', 3.14]"}
-			{"type":"variable_name","text":"$array1"}
-				{"type":"$","text":"$"}
-				{"type":"name","text":"array1"}
-			
-			{"type":"=","text":"="}
-			{"type":"array_creation_expression","text":"['PI', 3.14]"}
-				{"type":"[","text":"["}
-				{"type":"array_element_initializer","text":"'PI'"}
-					{"type":"string","text":"'PI'"}
-				
-				{"type":",","text":","}
-				{"type":"array_element_initializer","text":"3.14"}
-					{"type":"float","text":"3.14"}
-				
-				{"type":"]","text":"]"}
-			
-		
-		{"type":";","text":";"}
-	
-	{"type":"echo_statement","text":"echo $array1[0];"}
-		{"type":"echo","text":"echo"}
-		{"type":"subscript_expression","text":"$array1[0]"}
-			{"type":"dereferencable_expression","text":"$array1"}
+		{"type":"expression_statement","text":"$array1 = ['PI', 3.14];"}
+			{"type":"assignment_expression","text":"$array1 = ['PI', 3.14]"}
 				{"type":"variable_name","text":"$array1"}
 					{"type":"$","text":"$"}
 					{"type":"name","text":"array1"}
 				
+				{"type":"=","text":"="}
+				{"type":"array_creation_expression","text":"['PI', 3.14]"}
+					{"type":"[","text":"["}
+					{"type":"array_element_initializer","text":"'PI'"}
+						{"type":"string","text":"'PI'"}
+					
+					{"type":",","text":","}
+					{"type":"array_element_initializer","text":"3.14"}
+						{"type":"float","text":"3.14"}
+					
+					{"type":"]","text":"]"}
+				
 			
-			{"type":"[","text":"["}
-			{"type":"integer","text":"0"}
-			{"type":"]","text":"]"}
+			{"type":";","text":";"}
 		
-		{"type":";","text":";"}
+		{"type":"echo_statement","text":"echo $array1[0];"}
+			{"type":"echo","text":"echo"}
+			{"type":"subscript_expression","text":"$array1[0]"}
+				{"type":"dereferencable_expression","text":"$array1"}
+					{"type":"variable_name","text":"$array1"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"array1"}
+					
+				
+				{"type":"[","text":"["}
+				{"type":"integer","text":"0"}
+				{"type":"]","text":"]"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"end_tag","text":""}
 	
