@@ -69,7 +69,7 @@ describe('ReferenceReader', () => {
                 uri: 'test'
             },
             name: '$DB',
-            type: 'database',
+            type: 'database|renderer',
         });
     });
 
