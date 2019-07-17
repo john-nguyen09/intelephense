@@ -19,6 +19,7 @@ export class SymbolReader implements TreeVisitor<Phrase | Token> {
     lastPhpDocLocation: Location;
 
     private _transformStack: NodeTransform[];
+    private _globalVars: Map<string, PhpSymbol> = new Map<string, PhpSymbol>();
 
     constructor(
         public document: ParsedDocument,
@@ -337,15 +338,28 @@ export class SymbolReader implements TreeVisitor<Phrase | Token> {
                 
                 case PhraseKind.GlobalDeclaration:
                     if (this.lastPhpDoc && this.lastPhpDoc.globalTags.length > 0) {
-                        this._transformStack.push(new GlobalVariableTransform(
+                        const transform = new GlobalVariableTransform(
                             this.nameResolver,
+                            this._globalVars,
                             this.document.nodeLocation(node),
                             this.lastPhpDoc,
                             this.lastPhpDocLocation
-                        ));
+                        );
+                        this._transformStack.push(transform);
                     } else {
                         this._transformStack.push(null);
                     }
+                    break;
+                case PhraseKind.SimpleAssignmentExpression:
+                    if (this._globalVars.size > 0) {
+                        this._transformStack.push(new SimpleAssignmentTransform(this._globalVars));
+                    } else {
+                        this._transformStack.push(null);
+                    }
+                    break;
+                case PhraseKind.ClassTypeDesignator:
+                case PhraseKind.InstanceofTypeDesignator:
+                    this._transformStack.push(new TypeDesignatorTransform());
                     break;
     
                 default:
@@ -1838,6 +1852,7 @@ class GlobalVariableTransform implements NodeTransform {
 
     constructor(
         private nameResolver: NameResolver,
+        private globalVars: Map<string, PhpSymbol>,
         location: Location,
         private doc: PhpDoc,
         private docLocation: Location
@@ -1851,8 +1866,58 @@ class GlobalVariableTransform implements NodeTransform {
         if (transform instanceof SimpleVariableTransform) {
             this.symbol.name = (<SimpleVariableTransform>transform).symbol.name;
             SymbolReader.assignPhpDocInfoToSymbol(this.symbol, this.doc, this.docLocation, this.nameResolver);
+
+            if (this.symbol.name) {
+                this.globalVars.set(this.symbol.name, this.symbol);
+            }
         }
 
+    }
+
+}
+
+class SimpleAssignmentTransform implements NodeTransform {
+
+    private _pushCount = 0;
+    private _symbol: PhpSymbol | null = null;
+
+    constructor(private _globalVars: Map<string, PhpSymbol>) { }
+
+    push(transform: NodeTransform) {
+        this._pushCount++;
+
+        if (this._pushCount === 1 && transform.phraseKind == PhraseKind.SimpleVariable) {
+            const varName = (<SimpleVariableTransform>transform).symbol.name;
+            if (this._globalVars.has(varName)) {
+                this._symbol = this._globalVars.get(varName);
+            }
+        } else if (this._symbol !== null) {
+            if (transform.phraseKind == PhraseKind.ClassTypeDesignator) {
+                this._symbol.type = TypeString.merge(
+                    this._symbol.type,
+                    (<TypeDesignatorTransform>transform).type
+                );
+            }
+        }
+    }
+}
+
+class TypeDesignatorTransform implements NodeTransform {
+
+    public phraseKind = PhraseKind.ClassTypeDesignator;
+    type: string = '';
+
+    push(transform: NodeTransform) {
+        switch (transform.phraseKind) {
+            case PhraseKind.FullyQualifiedName:
+            case PhraseKind.RelativeQualifiedName:
+            case PhraseKind.QualifiedName:
+                this.type = (<NameNodeTransform>transform).name;
+                break;
+
+            default:
+                break;
+        }
     }
 
 }
