@@ -37,8 +37,8 @@
     "leveldown": "^5.1.0",
     "levelup": "^4.0.2",
     "vscode-languageserver": "^5.2.1",
-    "subleveldown": "^4.0.0"
-    "php7parser": "file://../php7parser",
+    "subleveldown": "^4.0.0",
+    "php7parser": "file://../php7parser"
   },
   "devDependencies": {
     "memdown": "^4.0.0",

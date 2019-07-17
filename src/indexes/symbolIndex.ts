@@ -126,7 +126,9 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
             promises.push(this._namedSymbols.get(SymbolIndex.getSymbolKey(completionValue.identifier)));
         }
 
-        return Promise.all(promises);
+        const allResults = await Promise.all(promises.map(p => p.catch(e => e)));
+
+        return allResults.filter(result => !(result instanceof Error));
     }
 
     async getGlobalVariables() {
