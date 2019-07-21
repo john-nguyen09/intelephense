@@ -7,6 +7,7 @@ import { CodecEncoder } from "level-codec";
 import { CompletionIndex, CompletionValue } from "./completionIndex";
 import { Position } from "vscode-languageserver";
 import { elapsed } from "../util";
+import { TypeString } from "../typeString";
 
 export type PhpSymbolIdentifier = [string, string, number, number, number, number];
 
@@ -150,7 +151,18 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         }
 
         if (SymbolIndex._isGlobalVariables(node)) {
-            this._globalVariableJobs.push(this._globalVariables.put(node.name, node));
+            this._globalVariableJobs.push((async () => {
+                let currentGlobalVar: PhpSymbol | null = null;
+                try {
+                    currentGlobalVar = await this._globalVariables.get(node.name);
+                } catch (e) { }
+
+                if (currentGlobalVar) {
+                    node.type = TypeString.merge(node.type, currentGlobalVar.type);
+                }
+
+                await this._globalVariables.put(node.name, node);
+            })());
         }
 
         return true;
