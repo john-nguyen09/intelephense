@@ -7,37 +7,37 @@ let symbols: PhpSymbol[] = [
     {
         kind: SymbolKind.Class,
         name: 'Foo\\MyFoo',
-        location: null,
+        location: undefined,
     },
     {
         kind: SymbolKind.Property,
         name: 'fooBar',
-        location: null,
+        location: undefined,
     },
     {
         kind: SymbolKind.Method,
         name: 'myFooFunction',
-        location: null,
+        location: undefined,
     },
     {
         kind: SymbolKind.Method,
         name: 'myBarFunction',
-        location: null,
+        location: undefined,
     },
     {
         kind: SymbolKind.Interface,
         name: 'Bar\\MyBar',
-        location: null,
+        location: undefined,
     },
     {
         kind:SymbolKind.Function,
         name: 'zoo',
-        location: null,
+        location: undefined,
     },
     {
         kind: SymbolKind.Class,
         name: 'Foo\\myFoo',
-        location: null,
+        location: undefined,
     }
 ];
 

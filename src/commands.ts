@@ -50,7 +50,11 @@ export class NameTextEditProvider {
 
         } else if(alias && fqnUseSymbol.name !== alias) {
             //replace existing 
-            edits.push(helper.replaceDeclarationTextEdit(ref, alias));
+            const replaceTextEdit = helper.replaceDeclarationTextEdit(ref, alias);
+
+            if (replaceTextEdit) {
+                edits.push(replaceTextEdit);
+            }
         }
 
         let name = alias || PhpSymbol.notFqn(ref.name);

@@ -267,6 +267,15 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                     new QualifiedNameTransform(this._nameSymbolType(parent), this.doc.nodeLocation(node), this.nameResolver)
                 );
                 break;
+            case 'name':
+                if (this._isScope(parent)) {
+                    this._transformStack.push(
+                        new MemberNameTransform(node, this.doc.nodeLocation(node))
+                    );
+                    break;
+                }
+                this._transformStack.push(new TokenTransform(node, this.doc));
+                break;
 
             case 'namespace_name':
                 this._transformStack.push(new NamespaceNameTransform(node, this.doc));
@@ -349,7 +358,7 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
 
             case 'member_name':
                 this._transformStack.push(
-                    new MemberNameTransform(this.doc.nodeLocation(node))
+                    new MemberNameTransform(node, this.doc.nodeLocation(node))
                 );
                 break;
 
@@ -368,21 +377,25 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                         this._variableTable.pushScope();
                         this._variableTable.setVariable(Variable.create('$this', s.name));
                         this._transformStack.push(null);
-                    } else if (parentTransform) {
-                        this._transformStack.push(new ObjectCreationExpressionTransform());
-                    } else {
-                        // ClassTypeDesignator
-                        const secondChild = node.child(1);
-                        if (
-                            secondChild &&
-                            (secondChild.type == 'qualified_name' || secondChild.type === 'new_variable')
-                        ) {
-                            this._transformStack.push(new TypeDesignatorTransform('_class_type_designator'));
-                        }
-
-                        this._transformStack.push(null);
+                        break;
                     }
 
+                    // ClassTypeDesignator
+                    const secondChild = node.child(1);
+                    if (
+                        secondChild &&
+                        (secondChild.type == 'qualified_name' || secondChild.type === 'new_variable')
+                    ) {
+                        this._transformStack.push(new TypeDesignatorTransform('_class_type_designator'));
+                        break;
+                    }
+
+                    if (parentTransform) {
+                        this._transformStack.push(new ObjectCreationExpressionTransform());
+                        break;
+                    }
+
+                    this._transformStack.push(null);
                     break;
                 }
 
@@ -561,21 +574,29 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
         this._scopeStack.push(scope);
     }
 
+    private _isScope(parent: SyntaxNode | null): boolean {
+        if (!parent) {
+            return false;
+        }
+
+        return [
+            'class_constant_access_expression',
+            'function_call_expression',
+            'object_creation_expression',
+        ].includes(parent.type);
+    }
+
     private _nameSymbolType(parent: SyntaxNode | null): SymbolKind {
         if (!parent) {
             return SymbolKind.Class;
         }
 
         switch (parent.type) {
-            case 'class_constant_access_expression':
-                return SymbolKind.Constant;
             case 'function_call_expression':
                 return SymbolKind.Function;
-            case 'object_creation_expression':
-                return SymbolKind.Constructor;
-            default:
-                return SymbolKind.Class;
         }
+
+        return SymbolKind.Class;
     }
 
     private _methodDeclaration(node: SyntaxNode) {
@@ -919,6 +940,9 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
     }
 
     push(transform: NodeTransform) {
+        if (['=', '&'].includes(transform.kind)) {
+            return;
+        }
         ++this._pushCount;
 
         //ws and = should be excluded
@@ -946,7 +970,7 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
 
     private _lhs(lhs: NodeTransform) {
         switch (lhs.kind) {
-            case 'simple_name':
+            case 'variable_name':
                 {
                     let ref = (<SimpleVariableTransform>lhs).reference;
                     if (ref) {
@@ -1293,6 +1317,7 @@ class ObjectCreationExpressionTransform implements TypeNodeTransform {
     type: string | TypeResolvable = '';
 
     push(transform: NodeTransform) {
+        console.log(transform);
         if (transform.kind === '_class_type_designator') {
             this.type = (<TypeNodeTransform>transform).type;
         }
@@ -1335,7 +1360,7 @@ class GlobalVariableTransform implements TypeNodeTransform, ReferenceNodeTransfo
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this.reference.name = (<TokenTransform>transform).text;
+            this.reference.name = '$' + (<TokenTransform>transform).text;
 
             let topLevelScope = this.varTable.getScope(0);
 
@@ -1364,8 +1389,8 @@ class QualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransfor
     push(transform: NodeTransform) {
 
         if (transform.kind === 'namespace_name') {
-            let name = (<NamespaceNameTransform>transform).text;
-            let lcName = name.toLowerCase();
+            const name = (<NamespaceNameTransform>transform).text;
+            const lcName = name.toLowerCase();
             this.reference.name = this._nameResolver.resolveNotFullyQualified(name, this.reference.kind);
             if (
                 ((this.reference.kind === SymbolKind.Function || this.reference.kind === SymbolKind.Constant) &&
@@ -1373,6 +1398,8 @@ class QualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransfor
             ) {
                 this.reference.altName = name;
             }
+        } else if (transform.kind === 'name') {
+            this.reference.name = (<TokenTransform>transform).text;
         }
 
     }
@@ -1388,14 +1415,11 @@ class MemberNameTransform implements ReferenceNodeTransform {
     kind = 'member_name';
     reference: Reference;
 
-    constructor(loc: lsp.Location) {
-        this.reference = Reference.create(SymbolKind.None, '', loc);
+    constructor(node: SyntaxNode, loc: lsp.Location) {
+        this.reference = Reference.create(SymbolKind.None, node.text, loc);
     }
 
     push(transform: NodeTransform) {
-        if (transform.kind === 'name') {
-            this.reference.name = (<TokenTransform>transform).text;
-        }
     }
 
 }
@@ -1493,9 +1517,6 @@ export class VariableTable {
     }
 
     setVariable(v: Variable) {
-        if (!v || !v.name || !v.type) {
-            return;
-        }
         this._typeVariableSetStack[this._typeVariableSetStack.length - 1].variables[v.name] = v;
     }
 

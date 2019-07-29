@@ -4,7 +4,6 @@
 
 'use strict';
 
-import { Token, TokenKind, Phrase, PhraseKind, phraseKindToString, tokenKindToString } from 'php7parser';
 import { PhpSymbol, SymbolKind, SymbolModifier, UniqueSymbolSet } from '../symbol';
 import { Reference, ReferenceStore, Scope } from '../reference';
 import { SymbolStore, SymbolTable } from '../symbolStore';
@@ -17,6 +16,7 @@ import * as lsp from 'vscode-languageserver-types';
 import * as util from '../utils';
 import { TypeAggregate, MemberMergeStrategy } from '../typeAggregate';
 import { UseDeclarationHelper } from '../useDeclarationHelper';
+import { SyntaxNode } from 'tree-sitter';
 
 const noCompletionResponse: lsp.CompletionList = {
     items: [],
@@ -137,9 +137,7 @@ export class CompletionProvider {
 
         await this.documentStore.acquireLock(uri, async () => {
             let doc = this.documentStore.find(uri);
-            let table: SymbolTable = undefined;
-            
-                table = await this.symbolStore.getSymbolTable(uri);
+            let table = await this.symbolStore.getSymbolTable(uri);
             let refTable = this.refStore.getReferenceTable(uri);
 
             if (!doc || !table || !refTable) {
@@ -150,14 +148,14 @@ export class CompletionProvider {
             traverser.position(position);
 
             //return early if not in <?php ?>
-            let t = traverser.node as Token;
-            if (!t || t.kind === TokenKind.Text) {
+            let t = traverser.node;
+            if (!t || t.type === 'text') {
                 return;
             }
 
             let offset = doc.offsetAtPosition(position);
             let word = doc.wordAtOffset(offset);
-            let strategy: CompletionStrategy = null;
+            let strategy: CompletionStrategy | null = null;
 
             for (let n = 0, l = this._strategies.length; n < l; ++n) {
                 if (this._strategies[n].canSuggest(traverser.clone())) {
@@ -193,7 +191,8 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
      * @param traverser 
      */
     canSuggest(traverser: ParseTreeTraverser): boolean {
-        if (ParsedDocument.isToken(traverser.node, [TokenKind.Backslash])) {
+        const node = traverser.node;
+        if (node && node.type === '\\') {
             traverser.prevToken();
         }
         return true;
@@ -202,7 +201,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
     async completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
 
         let items: lsp.CompletionItem[] = [];
-        let namePhrase = traverser.clone().ancestor(this._isNamePhrase) as Phrase;
+        let namePhrase = traverser.clone().ancestor(this._isNamePhrase);
         let nameResolver = traverser.nameResolver;
 
         if (!word || !namePhrase) {
@@ -213,15 +212,13 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         let addUseDeclarationEnabled = this.config.addUseDeclaration;
         let fqnOffset = 0;
         let isUnqualified = false;
-        const useDeclarationHelper = new UseDeclarationHelper(traverser.document, traverser.symbolTable, traverser.range.start);
+        const useDeclarationHelper = new UseDeclarationHelper(
+            traverser.document, traverser.symbolTable, (<lsp.Range>traverser.range).start
+        );
         const importMap: { [index: string]: PhpSymbol } = {};
-        let qualifiedNameRule: PhpSymbol;
+        let qualifiedNameRule: PhpSymbol | null = null;
 
-        if (
-            namePhrase.kind === PhraseKind.RelativeQualifiedName ||
-            namePhrase.kind === PhraseKind.FullyQualifiedName ||
-            word.indexOf('\\') > -1
-        ) {
+        if (word.indexOf('\\') === 0) {
 
             //If the user has started typing a RelativeQualifiedName, FullyQualifiedName,
             //or a QualifiedName with an ns separator then it is asumed they must 
@@ -229,10 +226,11 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             //Allow namespaces in this case to enable progresive discovery of symbols.
             //Expand word to match start of symbol fqn
 
-            if (namePhrase.kind === PhraseKind.RelativeQualifiedName) {
-                //symbols share current namespace
-                word = nameResolver.resolveRelative(word.slice(10)); //namespace\
-            } else if (namePhrase.kind === PhraseKind.QualifiedName) {
+            // if (namePhrase.kind === PhraseKind.RelativeQualifiedName) {
+            //     //symbols share current namespace
+            //     word = nameResolver.resolveRelative(word.slice(10)); //namespace\
+            // } else
+            if (namePhrase.type === 'qualified_name') {
                 qualifiedNameRule = nameResolver.matchImportedSymbol(word.slice(0, word.indexOf('\\')), SymbolKind.Class);
                 word = nameResolver.resolveNotFullyQualified(word);
             }
@@ -312,6 +310,10 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
     }
 
     protected _useSymbolToUseDeclaration(s: PhpSymbol) {
+        if (!s.associated) {
+            return '';
+        }
+
         const fqn = s.associated[0].name;
         let decl = `use ${fqn}`;
         const slashPos = fqn.lastIndexOf('\\') + 1;
@@ -336,15 +338,23 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         }
 
         //lookup associated symbol for extra info
-        let s: PhpSymbol;
+        let s: PhpSymbol | undefined;
         let merged: PhpSymbol;
         let imported: PhpSymbol[] = [];
         for (let n = 0, l = filteredRules.length; n < l; ++n) {
             r = filteredRules[n];
+            if (!r.associated) {
+                continue;
+            }
             s = (await this.symbolStore.find(r.associated[0].name, pred)).shift();
             if (s) {
                 merged = PhpSymbol.clone(s);
                 merged.associated = r.associated;
+
+                if (!merged.modifiers) {
+                    merged.modifiers = SymbolModifier.None;
+                }
+
                 merged.modifiers |= SymbolModifier.Use;
                 merged.name = r.name;
                 imported.push(merged);
@@ -364,12 +374,12 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         namespaceName: string,
         isUnqualified: boolean,
         fqnOffset: number,
-        qualifiedNameRule: PhpSymbol
+        qualifiedNameRule: PhpSymbol | null
     ) {
 
         const item = <lsp.CompletionItem>{
             kind: symbolKindToLspSymbolKind(s.kind),
-            label: undefined
+            label: ''
         }
 
         //todo remove this and use resolve provider
@@ -384,7 +394,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             if (qualifiedNameRule) {
                 item.detail = this._useSymbolToUseDeclaration(qualifiedNameRule);
             }
-        } else if ((s.modifiers & SymbolModifier.Use) > 0) {
+        } else if (s.modifiers && (s.modifiers & SymbolModifier.Use) > 0) {
             //symbol is use decl
             //show the use decl as detail
             item.detail = this._useSymbolToUseDeclaration(s);
@@ -464,15 +474,8 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         }
     }
 
-    protected _isNamePhrase(node: Phrase | Token) {
-        switch ((<Phrase>node).kind) {
-            case PhraseKind.QualifiedName:
-            case PhraseKind.FullyQualifiedName:
-            case PhraseKind.RelativeQualifiedName:
-                return true;
-            default:
-                return false;
-        }
+    protected _isNamePhrase(node: SyntaxNode) {
+        return node.type === 'qualified_name';
     }
 
     /**
@@ -513,15 +516,22 @@ class InstanceOfTypeDesignatorCompletion extends AbstractNameCompletion {
     canSuggest(traverser: ParseTreeTraverser) {
 
         super.canSuggest(traverser);
+        const parent = traverser.parent();
+        const parentOfParent = traverser.parent();
+        const parentOfParentOfParent = traverser.parent();
+        let operator: null | SyntaxNode = null;
 
-        return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.NamespaceName]) &&
-            ParsedDocument.isPhrase(traverser.parent(),
-                [PhraseKind.FullyQualifiedName, PhraseKind.QualifiedName, PhraseKind.RelativeQualifiedName]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.InstanceofTypeDesignator]);
+        return (parent != null && parent.type === 'namespace_name') &&
+            (parentOfParent != null && parentOfParent.type === 'parentOfParent.type') &&
+            (parentOfParentOfParent != null && (
+                parentOfParentOfParent.type == 'binary_expression' &&
+                (operator = parentOfParentOfParent.child(1)) != null && operator.type == 'instanceof'
+            ));
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace)) > 0 && !(s.modifiers & (SymbolModifier.Anonymous));
+        return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace)) > 0 &&
+            s.modifiers != null && !(s.modifiers & (SymbolModifier.Anonymous));
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser):string[] {
@@ -538,15 +548,20 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
         super.canSuggest(traverser);
-        return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.NamespaceName]) &&
-            ParsedDocument.isPhrase(traverser.parent(),
-                [PhraseKind.FullyQualifiedName, PhraseKind.QualifiedName, PhraseKind.RelativeQualifiedName]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.ClassTypeDesignator]);
+        const node = traverser.node;
+        const parent = traverser.parent();
+        const parentOfParent = traverser.parent();
+
+        return (node !== null && node.type === 'new') ||
+            (
+                (parent !== null && parent.type === 'qualified_name') &&
+                (parentOfParent !== null && parentOfParent.type === 'object_creation_expression')
+            );
     }
 
     protected _symbolFilter(s: PhpSymbol) {
         return (s.kind & (SymbolKind.Class | SymbolKind.Namespace)) > 0 &&
-            !(s.modifiers & (SymbolModifier.Anonymous | SymbolModifier.Abstract));
+            !(s.modifiers != null && s.modifiers & (SymbolModifier.Anonymous | SymbolModifier.Abstract));
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser) {
@@ -588,8 +603,8 @@ class ClassTypeDesignatorCompletion extends AbstractNameCompletion {
         return s.kind === SymbolKind.Constructor || (s.kind === SymbolKind.Method && s.name.toLowerCase() === '__construct');
     }
 
-    private _isQualifiedName(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.QualifiedName;
+    private _isQualifiedName(node: SyntaxNode) {
+        return node.type == 'qualified_name';
     }
 
 }
@@ -599,8 +614,26 @@ class SimpleVariableCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        return ParsedDocument.isToken(traverser.node, [TokenKind.Dollar, TokenKind.VariableName]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.SimpleVariable]);
+        const node = traverser.node;
+        const parent = traverser.parent();
+
+        if (node === null) {
+            return false;
+        }
+
+        if (node.type === '$') {
+            return true;
+        }
+
+        if (node.type === 'simple_variable') {
+            return true;
+        }
+
+        if (node.type !== 'name') {
+            return false;
+        }
+
+        return parent != null && ['$', 'variable_name'].includes(parent.type);
     }
 
     async completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
@@ -610,6 +643,11 @@ class SimpleVariableCompletion implements CompletionStrategy {
         }
 
         let scope = traverser.scope;
+
+        if (!scope || !scope.location) {
+            return noCompletionResponse;
+        }
+
         let symbolMask = SymbolKind.Variable | SymbolKind.Parameter;
         let varSymbols = PhpSymbol.filterChildren(scope, (x) => {
             return (x.kind & symbolMask) > 0 && x.name.indexOf(word) === 0;
@@ -651,7 +689,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
 
     }
 
-    private async _varTypeMap(s: Scope) {
+    private async _varTypeMap(s: Scope | undefined) {
 
         let map: { [index: string]: string } = {};
 
@@ -758,8 +796,10 @@ class NameCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
         super.canSuggest(traverser);
-        return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.NamespaceName]) &&
-            traverser.ancestor(this._isNamePhrase) !== undefined;
+        const parent = traverser.parent();
+
+        return parent != null && parent.type === 'namespace_name' &&
+            traverser.ancestor(this._isNamePhrase) !== null;
     }
 
     async completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
@@ -799,7 +839,7 @@ class NameCompletion extends AbstractNameCompletion {
 
     protected _symbolFilter(s: PhpSymbol) {
         return (s.kind & (SymbolKind.Class | SymbolKind.Function | SymbolKind.Constant | SymbolKind.Namespace)) > 0 &&
-            !(s.modifiers & SymbolModifier.Anonymous);
+            s.modifiers != undefined && !(s.modifiers & SymbolModifier.Anonymous);
     }
 
 }
@@ -812,7 +852,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
     async completions(traverser: ParseTreeTraverser, word: string) {
         let scopedAccessExpr = traverser.ancestor(this._isMemberAccessExpr);
-        let scopePhrase = traverser.nthChild(0) as Phrase;
+        let scopePhrase = traverser.nthChild(0);
         let type = await this._resolveType(traverser);
         let typeNames = TypeString.atomicClassArray(type);
 
@@ -824,7 +864,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
         let classAggregateType = await TypeAggregate.create(this.symbolStore, nameResolver.className);
         let typeName: string;
         let fn: Predicate<PhpSymbol>;
-        let typeAggregate: TypeAggregate;
+        let typeAggregate: TypeAggregate | null = null;
         let symbols: PhpSymbol[] = [];
 
         for (let n = 0, l = typeNames.length; n < l; ++n) {
@@ -862,57 +902,76 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
     private async _resolveType(traverser: ParseTreeTraverser): Promise<string> {
 
         //assumed that traverser is on the member scope node
-        let node: Phrase;
+        let node: SyntaxNode | null = null;
         let arrayDereference = 0;
-        let ref: Reference;
+        let ref: Reference | null = null;
 
         while (true) {
-            node = traverser.node as Phrase;
-            switch (node.kind) {
-                case PhraseKind.FullyQualifiedName:
-                case PhraseKind.RelativeQualifiedName:
-                case PhraseKind.QualifiedName:
-                case PhraseKind.SimpleVariable:
-                case PhraseKind.RelativeScope:
+            node = traverser.node;
+
+            if (node == null) {
+                break;
+            }
+
+            switch (node.type) {
+                case 'dereferencable_expression':
+                    if (traverser.nthChild(0)) {
+                        continue;
+                    }
+                    break;
+
+                case 'qualified_name':
+                case 'variable_name':
+                case 'relative_scope':
                     ref = traverser.reference;
                     break;
 
-                case PhraseKind.MethodCallExpression:
-                case PhraseKind.PropertyAccessExpression:
-                case PhraseKind.ScopedCallExpression:
-                case PhraseKind.ScopedPropertyAccessExpression:
-                case PhraseKind.ClassConstantAccessExpression:
+                case 'scoped_call_expression':
+                case 'member_access_expression':
+                case 'scoped_property_access_expression':
+                case 'class_constant_access_expression':
                     if (traverser.child(this._isMemberName)) {
                         ref = traverser.reference;
                     }
                     break;
 
-                case PhraseKind.EncapsulatedExpression:
-                    if (traverser.child(ParsedDocument.isPhrase)) {
+                case 'conditional_expression':
+                case 'augmented_assignment_expression':
+                case 'assignment_expression':
+                case 'yield_expression':
+                case 'binary_expression':
+                case 'include_expression':
+                case 'include_once_expression':
+                case 'require_expression':
+                case 'require_once_expression':
+                case 'clone_expression':
+                case 'exponentiation_expression':
+                case 'unary_op_expression':
+                case 'cast_expression':
+                    if (traverser.child(node => node.childCount > 0)) {
                         continue;
                     }
                     break;
 
-                case PhraseKind.ObjectCreationExpression:
+                case 'object_creation_expression':
                     if (traverser.child(this._isClassTypeDesignator) && traverser.child(ParsedDocument.isNamePhrase)) {
                         ref = traverser.reference;
                     }
                     break;
 
-                case PhraseKind.SimpleAssignmentExpression:
-                case PhraseKind.ByRefAssignmentExpression:
+                case 'assignment_expression':
                     if (traverser.nthChild(0)) {
                         continue;
                     }
                     break;
 
-                case PhraseKind.FunctionCallExpression:
+                case 'function_call_expression':
                     if (traverser.nthChild(0)) {
                         ref = traverser.reference;
                     }
                     break;
 
-                case PhraseKind.SubscriptExpression:
+                case 'subscript_expression':
                     if (traverser.nthChild(0)) {
                         arrayDereference++;
                         continue;
@@ -942,20 +1001,17 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
     }
 
     protected abstract async _createMemberPredicate(
-        scopeName: string, word: string, classContext: TypeAggregate
+        scopeName: string, word: string, classContext: TypeAggregate | null
     ): Promise<Predicate<PhpSymbol>>;
 
-    protected _isMemberAccessExpr(node: Phrase | Token) {
-        switch ((<Phrase>node).kind) {
-            case PhraseKind.ScopedCallExpression:
-            case PhraseKind.ClassConstantAccessExpression:
-            case PhraseKind.ScopedPropertyAccessExpression:
-            case PhraseKind.PropertyAccessExpression:
-            case PhraseKind.MethodCallExpression:
-                return true;
-            default:
-                return false;
-        }
+    protected _isMemberAccessExpr(node: SyntaxNode) {
+        return [
+            'scoped_call_expression',
+            'class_constant_access_expression',
+            'scoped_property_access_expression',
+            'member_access_expression',
+            'member_call_expression',
+        ].includes(node.type);
     }
 
     protected _toCompletionItem(s: PhpSymbol) {
@@ -1023,7 +1079,8 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
     protected toPropertyCompletionItem(s: PhpSymbol) {
         let item = <lsp.CompletionItem>{
             kind: lsp.CompletionItemKind.Property,
-            label: (s.modifiers & SymbolModifier.Static) > 0 ? s.name : s.name.slice(1), //remove $
+            label: s.modifiers !== undefined && (s.modifiers & SymbolModifier.Static) > 0 ?
+                s.name : s.name.slice(1), //remove $
             detail: PhpSymbol.type(s)
         }
 
@@ -1034,12 +1091,16 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
         return item;
     }
 
-    private _isMemberName(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.MemberName || (<Phrase>node).kind === PhraseKind.ScopedMemberName;
+    private _isMemberName(node: SyntaxNode) {
+        return node.type === 'member_name';
     }
 
-    private _isClassTypeDesignator(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.ClassTypeDesignator;
+    private _isClassTypeDesignator(node: SyntaxNode): boolean {
+        return ['qualified_name', 'new_variable'].includes(node.type) &&
+            node.parent !== null && [
+                'object_creation_expression',
+                'binary_expression',
+            ].includes(node.parent.type);
     }
 
 }
@@ -1047,49 +1108,58 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 class ScopedAccessCompletion extends MemberAccessCompletion {
 
 
-    canSuggest(traverser: ParseTreeTraverser) {
+    canSuggest(traverser: ParseTreeTraverser): boolean {
         const scopedAccessPhrases = [
-            PhraseKind.ScopedCallExpression,
-            PhraseKind.ClassConstantAccessExpression,
-            PhraseKind.ScopedPropertyAccessExpression
+            'class_constant_access_expression',
+            'scoped_property_access_expression',
+            'scoped_call_expression',
         ];
+        const node = traverser.node;
+        const parent = traverser.parent();
+        const parentOfParent = traverser.parent();
 
-        if (ParsedDocument.isToken(traverser.node, [TokenKind.ColonColon])) {
-            return ParsedDocument.isPhrase(traverser.parent(), scopedAccessPhrases);
+        if (node == null) {
+            return false;
         }
 
-        if (ParsedDocument.isToken(traverser.node, [TokenKind.VariableName])) {
-            return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.ScopedMemberName]);
+        if (node.type === '::') {
+            return parent != null && scopedAccessPhrases.includes(parent.type);
         }
 
-        if (ParsedDocument.isToken(traverser.node, [TokenKind.Dollar])) {
-            return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.SimpleVariable]) &&
-                ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.ScopedMemberName]);
+        if (node.type == '$') {
+            return parent !== null && parentOfParent !== null && (
+                parent.type == 'variable_name' && parentOfParent.type == 'scoped_property_access_expression'
+            );
         }
 
-        return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.Identifier]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.ScopedMemberName]);
+        if (node.type !== 'name') {
+            return false;
+        }
+
+        return parentOfParent != null && scopedAccessPhrases.includes(parentOfParent.type);
     }
 
     protected async _createMemberPredicate(
-        scopeName: string, word: string, classContext: TypeAggregate
+        scopeName: string, word: string, classContext: TypeAggregate | null
     ): Promise<Predicate<PhpSymbol>> {
         if (classContext && scopeName.toLowerCase() === classContext.name.toLowerCase()) {
             //public, protected, private
             return (x) => {
-                return (x.modifiers & SymbolModifier.Static) > 0 && util.ciStringContains(word, x.name);
+                return x.modifiers !== undefined && (x.modifiers & SymbolModifier.Static) > 0 &&
+                    util.ciStringContains(word, x.name);
             };
         } else if (classContext && await classContext.isBaseClass(scopeName)) {
             //public, protected
             //looking for non static here as well to handle parent keyword
             return (x) => {
-                return !(x.modifiers & SymbolModifier.Private) && util.ciStringContains(word, x.name);
+                return !(x.modifiers !== undefined && x.modifiers & SymbolModifier.Private) &&
+                    util.ciStringContains(word, x.name);
             };
 
         } else if (classContext && await classContext.isAssociated(scopeName)) {
             //public, protected
             return (x) => {
-                return (x.modifiers & SymbolModifier.Static) > 0 &&
+                return x.modifiers !== undefined && (x.modifiers & SymbolModifier.Static) > 0 &&
                     !(x.modifiers & SymbolModifier.Private) &&
                     util.ciStringContains(word, x.name);
             };
@@ -1098,7 +1168,8 @@ class ScopedAccessCompletion extends MemberAccessCompletion {
             //public
             const mask = SymbolModifier.Static | SymbolModifier.Public;
             return (x) => {
-                return (x.modifiers & mask) === mask && util.ciStringContains(word, x.name);
+                return x.modifiers !== undefined && (x.modifiers & mask) === mask &&
+                    util.ciStringContains(word, x.name);
             };
         }
     }
@@ -1108,18 +1179,36 @@ class ScopedAccessCompletion extends MemberAccessCompletion {
 class ObjectAccessCompletion extends MemberAccessCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
+        const parent = traverser.parent();
+        const node = traverser.node;
+        const objectTypes = [
+            'new_variable',
+            'member_access_expression',
+            'member_call_expression',
+        ];
 
-        if (ParsedDocument.isToken(traverser.node, [TokenKind.Arrow])) {
-            return ParsedDocument.isPhrase(traverser.parent(),
-                [PhraseKind.PropertyAccessExpression, PhraseKind.MethodCallExpression]);
+        if (node === null) {
+            return false;
         }
 
-        return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.MemberName]);
+        if (objectTypes.includes(node.type)) {
+            return true;
+        }
+
+        if (parent === null) {
+            return false;
+        }
+
+        if (node !== null && ['->'].includes(node.type)) {
+            return objectTypes.includes(parent.type);
+        }
+
+        return parent.type === 'member_name';
 
     }
 
     protected async _createMemberPredicate(
-        scopeName: string, word: string, classContext: TypeAggregate
+        scopeName: string, word: string, classContext: TypeAggregate | null
     ): Promise<Predicate<PhpSymbol>> {
 
         //php allows static methods to be accessed with ->
@@ -1132,14 +1221,16 @@ class ObjectAccessCompletion extends MemberAccessCompletion {
             //public, protected
             const mask = SymbolModifier.Private;
             return (x) => {
-                return !(x.modifiers & mask) && util.ciStringContains(word, x.name);
+                return x.modifiers !== undefined &&
+                    !(x.modifiers & mask) && util.ciStringContains(word, x.name);
             };
 
         } else {
             //public
             const mask = SymbolModifier.Protected | SymbolModifier.Private;
             return (x) => {
-                return !(x.modifiers & mask) && util.ciStringContains(word, x.name);
+                return x.modifiers !== undefined &&
+                    !(x.modifiers & mask) && util.ciStringContains(word, x.name);
             };
         }
     }
@@ -1154,8 +1245,13 @@ class TypeDeclarationCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
         super.canSuggest(traverser);
-        return ParsedDocument.isToken(traverser.node, [TokenKind.Name, TokenKind.Backslash, TokenKind.Array, TokenKind.Callable]) &&
-            traverser.ancestor(this._isTypeDeclaration) !== undefined;
+        return traverser.node !== null && [
+            'name',
+            '\\',
+            'array',
+            'callable',
+        ].includes(traverser.node.type) &&
+            traverser.ancestor(this._isTypeDeclaration) !== null;
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser) {
@@ -1166,8 +1262,8 @@ class TypeDeclarationCompletion extends AbstractNameCompletion {
         return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace)) > 0;
     }
 
-    private _isTypeDeclaration(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.TypeDeclaration;
+    private _isTypeDeclaration(node: SyntaxNode) {
+        return node.type === 'type_declaration';
     }
 
 }
@@ -1176,7 +1272,7 @@ class ClassBaseClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
         super.canSuggest(traverser);
-        return traverser.ancestor(this._isClassBaseClause) !== undefined;
+        return traverser.ancestor(this._isClassBaseClause) !== null;
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser):string[] {
@@ -1184,11 +1280,12 @@ class ClassBaseClauseCompletion extends AbstractNameCompletion {
     }
 
     protected _symbolFilter(s: PhpSymbol) {
-        return (s.kind & (SymbolKind.Class | SymbolKind.Namespace)) > 0 && !(s.modifiers & SymbolModifier.Final);
+        return (s.kind & (SymbolKind.Class | SymbolKind.Namespace)) > 0 &&
+            s.modifiers !== undefined && !(s.modifiers & SymbolModifier.Final);
     }
 
-    private _isClassBaseClause(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.ClassBaseClause;
+    private _isClassBaseClause(node: SyntaxNode) {
+        return node.type === 'class_base_clause';
     }
 
 }
@@ -1197,7 +1294,7 @@ class InterfaceClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
         super.canSuggest(traverser);
-        return traverser.ancestor(this._isInterfaceClause) !== undefined;
+        return traverser.ancestor(this._isInterfaceClause) !== null;
 
     }
 
@@ -1209,9 +1306,11 @@ class InterfaceClauseCompletion extends AbstractNameCompletion {
         return s.kind === SymbolKind.Interface || s.kind === SymbolKind.Namespace;
     }
 
-    private _isInterfaceClause(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.ClassInterfaceClause ||
-            (<Phrase>node).kind === PhraseKind.InterfaceBaseClause;
+    private _isInterfaceClause(node: SyntaxNode) {
+        return [
+            'class_interface_clause',
+            'interface_base_clause',
+        ].includes(node.type);
     }
 
 }
@@ -1220,9 +1319,11 @@ class TraitUseClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
         super.canSuggest(traverser);
-        return traverser.ancestor(this._isNamePhrase) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.QualifiedNameList]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.TraitUseClause]);
+        const parent = traverser.parent();
+        const parentOfParent = traverser.parent();
+        return traverser.ancestor(this._isNamePhrase) !== null &&
+            parent !== null && parent.type === 'qualified_name' &&
+            parentOfParent !== null && parentOfParent.type === 'trait_use_clause';
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser):string[] {
@@ -1240,10 +1341,10 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        if (ParsedDocument.isToken(traverser.node, [TokenKind.Backslash])) {
+        if (traverser.node && traverser.node.type === '\\') {
             traverser.prevToken();
         }
-        return traverser.ancestor(this._isNamespaceDefinition) !== undefined;
+        return traverser.ancestor(this._isNamespaceDefinition) !== null;
     }
 
     async completions(traverser: ParseTreeTraverser, word: string) {
@@ -1296,8 +1397,8 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
         return s.kind === SymbolKind.Namespace;
     }
 
-    private _isNamespaceDefinition(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.NamespaceDefinition;
+    private _isNamespaceDefinition(node: SyntaxNode) {
+        return node.type === 'namespace_definition';
     }
 
 
@@ -1308,25 +1409,35 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        if (ParsedDocument.isToken(traverser.node, [TokenKind.Backslash])) {
+        if (traverser.node && traverser.node.type === '\\') {
             traverser.prevToken();
         }
-        return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.NamespaceName]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.NamespaceUseDeclaration, PhraseKind.NamespaceUseClause]);
+        const parent = traverser.parent();
+        const parentOfParent = traverser.parent();
+
+        if (parent === null || parentOfParent === null) {
+            return false;
+        }
+
+        return parent.type === 'namespace_name' &&
+            [
+                'namespace_use_declaration',
+                'namespace_use_clause',
+            ].includes(parentOfParent.type);
     }
 
     async completions(traverser: ParseTreeTraverser, word: string) {
 
         let items: lsp.CompletionItem[] = [];
-        let namespaceUseDecl = traverser.ancestor(this._isNamespaceUseDeclaration) as Phrase;
+        let namespaceUseDecl = traverser.ancestor(this._isNamespaceUseDeclaration);
 
         if (!word) {
             return noCompletionResponse;
         }
 
-        const kindMask = this._modifierToSymbolKind(<Token>traverser.child(this._isModifier));
+        const kindMask = this._modifierToSymbolKind(traverser.child(this._isModifier));
         const pred = (x: PhpSymbol) => {
-            return (x.kind & kindMask) > 0 && !(x.modifiers & SymbolModifier.Use);
+            return (x.kind & kindMask) > 0 && x.modifiers !== undefined && !(x.modifiers & SymbolModifier.Use);
         }
 
         const matches = await this.symbolStore.match(word, pred);
@@ -1379,15 +1490,11 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
         return item;
     }
 
-    private _isNamespaceUseDeclaration(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.NamespaceUseDeclaration;
+    private _isNamespaceUseDeclaration(node: SyntaxNode) {
+        return node.type === 'namespace_use_declaration';
     }
 
-    private _isNamespaceUseClause(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.NamespaceUseClause;
-    }
-
-    private _modifierToSymbolKind(token: Token) {
+    private _modifierToSymbolKind(token: SyntaxNode | null) {
 
         const defaultKindMask = SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Namespace;
 
@@ -1395,21 +1502,21 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             return defaultKindMask;
         }
 
-        switch (token.kind) {
-            case TokenKind.Function:
+        switch (token.type) {
+            case 'function':
                 return SymbolKind.Function | SymbolKind.Namespace;
-            case TokenKind.Const:
+            case 'const':
                 return SymbolKind.Constant | SymbolKind.Namespace;
             default:
                 return defaultKindMask;
         }
     }
 
-    private _isModifier(node: Phrase | Token) {
-        switch ((<Token>node).kind) {
-            case TokenKind.Class:
-            case TokenKind.Function:
-            case TokenKind.Const:
+    private _isModifier(node: SyntaxNode) {
+        switch (node.type) {
+            case 'class':
+            case 'function':
+            case 'const':
                 return true;
             default:
                 return false;
@@ -1423,11 +1530,20 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions, public symbolStore: SymbolStore) { }
 
     canSuggest(traverser: ParseTreeTraverser) {
-        if (ParsedDocument.isToken(traverser.node, [TokenKind.Backslash])) {
+        if (traverser.node && traverser.node.type === '\\') {
             traverser.prevToken();
         }
-        return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.NamespaceName]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.NamespaceUseGroupClause]);
+        const parent = traverser.parent();
+        const parentOfParent = traverser.parent();
+
+        if (parent === null || parentOfParent === null) {
+            return false;
+        }
+
+        return parent.type === 'namespace_name' && [
+            'namespace_use_group_clause_1',
+            'namespace_use_group_clause_2',
+        ].includes(parentOfParent.type);
     }
 
     async completions(traverser: ParseTreeTraverser, word: string) {
@@ -1437,10 +1553,10 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
             return noCompletionResponse;
         }
 
-        let nsUseGroupClause = traverser.ancestor(this._isNamespaceUseGroupClause) as Phrase;
-        let nsUseGroupClauseModifier = traverser.child(this._isModifier) as Token;
-        let nsUseDecl = traverser.ancestor(this._isNamespaceUseDeclaration) as Phrase;
-        let nsUseDeclModifier = traverser.child(this._isModifier) as Token;
+        let nsUseGroupClause = traverser.ancestor(this._isNamespaceUseGroupClause);
+        let nsUseGroupClauseModifier = traverser.child(this._isModifier);
+        let nsUseDecl = traverser.ancestor(this._isNamespaceUseDeclaration);
+        let nsUseDeclModifier = traverser.child(this._isModifier);
         let kindMask = this._modifierToSymbolKind(nsUseGroupClauseModifier || nsUseDeclModifier);
         let prefix = '';
         if (nsUseDeclModifier) {
@@ -1454,7 +1570,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
         word = prefix + '\\' + word;
 
         let pred = (x: PhpSymbol) => {
-            return (x.kind & kindMask) > 0 && !(x.modifiers & SymbolModifier.Use);
+            return (x.kind & kindMask) > 0 && x.modifiers !== undefined && !(x.modifiers & SymbolModifier.Use);
         };
 
         let matches = await this.symbolStore.match(word, pred);
@@ -1499,30 +1615,33 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
         return item;
     }
 
-    private _isNamespaceUseGroupClause(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.NamespaceUseGroupClause;
+    private _isNamespaceUseGroupClause(node: SyntaxNode) {
+        return [
+            'namespace_use_group_clause_1',
+            'namespace_use_group_clause_2',
+        ].includes(node.type);
     }
 
-    private _isNamespaceUseDeclaration(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.NamespaceUseDeclaration;
+    private _isNamespaceUseDeclaration(node: SyntaxNode) {
+        return node.type === 'namespace_use_declaration';
     }
 
-    private _isModifier(node: Phrase | Token) {
-        switch ((<Token>node).kind) {
-            case TokenKind.Class:
-            case TokenKind.Function:
-            case TokenKind.Const:
+    private _isModifier(node: SyntaxNode) {
+        switch (node.type) {
+            case 'class':
+            case 'function':
+            case 'const':
                 return true;
             default:
                 return false;
         }
     }
 
-    private _isNamespaceName(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.NamespaceName;
+    private _isNamespaceName(node: SyntaxNode) {
+        return node.type === 'namespace_name';
     }
 
-    private _modifierToSymbolKind(modifier: Token) {
+    private _modifierToSymbolKind(modifier: SyntaxNode | null) {
 
         const defaultKindMask = SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Namespace;
 
@@ -1530,10 +1649,10 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
             return defaultKindMask;
         }
 
-        switch (modifier.kind) {
-            case TokenKind.Function:
+        switch (modifier.type) {
+            case 'function':
                 return SymbolKind.Function | SymbolKind.Namespace;
-            case TokenKind.Const:
+            case 'const':
                 return SymbolKind.Constant | SymbolKind.Namespace;
             default:
                 return defaultKindMask;
@@ -1547,10 +1666,8 @@ class DeclarationBodyCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions) { }
 
     private static _phraseTypes = [
-        PhraseKind.ClassDeclarationBody, PhraseKind.InterfaceDeclarationBody, PhraseKind.TraitDeclarationBody,
-        PhraseKind.ClassMemberDeclarationList,
-        PhraseKind.InterfaceMemberDeclarationList,
-        PhraseKind.TraitMemberDeclarationList,
+        'class_const_declaration', 'property_declaration', 'method_declaration',
+        'constructor_declaration', 'destructor_declaration', 'trait_use_clause',
     ];
 
     private static _keywords = [
@@ -1558,15 +1675,22 @@ class DeclarationBodyCompletion implements CompletionStrategy {
     ];
 
     canSuggest(traverser: ParseTreeTraverser) {
-        return ParsedDocument.isPhrase(traverser.parent(), DeclarationBodyCompletion._phraseTypes) ||
-            (
-                ParsedDocument.isPhrase(traverser.node, [PhraseKind.Error]) &&
-                ParsedDocument.isPhrase(traverser.parent(), DeclarationBodyCompletion._phraseTypes)
-            ) ||
-            (
-                ParsedDocument.isPhrase(traverser.node, [PhraseKind.Error]) &&
-                ParsedDocument.isPhrase(traverser.parent(), DeclarationBodyCompletion._phraseTypes)
-            );
+        const parent = traverser.parent();
+        const parentOfParent = traverser.parent();
+        const parentOfParentOfParent = traverser.parent();
+
+        return parent !== null && (
+            DeclarationBodyCompletion._phraseTypes.includes(parent.type) ||
+            parent.type === 'ERROR' && (
+                parentOfParent !== null && (
+                    DeclarationBodyCompletion._phraseTypes.includes(parentOfParent.type) ||
+                    parentOfParent.type === 'ERROR' && (
+                        parentOfParentOfParent !== null &&
+                        DeclarationBodyCompletion._phraseTypes.includes(parentOfParentOfParent.type)
+                    )
+                )
+            )
+        );
     }
 
     async completions(traverser: ParseTreeTraverser, word: string) {
@@ -1602,15 +1726,18 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
     canSuggest(traverser: ParseTreeTraverser) {
         let nameResolver = traverser.nameResolver;
         let thisSymbol = nameResolver.class;
-        return ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.Identifier]) &&
-            ParsedDocument.isPhrase(traverser.parent(), [PhraseKind.MethodDeclarationHeader]) &&
+        const parent = traverser.parent();
+        const parentOfParent = traverser.parent();
+        return parent !== null && parent.type === 'name' &&
+            // TODO: Fix this
+            parentOfParent !== null && parentOfParent.type === 'method_declaration_header' &&
             thisSymbol !== undefined;
     }
 
     async completions(traverser: ParseTreeTraverser, word: string) {
 
-        let memberDecl = traverser.ancestor(this._isMethodDeclarationHeader) as Phrase;
-        let modifiers = SymbolReader.modifierListToSymbolModifier(<Phrase>traverser.child(this._isMemberModifierList));
+        let memberDecl = traverser.ancestor(this._isMethodDeclarationHeader);
+        let modifiers = SymbolReader.modifierListToSymbolModifier(traverser.child(this._isMemberModifierList));
 
         if (modifiers & (SymbolModifier.Private | SymbolModifier.Abstract)) {
             return noCompletionResponse;
@@ -1624,8 +1751,8 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
 
         let fn = (x: PhpSymbol) => {
             return x.kind === SymbolKind.Method &&
-                (!modifiers || (x.modifiers & modifiers) > 0) &&
-                !(x.modifiers & (SymbolModifier.Final | SymbolModifier.Private)) &&
+                (!modifiers || (x.modifiers !== undefined && (x.modifiers & modifiers) > 0)) &&
+                !(x.modifiers !== undefined && (x.modifiers & (SymbolModifier.Final | SymbolModifier.Private))) &&
                 !existingMethodNames.has(x.name.toLowerCase()) &&
                 util.ciStringContains(word, x.name);
         }
@@ -1735,12 +1862,14 @@ class MethodDeclarationHeaderCompletion implements CompletionStrategy {
 
     }
 
-    private _isMethodDeclarationHeader(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.MethodDeclarationHeader;
+    private _isMethodDeclarationHeader(node: SyntaxNode) {
+        // TODO: Fix this please method_declaration_header does not exist
+        return node.type === 'method_declaration_header';
     }
 
-    private _isMemberModifierList(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.MemberModifierList;
+    private _isMemberModifierList(node: SyntaxNode) {
+        // TODO: Fix this please member_modifier_list does not exist
+        return node.type === 'member_modifier_list';
     }
 
     private _isMethod(s: PhpSymbol) {

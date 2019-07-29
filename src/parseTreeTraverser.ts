@@ -9,18 +9,17 @@ import { SymbolTable } from './symbolStore';
 import { TreeTraverser } from './types';
 import { ParsedDocument } from './parsedDocument';
 import { Position, Range } from 'vscode-languageserver-types';
-import { Phrase, Token, PhraseKind, TokenKind, Node, isToken } from 'php7parser';
-import { PhpSymbol } from './symbol';
-import { NameResolver } from './nameResolver';
+import { SyntaxNode } from 'tree-sitter';
+import { Parser } from './parser';
 
-export class ParseTreeTraverser extends TreeTraverser<Node> {
+export class ParseTreeTraverser extends TreeTraverser<SyntaxNode> {
 
     private _doc: ParsedDocument;
     private _symbolTable: SymbolTable;
-    private _refTable:ReferenceTable;
+    private _refTable: ReferenceTable;
 
-    constructor(document: ParsedDocument, symbolTable: SymbolTable, refTable:ReferenceTable) {
-        super([document.tree]);
+    constructor(document: ParsedDocument, symbolTable: SymbolTable, refTable: ReferenceTable) {
+        super([document.tree.rootNode]);
         this._doc = document;
         this._symbolTable = symbolTable;
         this._refTable = refTable;
@@ -39,15 +38,27 @@ export class ParseTreeTraverser extends TreeTraverser<Node> {
     }
 
     get text() {
-        return this._doc.nodeText(this.node);
+        if (this.node == null) {
+            return '';
+        }
+
+        return this.node.text;
     }
 
     get range() {
+        if (this.node == null) {
+            return null;
+        }
+
         return this._doc.nodeRange(this.node);
     }
 
     get reference() {
-        let range = this.range;
+        const range = this.range;
+
+        if (range == null) {
+            return null;
+        }
         return this._refTable.referenceAtPosition(range.start);
     }
 
@@ -60,8 +71,9 @@ export class ParseTreeTraverser extends TreeTraverser<Node> {
     }
 
     get nameResolver() {
-        let firstToken = ParsedDocument.firstToken(this.node);
-        let pos = this.document.positionAtOffset(firstToken.offset);
+        const pos = this.node != null ? Parser.toPosition(this.node.startPosition) : Position.create(
+            0, 0
+        );
         return this._symbolTable.nameResolver(pos);
     }
 
@@ -71,13 +83,11 @@ export class ParseTreeTraverser extends TreeTraverser<Node> {
      */
     position(pos: Position) {
         let offset = this._doc.offsetAtPosition(pos) - 1;
-        let fn = (node: Node) => {
-            return isToken(node) &&
-                offset < node.offset + node.length &&
-                offset >= node.offset;
+        let fn = (node: SyntaxNode) => {
+            return node.childCount === 0 && offset < node.endIndex && offset >= node.startIndex;
         };
 
-        return this.find(fn) as Token;
+        return this.find(fn);
     }
 
     clone() {
@@ -90,19 +100,19 @@ export class ParseTreeTraverser extends TreeTraverser<Node> {
     prevToken() {
 
         const spine = this._spine.slice(0);
-        let current:Node;
-        let parent:Phrase;
-        let prevSiblingIndex:number;
+        let current: SyntaxNode | undefined;
+        let parent: SyntaxNode;
+        let prevSiblingIndex: number;
 
-        while(spine.length > 1) {
+        while (spine.length > 1) {
 
-            current = spine.pop();
-            parent = spine[spine.length - 1] as Phrase;
+            current = spine.pop() as SyntaxNode;
+            parent = spine[spine.length - 1];
             prevSiblingIndex = parent.children.indexOf(current) - 1;
 
-            if(prevSiblingIndex > -1) {
+            if (prevSiblingIndex > -1) {
                 spine.push(parent.children[prevSiblingIndex]);
-                if(this._lastToken(spine)) {
+                if (this._lastToken(spine)) {
                     //token found
                     this._spine = spine;
                     return this.node;
@@ -113,72 +123,31 @@ export class ParseTreeTraverser extends TreeTraverser<Node> {
 
         }
 
-        return undefined;
+        return null;
 
     }
 
-    private _lastToken(spine: Node[]) {
+    private _lastToken(spine: SyntaxNode[]) {
 
         let node = spine[spine.length - 1];
-        if(isToken(node)) {
+
+        if (!node) {
             return spine;
         }
 
-        if(!(<Phrase>node).children) {
-            return undefined;
-        }
+        const children = node.children;
 
-        for(let n = (<Phrase>node).children.length - 1; n >= 0; --n) {
-            spine.push((<Phrase>node).children[n]);
-            if(this._lastToken(spine)) {
+        for (let n = children.length - 1; n >= 0; --n) {
+            spine.push(children[n]);
+            if (this._lastToken(spine)) {
                 return spine;
             } else {
                 spine.pop();
             }
         }
 
-        return undefined;
+        return null;
 
-    }
-
-    /**
-     * True if current node is the name part of a declaration
-     */
-    get isDeclarationName() {
-
-        let traverser = this.clone();
-        let t = traverser.node as Token;
-        let parent = traverser.parent() as Phrase;
-
-        if (!t || !parent) {
-            return false;
-        }
-
-        return ((t.kind === TokenKind.Name || t.kind === TokenKind.VariableName) && this._isDeclarationPhrase(parent)) ||
-            (parent.kind === PhraseKind.Identifier && this._isDeclarationPhrase(<Phrase>traverser.parent()));
-
-    }
-
-    private _isDeclarationPhrase(node: Phrase) {
-
-        if (!node) {
-            return false;
-        }
-
-        switch (node.kind) {
-            case PhraseKind.ClassDeclarationHeader:
-            case PhraseKind.TraitDeclarationHeader:
-            case PhraseKind.InterfaceDeclarationHeader:
-            case PhraseKind.PropertyElement:
-            case PhraseKind.ConstElement:
-            case PhraseKind.ParameterDeclaration:
-            case PhraseKind.FunctionDeclarationHeader:
-            case PhraseKind.MethodDeclarationHeader:
-            case PhraseKind.ClassConstElement:
-                return true;
-            default:
-                return false;
-        }
     }
 
 }

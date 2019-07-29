@@ -33,7 +33,7 @@
         },
         {
             "kind": "Function",
-            "name": "",
+            "name": "Array",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/lc_keywords.php",
                 "range": {

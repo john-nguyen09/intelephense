@@ -15,7 +15,7 @@
     "children": [
         {
             "kind": "Class",
-            "name": "",
+            "name": "true",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -49,8 +49,8 @@
             "type": ""
         },
         {
-            "kind": "Constructor ",
-            "name": "",
+            "kind": "Class",
+            "name": "TestClass",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -80,8 +80,7 @@
                         "character": 10
                     }
                 }
-            },
-            "type": ""
+            }
         },
         {
             "kind": "Variable",
@@ -98,12 +97,11 @@
                         "character": 10
                     }
                 }
-            },
-            "type": ""
+            }
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "true",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -185,12 +183,11 @@
                         "character": 17
                     }
                 }
-            },
-            "type": ""
+            }
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "TestClass",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -224,8 +221,8 @@
             "type": ""
         },
         {
-            "kind": "Constant",
-            "name": "",
+            "kind": "Class",
+            "name": "TestClass",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -241,8 +238,25 @@
             }
         },
         {
+            "kind": "ClassConstant",
+            "name": "CLASS_CONSTANT",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
+                "range": {
+                    "start": {
+                        "line": 22,
+                        "character": 11
+                    },
+                    "end": {
+                        "line": 22,
+                        "character": 25
+                    }
+                }
+            }
+        },
+        {
             "kind": "Class",
-            "name": "",
+            "name": "TestClass4",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -289,12 +303,11 @@
                         "character": 10
                     }
                 }
-            },
-            "type": ""
+            }
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "TestClass",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -324,8 +337,7 @@
                         "character": 15
                     }
                 }
-            },
-            "type": ""
+            }
         },
         {
             "kind": "Variable",
@@ -364,8 +376,8 @@
             "type": ""
         },
         {
-            "kind": "Constructor ",
-            "name": "",
+            "kind": "Class",
+            "name": "Exception",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -382,7 +394,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "Exception",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -399,7 +411,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "Throwable",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -416,7 +428,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "TestClass",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -451,7 +463,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "Exception",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -486,7 +498,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "Expception",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -538,7 +550,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "Exception",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -573,7 +585,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "Exception",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -590,7 +602,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "Throwable",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -638,12 +650,11 @@
                         "character": 14
                     }
                 }
-            },
-            "type": ""
+            }
         },
         {
             "kind": "Function",
-            "name": "",
+            "name": "testFunction",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
                 "range": {
@@ -727,8 +738,7 @@
                         "character": 12
                     }
                 }
-            },
-            "type": ""
+            }
         }
     ]
 }

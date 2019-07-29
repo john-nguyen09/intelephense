@@ -312,7 +312,7 @@ export class SymbolStore {
         });
     }
 
-    async findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): Promise<PhpSymbol[]> {
+    async findSymbolsByReference(ref: Reference | null, memberMergeStrategy?: MemberMergeStrategy): Promise<PhpSymbol[]> {
         if (!ref) {
             return [];
         }

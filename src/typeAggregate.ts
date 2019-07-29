@@ -23,7 +23,7 @@ export class TypeAggregate {
     private _associated: PhpSymbol[];
     private _excludeTraits = false;
 
-    constructor(public symbolStore: SymbolStore, symbol: PhpSymbol | PhpSymbol[], excludeTraits?: boolean) {
+    constructor(public symbolStore: SymbolStore, symbol: PhpSymbol | PhpSymbol[] | undefined, excludeTraits?: boolean) {
         if (!symbol) {
             throw new Error('Invalid Argument');
         }

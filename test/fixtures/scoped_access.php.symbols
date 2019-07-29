@@ -1,0 +1,154 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 10,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Class",
+            "name": "Test",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 6,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "ClassConstant",
+                    "name": "FOO",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 17
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 24
+                            }
+                        }
+                    },
+                    "scope": "Test",
+                    "value": "1",
+                    "modifiers": "Public | Static"
+                },
+                {
+                    "kind": "Property",
+                    "name": "$bar",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+                        "range": {
+                            "start": {
+                                "line": 3,
+                                "character": 18
+                            },
+                            "end": {
+                                "line": 3,
+                                "character": 26
+                            }
+                        }
+                    },
+                    "value": "1",
+                    "modifiers": "Public | Static",
+                    "scope": "Test"
+                },
+                {
+                    "kind": "Method",
+                    "name": "baz",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+                        "range": {
+                            "start": {
+                                "line": 4,
+                                "character": 4
+                            },
+                            "end": {
+                                "line": 4,
+                                "character": 34
+                            }
+                        }
+                    },
+                    "modifiers": "Public | Static",
+                    "children": [],
+                    "scope": "Test"
+                },
+                {
+                    "kind": "Property",
+                    "name": "$baz",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+                        "range": {
+                            "start": {
+                                "line": 5,
+                                "character": 19
+                            },
+                            "end": {
+                                "line": 5,
+                                "character": 27
+                            }
+                        }
+                    },
+                    "value": "1",
+                    "modifiers": "Private | Static",
+                    "scope": "Test"
+                }
+            ],
+            "associated": [],
+            "modifiers": ""
+        },
+        {
+            "kind": "Variable",
+            "name": "$var",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+                "range": {
+                    "start": {
+                        "line": 7,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 7,
+                        "character": 4
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Variable",
+            "name": "$bar",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+                "range": {
+                    "start": {
+                        "line": 8,
+                        "character": 13
+                    },
+                    "end": {
+                        "line": 8,
+                        "character": 17
+                    }
+                }
+            }
+        }
+    ]
+}

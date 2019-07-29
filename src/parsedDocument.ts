@@ -170,7 +170,7 @@ export namespace ParsedDocument {
         return undefined;
     }
 
-    export function filterChildren(parent: SyntaxNode, predicate: Predicate<SyntaxNode>) {
+    export function filterChildren(parent: SyntaxNode | undefined, predicate: Predicate<SyntaxNode>) {
 
         const filtered: SyntaxNode[] = [];
         if (!parent || !parent.children) {

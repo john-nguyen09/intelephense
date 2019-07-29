@@ -76,7 +76,7 @@ export class ReferenceTable implements Traversable<Scope | Reference> {
         let visitor = new LocateVisitor(position);
         this.traverse(visitor);
         let ref = visitor.node as Reference;
-        return ref && ref.kind ? ref : undefined;
+        return ref && ref.kind ? ref : null;
 
     }
 

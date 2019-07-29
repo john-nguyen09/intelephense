@@ -26,7 +26,7 @@ export class HighlightProvider {
             return undefined;
         }
 
-        let ref = table.referenceAtPosition(pos);
+        const ref = table.referenceAtPosition(pos);
 
         if (!ref) {
             return [];

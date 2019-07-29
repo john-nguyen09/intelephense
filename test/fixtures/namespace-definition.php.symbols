@@ -48,7 +48,7 @@
                     }
                 }
             },
-            "modifiers": 4096,
+            "modifiers": "Use",
             "associated": []
         },
         {
@@ -67,7 +67,7 @@
                     }
                 }
             },
-            "modifiers": 4096,
+            "modifiers": "Use",
             "associated": []
         },
         {
@@ -86,7 +86,7 @@
                     }
                 }
             },
-            "modifiers": 4096,
+            "modifiers": "Use",
             "associated": []
         },
         {
@@ -105,7 +105,7 @@
                     }
                 }
             },
-            "modifiers": 4096,
+            "modifiers": "Use",
             "associated": []
         },
         {
@@ -124,7 +124,7 @@
                     }
                 }
             },
-            "modifiers": 4096,
+            "modifiers": "Use",
             "associated": []
         },
         {
@@ -143,7 +143,7 @@
                     }
                 }
             },
-            "modifiers": 4096,
+            "modifiers": "Use",
             "associated": []
         }
     ]

@@ -7,7 +7,7 @@
 import { TreeVisitor } from './types';
 import { ParsedDocument, NodeTransform } from './parsedDocument';
 import { PhpDoc, PhpDocParser, Tag, MethodTagParam } from './phpDoc';
-import { PhpSymbol, SymbolKind, SymbolModifier, PhpSymbolDoc } from './symbol';
+import { PhpSymbol, SymbolKind, SymbolModifier, PhpSymbolDoc, modifiersToString } from './symbol';
 import { NameResolver } from './nameResolver';
 import { TypeString } from './typeString';
 import { Location } from 'vscode-languageserver';
@@ -815,7 +815,7 @@ class AnonymousFunctionUseVariableTransform implements SymbolNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this.symbol.name = (<DefaultNodeTransform>transform).name;
+            this.symbol.name = '$' + (<DefaultNodeTransform>transform).name;
         } else if (transform.kind === '&') {
             this.symbol.modifiers = SymbolModifier.Reference;
         }
@@ -1292,11 +1292,15 @@ class PropertyElementTransform implements SymbolNodeTransform {
 
 class FieldDeclarationTransform implements SymbolsNodeTransform {
 
-    private _modifier = SymbolModifier.Public;
+    private _modifier = SymbolModifier.None;
     symbols: PhpSymbol[];
 
     constructor(public kind: 'class_const_declaration' | 'property_declaration') {
         this.symbols = [];
+
+        if (kind === 'class_const_declaration') {
+            this._modifier |= SymbolModifier.Static;
+        }
     }
 
     push(transform: NodeTransform) {
@@ -1311,7 +1315,14 @@ class FieldDeclarationTransform implements SymbolsNodeTransform {
             transform.kind === 'property_element' ||
             transform.kind === 'const_element'
         ) {
-            this.symbols.push((<SymbolNodeTransform>transform).symbol);
+            const symbol = (<SymbolNodeTransform>transform).symbol;
+
+            if (transform.kind === 'const_element') {
+                symbol.kind = SymbolKind.ClassConstant;
+            }
+
+            symbol.modifiers = this._modifier;
+            this.symbols.push(symbol);
         }
     }
 
@@ -1340,8 +1351,11 @@ class FunctionDeclarationTransform implements SymbolNodeTransform {
         } else if (transform.kind === 'formal_parameters') {
             const transforms = (<DelimiteredListTransform>transform).transforms;
             const symbols = transforms.filter(transform => {
-                return transform.kind === 'simple_parameter' ||
-                    transform.kind === 'variadic_parameter'
+                return [
+                    'simple_parameter',
+                    'variadic_parameter',
+                    'parameter_declaration',
+                ].includes(transform.kind);
             }).map(transform => {
                 return (<ParameterDeclarationTransform>transform).symbol;
             });
@@ -1522,10 +1536,10 @@ export namespace SymbolReader {
         }
     }
 
-    export function modifierListToSymbolModifier(node: SyntaxNode) {
+    export function modifierListToSymbolModifier(node: SyntaxNode | null) {
 
         if (!node) {
-            return 0;
+            return SymbolModifier.None;
         }
 
         let flag = SymbolModifier.None;

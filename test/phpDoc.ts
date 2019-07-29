@@ -17,7 +17,7 @@ describe('PhpDocParser', function () {
              * @method float fn(int $p1, string $p2) Method description
              */`
 
-            let phpDoc = PhpDocParser.parse(text);
+            const phpDoc = PhpDocParser.parse(text);
 
             let expectedProperty = {
                 tagName: '@property',

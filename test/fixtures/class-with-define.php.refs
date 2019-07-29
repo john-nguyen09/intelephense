@@ -116,7 +116,7 @@
                 },
                 {
                     "kind": "Function",
-                    "name": "",
+                    "name": "define",
                     "location": {
                         "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
                         "range": {

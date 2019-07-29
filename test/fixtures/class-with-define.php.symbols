@@ -48,7 +48,7 @@
                             }
                         }
                     },
-                    "modifiers": 33,
+                    "modifiers": "Public | Static",
                     "children": [],
                     "scope": "FirstClass"
                 },
@@ -68,12 +68,12 @@
                             }
                         }
                     },
-                    "modifiers": 1,
+                    "modifiers": "Public",
                     "scope": "FirstClass"
                 }
             ],
             "associated": [],
-            "modifiers": 0
+            "modifiers": ""
         },
         {
             "kind": "Constant",
@@ -126,7 +126,7 @@
                             }
                         }
                     },
-                    "modifiers": 33,
+                    "modifiers": "Public | Static",
                     "children": [],
                     "scope": "SecondClass"
                 },
@@ -146,12 +146,12 @@
                             }
                         }
                     },
-                    "modifiers": 1,
+                    "modifiers": "Public",
                     "scope": "SecondClass"
                 }
             ],
             "associated": [],
-            "modifiers": 0
+            "modifiers": ""
         }
     ]
 }

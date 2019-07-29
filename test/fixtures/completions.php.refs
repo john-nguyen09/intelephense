@@ -14,39 +14,58 @@
     },
     "children": [
         {
+            "kind": "GlobalVariable",
+            "name": "$DB",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
                 "range": {
                     "start": {
-                        "line": 2,
-                        "character": 0
+                        "line": 3,
+                        "character": 11
                     },
                     "end": {
-                        "line": 6,
-                        "character": 1
+                        "line": 3,
+                        "character": 14
                     }
                 }
             },
-            "children": [
-                {
-                    "kind": "GlobalVariable",
-                    "name": "DB",
-                    "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
-                        "range": {
-                            "start": {
-                                "line": 3,
-                                "character": 11
-                            },
-                            "end": {
-                                "line": 3,
-                                "character": 14
-                            }
-                        }
+            "type": "database"
+        },
+        {
+            "kind": "Variable",
+            "name": "$DB",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 4
                     },
-                    "type": ""
+                    "end": {
+                        "line": 5,
+                        "character": 7
+                    }
                 }
-            ]
+            },
+            "type": "database"
+        },
+        {
+            "kind": "Variable",
+            "name": "$DB",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "range": {
+                    "start": {
+                        "line": 8,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 8,
+                        "character": 3
+                    }
+                }
+            },
+            "type": "database"
         }
     ]
 }

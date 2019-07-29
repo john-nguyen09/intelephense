@@ -50,8 +50,8 @@ export function symbolKindToString(kind: SymbolKind) {
             return 'Variable';
         case SymbolKind.Namespace:
             return 'Namespace';
-        case SymbolKind.ClassConstant :
-            return 'ClassConstant ';
+        case SymbolKind.ClassConstant:
+            return 'ClassConstant';
         case SymbolKind.Constructor :
             return 'Constructor ';
         case SymbolKind.File:
@@ -78,6 +78,52 @@ export const enum SymbolModifier {
     Reference = 1 << 10,
     Variadic = 1 << 11,
     Use = 1 << 12
+}
+
+export function modifiersToString(modifiers: SymbolModifier): string {
+    const results: string[] = [];
+
+    if ((modifiers & SymbolModifier.Public) !== 0) {
+        results.push('Public');
+    }
+    if ((modifiers & SymbolModifier.Protected) !== 0) {
+        results.push('Protected');
+    }
+    if ((modifiers & SymbolModifier.Private) !== 0) {
+        results.push('Private');
+    }
+    if ((modifiers & SymbolModifier.Final) !== 0) {
+        results.push('Final');
+    }
+    if ((modifiers & SymbolModifier.Abstract) !== 0) {
+        results.push('Abstract');
+    }
+    if ((modifiers & SymbolModifier.Static) !== 0) {
+        results.push('Static');
+    }
+    if ((modifiers & SymbolModifier.ReadOnly) !== 0) {
+        results.push('ReadOnly');
+    }
+    if ((modifiers & SymbolModifier.WriteOnly) !== 0) {
+        results.push('WriteOnly');
+    }
+    if ((modifiers & SymbolModifier.Magic) !== 0) {
+        results.push('Magic');
+    }
+    if ((modifiers & SymbolModifier.Anonymous) !== 0) {
+        results.push('Anonymous');
+    }
+    if ((modifiers & SymbolModifier.Reference) !== 0) {
+        results.push('Reference');
+    }
+    if ((modifiers & SymbolModifier.Variadic) !== 0) {
+        results.push('Variadic');
+    }
+    if ((modifiers & SymbolModifier.Use) !== 0) {
+        results.push('Use');
+    }
+
+    return results.join(' | ');
 }
 
 export interface PhpSymbolDoc {
@@ -242,7 +288,7 @@ export namespace PhpSymbol {
         };
     }
 
-    export function filterChildren(parent: PhpSymbol, fn: Predicate<PhpSymbol>) {
+    export function filterChildren(parent: PhpSymbol | undefined, fn: Predicate<PhpSymbol>) {
         if (!parent || !parent.children) {
             return [];
         }

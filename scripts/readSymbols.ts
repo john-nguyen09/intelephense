@@ -5,7 +5,7 @@ import { ParsedDocument } from '../src/parsedDocument';
 import { SymbolReader } from '../src/symbolReader';
 import { pathToUri } from '../src/utils';
 import { NameResolver } from '../src/nameResolver';
-import { symbolKindToString } from '../src/symbol';
+import { symbolKindToString, modifiersToString } from '../src/symbol';
 
 const readDirAsync = promisify(fs.readdir);
 const readFileAsync = promisify(fs.readFile);
@@ -36,6 +36,9 @@ async function main(){
                 JSON.stringify(symbolReader.symbol, (key, value) => {
                     if (key === 'kind') {
                         return symbolKindToString(value);
+                    }
+                    if (key === 'modifiers') {
+                        return modifiersToString(value);
                     }
                     
                     return value;

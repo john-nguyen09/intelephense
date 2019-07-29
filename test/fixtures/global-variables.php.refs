@@ -15,7 +15,7 @@
     "children": [
         {
             "kind": "GlobalVariable",
-            "name": "DB",
+            "name": "$DB",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
                 "range": {
@@ -29,7 +29,7 @@
                     }
                 }
             },
-            "type": ""
+            "type": "database"
         },
         {
             "kind": "Variable",
@@ -51,7 +51,7 @@
         },
         {
             "kind": "Class",
-            "name": "",
+            "name": "null",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
                 "range": {

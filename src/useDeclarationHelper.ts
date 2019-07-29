@@ -120,7 +120,8 @@ export class UseDeclarationHelper {
 
     private _isUseDeclarationSymbol(s: PhpSymbol) {
         const mask = SymbolKind.Class | SymbolKind.Function | SymbolKind.Constant;
-        return s.modifiers && (s.modifiers & SymbolModifier.Use) > 0 && (s.kind & mask) > 0;
+        return typeof s.modifiers !== 'undefined' &&
+            (s.modifiers & SymbolModifier.Use) > 0 && (s.kind & mask) > 0;
     }
 
     private _insertAfterNode() {
@@ -184,28 +185,18 @@ class InsertAfterNodeVisitor implements TreeVisitor<SyntaxNode> {
     preorder(node: SyntaxNode, spine: SyntaxNode[]) {
 
         switch (node.type) {
-            case PhraseKind.InlineText:
+            case 'text':
                 if (!this._openingInlineText) {
-                    this._openingInlineText = node as Phrase;
+                    this._openingInlineText = node;
                 }
                 break;
 
-            case PhraseKind.NamespaceDefinition:
-                if (!ParsedDocument.findChild(<Phrase>node, this._isStatementList)) {
-                    this._namespaceDefinition = node as Phrase;
-                }
+            case 'namespace_definition':
+                this._namespaceDefinition = node;
                 break;
 
-            case PhraseKind.NamespaceUseDeclaration:
-                this._lastNamespaceUseDeclaration = node as Phrase;
-                break;
-
-            case undefined:
-                //tokens
-                if (this.haltAtOffset > -1 && ParsedDocument.isOffsetInNode(this.haltAtOffset, <Token>node)) {
-                    this.haltTraverse = true;
-                    return false;
-                }
+            case 'namespace_use_declaration':
+                this._lastNamespaceUseDeclaration = node;
                 break;
 
             default:
@@ -215,10 +206,6 @@ class InsertAfterNodeVisitor implements TreeVisitor<SyntaxNode> {
 
         return true;
 
-    }
-
-    private _isStatementList(node: Phrase | Token) {
-        return (<Phrase>node).kind === PhraseKind.StatementList;
     }
 
 }

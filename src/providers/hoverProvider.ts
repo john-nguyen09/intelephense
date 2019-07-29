@@ -19,7 +19,7 @@ export class HoverProvider {
     }
 
 
-    async provideHover(uri: string, pos: Position): Promise<Hover> {
+    async provideHover(uri: string, pos: Position): Promise<Hover | undefined> {
 
 
         let doc = this.docStore.find(uri);
@@ -98,9 +98,13 @@ export class HoverProvider {
 
     }
 
-    private modifiersToString(modifiers: SymbolModifier) {
+    private modifiersToString(modifiers: SymbolModifier | undefined) {
 
         let modStrings: string[] = [];
+
+        if (modifiers === undefined) {
+            return '';
+        }
 
         if (modifiers & SymbolModifier.Public) {
             modStrings.push('public');
