@@ -119,17 +119,12 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
             .filter(filter);
     }
 
-    async match(text: string): Promise<PhpSymbol[]> {
+    async *match(text: string): AsyncIterableIterator<PhpSymbol> {
         const completionValues = await this._completion.match(text);
-        const promises: Promise<PhpSymbol>[] = [];
 
-        for (const completionValue of completionValues) {
-            promises.push(this._namedSymbols.get(SymbolIndex.getSymbolKey(completionValue.identifier)));
+        for await (const completionValue of completionValues) {
+            yield this._namedSymbols.get(SymbolIndex.getSymbolKey(completionValue.identifier));
         }
-
-        const allResults = await Promise.all(promises.map(p => p.catch(e => e)));
-
-        return allResults.filter(result => !(result instanceof Error));
     }
 
     async getGlobalVariables() {
