@@ -1,0 +1,34 @@
+{"type":"program","text":"<?php\nnamespace Foo\\Bar;\nuse Foo\\{\n    B\n}\n\nclass Baz {}\n"}
+	{"type":"script_section","text":"<?php\nnamespace Foo\\Bar;\nuse Foo\\{\n    B\n}\n\nclass Baz {}"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"namespace_definition","text":"namespace Foo\\Bar;"}
+			{"type":"namespace","text":"namespace"}
+			{"type":"namespace_name","text":"Foo\\Bar"}
+				{"type":"name","text":"Foo"}
+				{"type":"\\","text":"\\"}
+				{"type":"name","text":"Bar"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"namespace_use_declaration","text":"use Foo\\{\n    B\n}"}
+			{"type":"use","text":"use"}
+			{"type":"namespace_name","text":"Foo"}
+				{"type":"name","text":"Foo"}
+			
+			{"type":"\\","text":"\\"}
+			{"type":"{","text":"{"}
+			{"type":"namespace_use_group_clause_2","text":"B"}
+				{"type":"namespace_name","text":"B"}
+					{"type":"name","text":"B"}
+				
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"class_declaration","text":"class Baz {}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"Baz"}
+			{"type":"{","text":"{"}
+			{"type":"}","text":"}"}
+		
+		{"type":"end_tag","text":""}
+	

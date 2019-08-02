@@ -472,10 +472,19 @@ class FileTransform implements SymbolNodeTransform {
 }
 
 class ProgramTransform implements SymbolsNodeTransform {
+    static readonly EXCLUDE_KINDS =[
+        'class_interface_clause',
+        'class_base_clause',
+        'interface_base_clause',
+    ];
     kind = 'program';
     private _children: UniqueSymbolCollection = new UniqueSymbolCollection();
 
     push(transform: NodeTransform) {
+
+        if (ProgramTransform.EXCLUDE_KINDS.includes(transform.kind)) {
+            return;
+        }
 
         let s = (<SymbolNodeTransform>transform).symbol;
         if (s) {
@@ -524,17 +533,10 @@ class NamespaceNameTransform implements TextNodeTransform {
 
     constructor(node: SyntaxNode) {
         this._parts = [];
-        for (const child of node.children) {
-            if (child.type === 'name') {
-                this._parts.push(child.text);
-            }
-        }
     }
 
     push(transform: NodeTransform) {
-        if (transform.kind === 'namespace_name_as_prefix') {
-            this._parts.push((<NamespaceNameAsPrefixTransform>transform).name);
-        } else if (transform.kind === 'name') {
+        if (transform.kind === 'name') {
             this._parts.push((<DefaultNodeTransform>transform).name);
         }
     }
@@ -563,17 +565,21 @@ class QualifiedNameTransform implements NameNodeTransform {
     kind = 'qualified_name';
     name = '';
     unresolved = '';
+    namespacePrefix = '';
     constructor(public nameResolver: NameResolver) {
 
     }
 
     push(transform: NodeTransform) {
-        if (transform.kind === 'namespace_name') {
-            this.unresolved = (<NamespaceNameTransform>transform).name;
-            this.name = this.nameResolver.resolveNotFullyQualified(this.unresolved);
+        if (transform.kind === 'namespace_name_as_prefix') {
+            this.namespacePrefix = (<NamespaceNameAsPrefixTransform>transform).name;
         } else if (transform.kind === 'name') {
-            this.unresolved = (<DefaultNodeTransform>transform).name;
-            this.name = this.nameResolver.resolveNotFullyQualified(this.unresolved);
+            if (this.namespacePrefix.length === 0) {
+                this.unresolved = (<DefaultNodeTransform>transform).name;
+                this.name = this.nameResolver.resolveNotFullyQualified(this.unresolved);
+            } else {
+                this.name = this.unresolved = this.namespacePrefix + '\\' + (<DefaultNodeTransform>transform).name;
+            }
         }
     }
 
@@ -1347,7 +1353,7 @@ class FunctionDeclarationTransform implements SymbolNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {
-            this._symbol.name = this.nameResolver.resolveRelative((<DefaultNodeTransform>transform).name);
+            this._symbol.name = (<DefaultNodeTransform>transform).name;
         } else if (transform.kind === 'formal_parameters') {
             const transforms = (<DelimiteredListTransform>transform).transforms;
             const symbols = transforms.filter(transform => {
@@ -1606,9 +1612,12 @@ class NamespaceUseDeclarationTransform implements SymbolsNodeTransform {
             } else if (kindTransform.namespaceType === 'function') {
                 this._kind = SymbolKind.Function;
             }
-        } else if (transform.kind === 'namespace_use_clause') {
+        } else if (
+            transform.kind === 'namespace_use_clause' ||
+            transform.kind === 'namespace_use_group_clause_2'
+        ) {
             const symbol = (<NamespaceUseClauseTransform>transform).symbol;
-            const prefix = this._prefix ? this._prefix + '\\' : '';
+            const prefix = this._prefix.length ? this._prefix + '\\' : '';
 
             if (symbol.associated && symbol.associated[0]) {
                 symbol.associated[0].name = prefix + symbol.associated[0].name;
@@ -1639,21 +1648,14 @@ class NamespaceUseClauseTransform implements NodeTransform {
     }
 
     push(transform: NodeTransform) {
-        if (transform.kind === 'namespace_function_or_const') {
-            const kindTransform = <NamespaceFunctionOrConst>transform;
-
-            if (kindTransform.namespaceType === 'const') {
-                this.symbol.kind = SymbolKind.Constant;
-            } else if (kindTransform.namespaceType === 'function') {
-                this.symbol.kind = SymbolKind.Function;
-            }
-        } else if (transform.kind === 'namespace_name') {
+        if (transform.kind === 'namespace_name') {
             const text = (<NamespaceNameTransform>transform).name;
             this.symbol.name = PhpSymbol.notFqn(text);
             this.pushAssociated(PhpSymbol.create(this.symbol.kind, text));
-        } else if (transform.kind === 'namespace_aliasing_clause') {
-            this.symbol.name = (<NamespaceAliasingClause>transform).name;
-            this.symbol.location = (<NamespaceAliasingClause>transform).location;
+        } else if (transform.kind === 'qualified_name') {
+            const text = (<QualifiedNameTransform>transform).name;
+            this.symbol.name = PhpSymbol.notFqn(text);
+            this.pushAssociated(PhpSymbol.create(this.symbol.kind, text));
         }
     }
 

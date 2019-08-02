@@ -1,0 +1,30 @@
+{"type":"program","text":"<?php\nclass Foo {}\ninterface FooInterface {}\nclass Bar extends Foo implements F \n"}
+	{"type":"ERROR","text":"<?php\nclass Foo {}\ninterface FooInterface {}\nclass Bar extends Foo implements F"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"class_declaration","text":"class Foo {}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"Foo"}
+			{"type":"{","text":"{"}
+			{"type":"}","text":"}"}
+		
+		{"type":"interface_declaration","text":"interface FooInterface {}"}
+			{"type":"interface","text":"interface"}
+			{"type":"name","text":"FooInterface"}
+			{"type":"{","text":"{"}
+			{"type":"}","text":"}"}
+		
+		{"type":"class","text":"class"}
+		{"type":"name","text":"Bar"}
+		{"type":"class_base_clause","text":"extends Foo"}
+			{"type":"extends","text":"extends"}
+			{"type":"qualified_name","text":"Foo"}
+				{"type":"name","text":"Foo"}
+			
+		
+		{"type":"class_interface_clause","text":"implements F"}
+			{"type":"implements","text":"implements"}
+			{"type":"qualified_name","text":"F"}
+				{"type":"name","text":"F"}
+			
+		
+	

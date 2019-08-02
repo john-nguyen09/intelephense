@@ -267,6 +267,11 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                     new QualifiedNameTransform(this._nameSymbolType(parent), this.doc.nodeLocation(node), this.nameResolver)
                 );
                 break;
+
+            case 'namespace_name_as_prefix':
+                this._transformStack.push(new NamespaceNameAsPrefixTransform());
+                break;
+
             case 'name':
                 if (this._isScope(parent)) {
                     this._transformStack.push(
@@ -731,6 +736,17 @@ class NamespaceNameTransform implements NodeTransform {
 
 }
 
+class NamespaceNameAsPrefixTransform implements NodeTransform {
+    kind = 'namespace_name_as_prefix';
+    text: string = '';
+
+    push(transform: NodeTransform) {
+        if (transform.kind === 'namespace_name') {
+            this.text = (<NamespaceNameTransform>transform).text;
+        }
+    }
+}
+
 class NamespaceUseDeclarationTransform implements NodeTransform {
 
     kind = 'namespace_use_declaration';
@@ -949,6 +965,7 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
         if (this._pushCount === 1) {
             this._lhs(transform);
         } else if (this._pushCount === 2) {
+            TypeString.resolve((<TypeNodeTransform>transform).type);
             this.type = (<TypeNodeTransform>transform).type || '';
         }
 
@@ -1379,6 +1396,7 @@ class QualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransfor
 
     kind = 'qualified_name';
     reference: Reference;
+    private _namespacePrefix = '';
     private _nameResolver: NameResolver;
 
     constructor(symbolKind: SymbolKind, loc: lsp.Location, nameResolver: NameResolver) {
@@ -1388,18 +1406,22 @@ class QualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransfor
 
     push(transform: NodeTransform) {
 
-        if (transform.kind === 'namespace_name') {
+        if (transform.kind === 'name') {
             const name = (<NamespaceNameTransform>transform).text;
             const lcName = name.toLowerCase();
-            this.reference.name = this._nameResolver.resolveNotFullyQualified(name, this.reference.kind);
-            if (
-                ((this.reference.kind === SymbolKind.Function || this.reference.kind === SymbolKind.Constant) &&
-                    name !== this.reference.name && name.indexOf('\\') < 0) || (lcName === 'parent' || lcName === 'self')
-            ) {
-                this.reference.altName = name;
+            if (this._namespacePrefix.length) {
+                this.reference.name = this._namespacePrefix + '\\' + name;
+            } else {
+                this.reference.name = this._nameResolver.resolveNotFullyQualified(name, this.reference.kind);
+                if (
+                    ((this.reference.kind === SymbolKind.Function || this.reference.kind === SymbolKind.Constant) &&
+                        name !== this.reference.name && name.indexOf('\\') < 0) || (lcName === 'parent' || lcName === 'self')
+                ) {
+                    this.reference.altName = name;
+                }
             }
-        } else if (transform.kind === 'name') {
-            this.reference.name = (<TokenTransform>transform).text;
+        } else if (transform.kind === 'namespace_name_as_prefix') {
+            this._namespacePrefix = (<NamespaceNameAsPrefixTransform>transform).text;
         }
 
     }

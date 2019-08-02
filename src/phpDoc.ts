@@ -26,12 +26,10 @@ export namespace PhpDocParser {
         let split = stripped.split(tagBoundaryPattern);
         let text: string = '';
 
-        const firstBit = split.shift();
-        if (typeof firstBit !== 'undefined' && firstBit.indexOf('@') !== 0) {
-            text = firstBit.trim();
+        if (split.length && split[0].indexOf('@') !== 0) {
+            text = split.shift().trim();
         }
 
-        let match: RegExpMatchArray;
         let tagString: string | undefined;
         let tags: Tag[] = [];
         let tag: Tag | null;

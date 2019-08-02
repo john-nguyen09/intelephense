@@ -1,0 +1,85 @@
+{
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-tag.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 7,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-tag.php",
+                "range": {
+                    "start": {
+                        "line": 4,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 4,
+                        "character": 12
+                    }
+                }
+            },
+            "children": []
+        },
+        {
+            "kind": "Variable",
+            "name": "$var",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-tag.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 4
+                    }
+                }
+            },
+            "type": ""
+        },
+        {
+            "kind": "Class",
+            "name": "Foo",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-tag.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 11
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 14
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Variable",
+            "name": "$var",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-tag.php",
+                "range": {
+                    "start": {
+                        "line": 6,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 6,
+                        "character": 4
+                    }
+                }
+            }
+        }
+    ]
+}

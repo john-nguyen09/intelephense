@@ -1,0 +1,151 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/static-and-this.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/static-and-this.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 13,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Class",
+            "name": "A",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/static-and-this.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 6,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "Method",
+                    "name": "factory",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/static-and-this.php",
+                        "range": {
+                            "start": {
+                                "line": 3,
+                                "character": 4
+                            },
+                            "end": {
+                                "line": 3,
+                                "character": 31
+                            }
+                        }
+                    },
+                    "doc": {
+                        "description": "",
+                        "type": "static"
+                    },
+                    "modifiers": "Static",
+                    "children": [],
+                    "scope": "A"
+                },
+                {
+                    "kind": "Method",
+                    "name": "setter",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/static-and-this.php",
+                        "range": {
+                            "start": {
+                                "line": 5,
+                                "character": 4
+                            },
+                            "end": {
+                                "line": 5,
+                                "character": 24
+                            }
+                        }
+                    },
+                    "doc": {
+                        "description": "",
+                        "type": "$this"
+                    },
+                    "modifiers": "",
+                    "children": [],
+                    "scope": "A"
+                }
+            ],
+            "associated": [],
+            "modifiers": ""
+        },
+        {
+            "kind": "Class",
+            "name": "B",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/static-and-this.php",
+                "range": {
+                    "start": {
+                        "line": 7,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 9,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "Method",
+                    "name": "fn",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/static-and-this.php",
+                        "range": {
+                            "start": {
+                                "line": 8,
+                                "character": 4
+                            },
+                            "end": {
+                                "line": 8,
+                                "character": 19
+                            }
+                        }
+                    },
+                    "modifiers": "",
+                    "children": [],
+                    "scope": "B"
+                }
+            ],
+            "associated": [
+                {
+                    "kind": "Class",
+                    "name": "A"
+                }
+            ],
+            "modifiers": ""
+        },
+        {
+            "kind": "Variable",
+            "name": "$var",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/static-and-this.php",
+                "range": {
+                    "start": {
+                        "line": 10,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 10,
+                        "character": 4
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,143 @@
+{"type":"program","text":"<?php\nclass A {\n    /** @return static */\n    static function factory(){}\n    /** @return $this */\n    function setter() {}\n}\nclass B extends A {\n    function fn(){}\n}\n$var = B::factory();\n$var->fn();\n$var->setter()->fn();\n"}
+	{"type":"script_section","text":"<?php\nclass A {\n    /** @return static */\n    static function factory(){}\n    /** @return $this */\n    function setter() {}\n}\nclass B extends A {\n    function fn(){}\n}\n$var = B::factory();\n$var->fn();\n$var->setter()->fn();"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"class_declaration","text":"class A {\n    /** @return static */\n    static function factory(){}\n    /** @return $this */\n    function setter() {}\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"A"}
+			{"type":"{","text":"{"}
+			{"type":"comment","text":"/** @return static */"}
+			{"type":"method_declaration","text":"static function factory(){}"}
+				{"type":"static_modifier","text":"static"}
+					{"type":"static","text":"static"}
+				
+				{"type":"function_definition","text":"function factory(){}"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"factory"}
+					{"type":"formal_parameters","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{}"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"comment","text":"/** @return $this */"}
+			{"type":"method_declaration","text":"function setter() {}"}
+				{"type":"function_definition","text":"function setter() {}"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"setter"}
+					{"type":"formal_parameters","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{}"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"class_declaration","text":"class B extends A {\n    function fn(){}\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"B"}
+			{"type":"class_base_clause","text":"extends A"}
+				{"type":"extends","text":"extends"}
+				{"type":"qualified_name","text":"A"}
+					{"type":"name","text":"A"}
+				
+			
+			{"type":"{","text":"{"}
+			{"type":"method_declaration","text":"function fn(){}"}
+				{"type":"function_definition","text":"function fn(){}"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"fn"}
+					{"type":"formal_parameters","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{}"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"expression_statement","text":"$var = B::factory();"}
+			{"type":"assignment_expression","text":"$var = B::factory()"}
+				{"type":"variable_name","text":"$var"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"var"}
+				
+				{"type":"=","text":"="}
+				{"type":"scoped_call_expression","text":"B::factory()"}
+					{"type":"qualified_name","text":"B"}
+						{"type":"name","text":"B"}
+					
+					{"type":"::","text":"::"}
+					{"type":"member_name","text":"factory"}
+						{"type":"name","text":"factory"}
+					
+					{"type":"arguments","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"$var->fn();"}
+			{"type":"member_call_expression","text":"$var->fn()"}
+				{"type":"dereferencable_expression","text":"$var"}
+					{"type":"variable_name","text":"$var"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"var"}
+					
+				
+				{"type":"->","text":"->"}
+				{"type":"member_name","text":"fn"}
+					{"type":"name","text":"fn"}
+				
+				{"type":"arguments","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"$var->setter()->fn();"}
+			{"type":"member_call_expression","text":"$var->setter()->fn()"}
+				{"type":"dereferencable_expression","text":"$var->setter()"}
+					{"type":"member_call_expression","text":"$var->setter()"}
+						{"type":"dereferencable_expression","text":"$var"}
+							{"type":"variable_name","text":"$var"}
+								{"type":"$","text":"$"}
+								{"type":"name","text":"var"}
+							
+						
+						{"type":"->","text":"->"}
+						{"type":"member_name","text":"setter"}
+							{"type":"name","text":"setter"}
+						
+						{"type":"arguments","text":"()"}
+							{"type":"(","text":"("}
+							{"type":")","text":")"}
+						
+					
+				
+				{"type":"->","text":"->"}
+				{"type":"member_name","text":"fn"}
+					{"type":"name","text":"fn"}
+				
+				{"type":"arguments","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"end_tag","text":""}
+	

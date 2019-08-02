@@ -1,0 +1,66 @@
+{
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/interface-base.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 4,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/interface-base.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 1,
+                        "character": 12
+                    }
+                }
+            },
+            "children": []
+        },
+        {
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/interface-base.php",
+                "range": {
+                    "start": {
+                        "line": 2,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 2,
+                        "character": 16
+                    }
+                }
+            },
+            "children": []
+        },
+        {
+            "kind": "Class",
+            "name": "B",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/interface-base.php",
+                "range": {
+                    "start": {
+                        "line": 3,
+                        "character": 22
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 23
+                    }
+                }
+            }
+        }
+    ]
+}

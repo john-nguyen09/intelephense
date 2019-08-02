@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { PhpSymbol, SymbolKind, SymbolModifier, UniqueSymbolSet } from '../symbol';
+import { PhpSymbol, SymbolKind, SymbolModifier, UniqueSymbolSet, symbolKindToString, modifiersToString } from '../symbol';
 import { Reference, ReferenceStore, Scope } from '../reference';
 import { SymbolStore, SymbolTable } from '../symbolStore';
 import { SymbolReader } from '../symbolReader';
@@ -475,7 +475,10 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
     }
 
     protected _isNamePhrase(node: SyntaxNode) {
-        return node.type === 'qualified_name';
+        return [
+            'qualified_name',
+            'named_label_statement',
+        ].includes(node.type);
     }
 
     /**
@@ -796,10 +799,14 @@ class NameCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
         super.canSuggest(traverser);
+        const node = traverser.node;
         const parent = traverser.parent();
 
-        return parent != null && parent.type === 'namespace_name' &&
-            traverser.ancestor(this._isNamePhrase) !== null;
+        return node !== null && node.type === 'name' &&
+            parent !== null && [
+                'named_label_statement',
+                'qualified_name',
+            ].includes(parent.type);
     }
 
     async completions(traverser: ParseTreeTraverser, word: string, lineSubstring: string) {
@@ -839,7 +846,7 @@ class NameCompletion extends AbstractNameCompletion {
 
     protected _symbolFilter(s: PhpSymbol) {
         return (s.kind & (SymbolKind.Class | SymbolKind.Function | SymbolKind.Constant | SymbolKind.Namespace)) > 0 &&
-            s.modifiers != undefined && !(s.modifiers & SymbolModifier.Anonymous);
+            (s.modifiers === undefined || !(s.modifiers & SymbolModifier.Anonymous));
     }
 
 }
@@ -975,6 +982,12 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
                     if (traverser.nthChild(0)) {
                         arrayDereference++;
                         continue;
+                    }
+                    break;
+
+                case '->':
+                    if (traverser.prevSibling()) {
+                        ref = traverser.reference;
                     }
                     break;
 
@@ -1179,8 +1192,8 @@ class ScopedAccessCompletion extends MemberAccessCompletion {
 class ObjectAccessCompletion extends MemberAccessCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
-        const parent = traverser.parent();
         const node = traverser.node;
+        const parent = traverser.parent();
         const objectTypes = [
             'new_variable',
             'member_access_expression',
@@ -1199,8 +1212,8 @@ class ObjectAccessCompletion extends MemberAccessCompletion {
             return false;
         }
 
-        if (node !== null && ['->'].includes(node.type)) {
-            return objectTypes.includes(parent.type);
+        if (node.type === '->') {
+            return true;
         }
 
         return parent.type === 'member_name';
@@ -1419,7 +1432,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             return false;
         }
 
-        return parent.type === 'namespace_name' &&
+        return parent.type === 'qualified_name' &&
             [
                 'namespace_use_declaration',
                 'namespace_use_clause',
@@ -1570,7 +1583,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
         word = prefix + '\\' + word;
 
         let pred = (x: PhpSymbol) => {
-            return (x.kind & kindMask) > 0 && x.modifiers !== undefined && !(x.modifiers & SymbolModifier.Use);
+            return (x.kind & kindMask) > 0 && (x.modifiers === undefined || !(x.modifiers & SymbolModifier.Use));
         };
 
         let matches = await this.symbolStore.match(word, pred);
@@ -1631,6 +1644,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
             case 'class':
             case 'function':
             case 'const':
+            case 'namespace_function_or_const':
                 return true;
             default:
                 return false;

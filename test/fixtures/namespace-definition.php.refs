@@ -49,7 +49,7 @@
         },
         {
             "kind": "Class",
-            "name": "Class1",
+            "name": "AnotherNamespace\\Class1",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
@@ -168,7 +168,7 @@
         },
         {
             "kind": "Class",
-            "name": "C",
+            "name": "NS1\\C",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
@@ -202,7 +202,7 @@
         },
         {
             "kind": "Class",
-            "name": "I",
+            "name": "NS1\\I",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
@@ -236,7 +236,7 @@
         },
         {
             "kind": "Class",
-            "name": "T",
+            "name": "NS1\\T",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
@@ -270,7 +270,7 @@
         },
         {
             "kind": "Class",
-            "name": "test_function",
+            "name": "AnotherNamespace1\\test_function",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
@@ -304,7 +304,7 @@
         },
         {
             "kind": "Class",
-            "name": "TEST_CONST",
+            "name": "AnotherNamespace1\\TEST_CONST",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/namespace-definition.php",
                 "range": {
