@@ -128,14 +128,15 @@ export class TreeTraverser<T extends TreeLike> {
 
     child(predicate: Predicate<T>) {
 
-        let parent = this.node;
-        if (!parent || !parent.children) {
+        const parent = this.node;
+        const children = parent.children;
+        if (!parent || !children) {
             return null;
         }
 
-        for (let n = 0; n < parent.children.length; ++n) {
-            if (predicate(<T>parent.children[n])) {
-                this._spine.push(<T>parent.children[n]);
+        for (const child of children) {
+            if (predicate(<T>child)) {
+                this._spine.push(<T>child);
                 return this.node;
             }
         }
@@ -144,18 +145,19 @@ export class TreeTraverser<T extends TreeLike> {
     }
 
     nthChild(n: number) {
-        let parent = this.node;
-        if (!parent || !parent.children || n < 0 || n > parent.children.length - 1) {
+        const parent = this.node;
+        const children = parent.children;
+        if (!parent || !children || n < 0 || n > children.length - 1) {
             return null;
         }
 
-        this._spine.push(<T>parent.children[n]);
+        this._spine.push(<T>children[n]);
         return this.node;
     }
 
     childCount() {
-        let node = this.node;
-        return node && node.children ? node.children.length : 0;
+        const node = this.node;
+        return node ? node.childCount : 0;
     }
 
     prevSibling() {
@@ -164,17 +166,18 @@ export class TreeTraverser<T extends TreeLike> {
             return null;
         }
 
-        let parent = this._spine[this._spine.length - 2];
+        const parent = this._spine[this._spine.length - 2];
+        const children = parent.children;
 
-        if (parent.children === undefined || this.node === null) {
+        if (children === undefined || this.node === null) {
             return null;
         }
 
-        let childIndex = parent.children.indexOf(this.node);
+        let childIndex = children.indexOf(this.node);
 
         if (childIndex > 0) {
             this._spine.pop();
-            this._spine.push(<T>parent.children[childIndex - 1]);
+            this._spine.push(<T>children[childIndex - 1]);
             return this.node;
         } else {
             return null;
@@ -188,17 +191,18 @@ export class TreeTraverser<T extends TreeLike> {
             return null;
         }
 
-        let parent = this._spine[this._spine.length - 2];
+        const parent = this._spine[this._spine.length - 2];
+        const children = parent.children;
 
-        if (parent.children === undefined || this.node === null) {
+        if (children === undefined || this.node === null) {
             return null;
         }
 
-        let childIndex = parent.children.indexOf(this.node);
+        let childIndex = children.indexOf(this.node);
 
-        if (childIndex < parent.children.length - 1) {
+        if (childIndex < children.length - 1) {
             this._spine.pop();
-            this._spine.push(<T>parent.children[childIndex + 1]);
+            this._spine.push(<T>children[childIndex + 1]);
             return this.node;
         } else {
             return null;
