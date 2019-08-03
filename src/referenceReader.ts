@@ -303,6 +303,10 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                 }
                 break;
 
+            case 'dereferencable_expression':
+                this._transformStack.push(new DereferencableExpression());
+                break;
+
             case 'list_literal':
                 this._transformStack.push(new ListIntrinsicTransform());
                 break;
@@ -470,6 +474,7 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
             case 'qualified_name':
             case 'variable_name':
             case 'scoped_call_expression':
+            case 'member_call_expression':
             case 'class_constant_access_expression':
             case 'scoped_property_access_expression':
             case 'namespace_use_clause':
@@ -1254,7 +1259,7 @@ class InstanceOfExpressionTransform implements TypeNodeTransform, VariableNodeTr
                     this._varName = ref.name;
                 }
             }
-        } else if (transform.kind === 'object_creation_expression') {
+        } else if (transform.kind === 'qualified_name') {
             this._varType = async () => {
                 return TypeString.resolve((<TypeDesignatorTransform>transform).type);
             };
@@ -1362,6 +1367,19 @@ class SimpleVariableTransform implements TypeNodeTransform, ReferenceNodeTransfo
 
     get type() {
         return this.reference.type || '';
+    }
+
+}
+
+class DereferencableExpression implements TypeNodeTransform {
+
+    kind = 'dereferencable_expression';
+    type: TypeResolvable | string = '';
+
+    push(transform: NodeTransform) {
+        if (transform.kind === 'variable_name') {
+            this.type = (<TypeNodeTransform>transform).type;
+        }
     }
 
 }
@@ -1476,6 +1494,7 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
             case 'variable_name':
             case 'qualified_name':
             case 'relative_scope':
+            case 'dereferencable_expression':
                 this._scope = async () => {
                     return await TypeString.resolve((<TypeNodeTransform>transform).type);
                 };

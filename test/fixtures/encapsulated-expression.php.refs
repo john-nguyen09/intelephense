@@ -1,0 +1,84 @@
+{
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/encapsulated-expression.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 5,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/encapsulated-expression.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/encapsulated-expression.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 4
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 19
+                            }
+                        }
+                    },
+                    "children": []
+                }
+            ]
+        },
+        {
+            "kind": "Class",
+            "name": "Foo",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/encapsulated-expression.php",
+                "range": {
+                    "start": {
+                        "line": 4,
+                        "character": 5
+                    },
+                    "end": {
+                        "line": 4,
+                        "character": 8
+                    }
+                }
+            }
+        },
+        {
+            "kind": "Method",
+            "name": "fn",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/encapsulated-expression.php",
+                "range": {
+                    "start": {
+                        "line": 4,
+                        "character": 13
+                    },
+                    "end": {
+                        "line": 4,
+                        "character": 15
+                    }
+                }
+            }
+        }
+    ]
+}

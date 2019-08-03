@@ -100,6 +100,23 @@
             }
         },
         {
+            "kind": "Method",
+            "name": "testMethod",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 12
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 22
+                    }
+                }
+            }
+        },
+        {
             "kind": "Class",
             "name": "true",
             "location": {

@@ -111,6 +111,23 @@
                                 }
                             },
                             "type": "FirstClass"
+                        },
+                        {
+                            "kind": "Method",
+                            "name": "thisWorks",
+                            "location": {
+                                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                "range": {
+                                    "start": {
+                                        "line": 12,
+                                        "character": 9
+                                    },
+                                    "end": {
+                                        "line": 12,
+                                        "character": 18
+                                    }
+                                }
+                            }
                         }
                     ]
                 },
@@ -229,6 +246,23 @@
                                         }
                                     },
                                     "type": "SecondClass"
+                                },
+                                {
+                                    "kind": "Method",
+                                    "name": "thisDoesNotWork",
+                                    "location": {
+                                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-with-define.php",
+                                        "range": {
+                                            "start": {
+                                                "line": 28,
+                                                "character": 9
+                                            },
+                                            "end": {
+                                                "line": 28,
+                                                "character": 24
+                                            }
+                                        }
+                                    }
                                 }
                             ]
                         }

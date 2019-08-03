@@ -202,6 +202,16 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
         let items: lsp.CompletionItem[] = [];
         let namePhrase = traverser.clone().ancestor(this._isNamePhrase);
+        if (namePhrase === null) {
+            const node = traverser.node;
+            if (node !== null && node.type === '\\') {
+                const prevNode = traverser.clone().prevSibling();
+                if (prevNode.type === 'name') {
+                    namePhrase = prevNode;
+                }
+            }
+        }
+
         let nameResolver = traverser.nameResolver;
 
         if (!word || !namePhrase) {
@@ -521,20 +531,16 @@ class InstanceOfTypeDesignatorCompletion extends AbstractNameCompletion {
         super.canSuggest(traverser);
         const parent = traverser.parent();
         const parentOfParent = traverser.parent();
-        const parentOfParentOfParent = traverser.parent();
         let operator: null | SyntaxNode = null;
 
-        return (parent != null && parent.type === 'namespace_name') &&
-            (parentOfParent != null && parentOfParent.type === 'parentOfParent.type') &&
-            (parentOfParentOfParent != null && (
-                parentOfParentOfParent.type == 'binary_expression' &&
-                (operator = parentOfParentOfParent.child(1)) != null && operator.type == 'instanceof'
-            ));
+        return (parent != null && parent.type === 'qualified_name') &&
+            (parentOfParent != null && parentOfParent.type === 'binary_expression') &&
+            (operator = parentOfParent.child(1)) != null && operator.type == 'instanceof';
     }
 
     protected _symbolFilter(s: PhpSymbol) {
         return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace)) > 0 &&
-            s.modifiers != null && !(s.modifiers & (SymbolModifier.Anonymous));
+            s.modifiers === null || !(s.modifiers & (SymbolModifier.Anonymous));
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser):string[] {
@@ -802,10 +808,14 @@ class NameCompletion extends AbstractNameCompletion {
         const node = traverser.node;
         const parent = traverser.parent();
 
-        return node !== null && node.type === 'name' &&
+        return node !== null && [
+            'name',
+            '\\',
+        ].includes(node.type) &&
             parent !== null && [
                 'named_label_statement',
                 'qualified_name',
+                'ERROR',
             ].includes(parent.type);
     }
 
@@ -922,7 +932,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
             switch (node.type) {
                 case 'dereferencable_expression':
-                    if (traverser.nthChild(0)) {
+                    if (traverser.child(this._isTypedNode)) {
                         continue;
                     }
                     break;
@@ -937,6 +947,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
                 case 'member_access_expression':
                 case 'scoped_property_access_expression':
                 case 'class_constant_access_expression':
+                case 'member_call_expression':
                     if (traverser.child(this._isMemberName)) {
                         ref = traverser.reference;
                     }
@@ -1106,6 +1117,15 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
     private _isMemberName(node: SyntaxNode) {
         return node.type === 'member_name';
+    }
+
+    private _isTypedNode(node: SyntaxNode) {
+        return [
+            'member_call_expression',
+            'variable_name',
+            'object_creation_expression',
+            'subscript_expression',
+        ].includes(node.type);
     }
 
     private _isClassTypeDesignator(node: SyntaxNode): boolean {
@@ -1332,11 +1352,10 @@ class TraitUseClauseCompletion extends AbstractNameCompletion {
 
     canSuggest(traverser: ParseTreeTraverser) {
         super.canSuggest(traverser);
+        const ancestor = traverser.ancestor(this._isNamePhrase);
         const parent = traverser.parent();
-        const parentOfParent = traverser.parent();
-        return traverser.ancestor(this._isNamePhrase) !== null &&
-            parent !== null && parent.type === 'qualified_name' &&
-            parentOfParent !== null && parentOfParent.type === 'trait_use_clause';
+
+        return ancestor !== null && parent !== null && parent.type === 'trait_use_clause';
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser):string[] {
@@ -1680,8 +1699,7 @@ class DeclarationBodyCompletion implements CompletionStrategy {
     constructor(public config: CompletionOptions) { }
 
     private static _phraseTypes = [
-        'class_const_declaration', 'property_declaration', 'method_declaration',
-        'constructor_declaration', 'destructor_declaration', 'trait_use_clause',
+        'class_declaration', 'interface_declaration', 'trait_declaration',
     ];
 
     private static _keywords = [
@@ -1691,20 +1709,9 @@ class DeclarationBodyCompletion implements CompletionStrategy {
     canSuggest(traverser: ParseTreeTraverser) {
         const parent = traverser.parent();
         const parentOfParent = traverser.parent();
-        const parentOfParentOfParent = traverser.parent();
 
-        return parent !== null && (
-            DeclarationBodyCompletion._phraseTypes.includes(parent.type) ||
-            parent.type === 'ERROR' && (
-                parentOfParent !== null && (
-                    DeclarationBodyCompletion._phraseTypes.includes(parentOfParent.type) ||
-                    parentOfParent.type === 'ERROR' && (
-                        parentOfParentOfParent !== null &&
-                        DeclarationBodyCompletion._phraseTypes.includes(parentOfParentOfParent.type)
-                    )
-                )
-            )
-        );
+        return parent !== null && parent.type === 'ERROR' &&
+            DeclarationBodyCompletion._phraseTypes.includes(parentOfParent.type);
     }
 
     async completions(traverser: ParseTreeTraverser, word: string) {

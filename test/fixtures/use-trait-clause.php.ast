@@ -1,0 +1,38 @@
+{"type":"program","text":"<?php\nnamespace Foo;\ntrait Bar {}\nnamespace Bar;\nclass Foo {\n    use Bar;\n}\n"}
+	{"type":"script_section","text":"<?php\nnamespace Foo;\ntrait Bar {}\nnamespace Bar;\nclass Foo {\n    use Bar;\n}"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"namespace_definition","text":"namespace Foo;"}
+			{"type":"namespace","text":"namespace"}
+			{"type":"namespace_name","text":"Foo"}
+				{"type":"name","text":"Foo"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"trait_declaration","text":"trait Bar {}"}
+			{"type":"trait","text":"trait"}
+			{"type":"name","text":"Bar"}
+			{"type":"{","text":"{"}
+			{"type":"}","text":"}"}
+		
+		{"type":"namespace_definition","text":"namespace Bar;"}
+			{"type":"namespace","text":"namespace"}
+			{"type":"namespace_name","text":"Bar"}
+				{"type":"name","text":"Bar"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"class_declaration","text":"class Foo {\n    use Bar;\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"Foo"}
+			{"type":"{","text":"{"}
+			{"type":"trait_use_clause","text":"use Bar;"}
+				{"type":"use","text":"use"}
+				{"type":"qualified_name","text":"Bar"}
+					{"type":"name","text":"Bar"}
+				
+				{"type":";","text":";"}
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"end_tag","text":""}
+	

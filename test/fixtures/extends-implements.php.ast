@@ -1,0 +1,7 @@
+{"type":"program","text":"<?php\nclass Foo i\n"}
+	{"type":"ERROR","text":"<?php\nclass Foo i"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"class","text":"class"}
+		{"type":"name","text":"Foo"}
+		{"type":"name","text":"i"}
+	

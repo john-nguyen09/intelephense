@@ -1,0 +1,101 @@
+{
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/backslash.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 5,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/backslash.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 1,
+                        "character": 14
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "Namespace",
+                    "name": "Foo",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/backslash.php",
+                        "range": {
+                            "start": {
+                                "line": 1,
+                                "character": 10
+                            },
+                            "end": {
+                                "line": 1,
+                                "character": 13
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/backslash.php",
+                "range": {
+                    "start": {
+                        "line": 2,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 2,
+                        "character": 11
+                    }
+                }
+            },
+            "children": []
+        },
+        {
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/backslash.php",
+                "range": {
+                    "start": {
+                        "line": 3,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 14
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "Namespace",
+                    "name": "Baz",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/backslash.php",
+                        "range": {
+                            "start": {
+                                "line": 3,
+                                "character": 10
+                            },
+                            "end": {
+                                "line": 3,
+                                "character": 13
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

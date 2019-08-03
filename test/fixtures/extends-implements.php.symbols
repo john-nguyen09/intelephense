@@ -1,0 +1,18 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/extends-implements.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/extends-implements.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 2,
+                "character": 0
+            }
+        }
+    },
+    "children": []
+}

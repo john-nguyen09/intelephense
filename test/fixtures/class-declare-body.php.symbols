@@ -1,0 +1,39 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-declare-body.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-declare-body.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 4,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Class",
+            "name": "Foo",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/class-declare-body.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [],
+            "associated": [],
+            "modifiers": ""
+        }
+    ]
+}
