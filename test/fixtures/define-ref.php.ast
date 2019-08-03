@@ -1,0 +1,27 @@
+{"type":"program","text":"<?php\ndefine('FOO', 'Bar');\necho FOO;\n"}
+	{"type":"script_section","text":"<?php\ndefine('FOO', 'Bar');\necho FOO;"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"expression_statement","text":"define('FOO', 'Bar');"}
+			{"type":"function_call_expression","text":"define('FOO', 'Bar')"}
+				{"type":"qualified_name","text":"define"}
+					{"type":"name","text":"define"}
+				
+				{"type":"arguments","text":"('FOO', 'Bar')"}
+					{"type":"(","text":"("}
+					{"type":"string","text":"'FOO'"}
+					{"type":",","text":","}
+					{"type":"string","text":"'Bar'"}
+					{"type":")","text":")"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"echo_statement","text":"echo FOO;"}
+			{"type":"echo","text":"echo"}
+			{"type":"qualified_name","text":"FOO"}
+				{"type":"name","text":"FOO"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"end_tag","text":""}
+	

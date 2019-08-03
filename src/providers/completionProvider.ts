@@ -228,7 +228,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         const importMap: { [index: string]: PhpSymbol } = {};
         let qualifiedNameRule: PhpSymbol | null = null;
 
-        if (word.indexOf('\\') === 0) {
+        if (word.indexOf('\\') > -1) {
 
             //If the user has started typing a RelativeQualifiedName, FullyQualifiedName,
             //or a QualifiedName with an ns separator then it is asumed they must 
