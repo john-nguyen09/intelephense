@@ -90,6 +90,10 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
                 ));
                 break;
 
+            case 'return_type':
+                this._transformStack.push(new ReturnTypeTransform());
+                break;
+
             case 'formal_parameters':
                 this._transformStack.push(new DelimiteredListTransform('formal_parameters'));
                 break;
@@ -106,10 +110,6 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
 
             case 'type_declaration':
                 this._transformStack.push(new TypeDeclarationTransform());
-                break;
-
-            case 'return_statement':
-                this._transformStack.push(new ReturnTypeTransform());
                 break;
 
             case 'compound_statement':
@@ -746,8 +746,8 @@ class AnonymousFunctionCreationExpressionTransform implements SymbolNodeTransfor
             for (let n = 0; n < symbols.length; ++n) {
                 this._children.push(symbols[n]);
             }
-        } else if (transform.kind === 'return_statement') {
-            this._symbol.type = (<ReturnTypeTransform>transform).kind;
+        } else if (transform.kind === 'return_type') {
+            this._symbol.type = (<ReturnTypeTransform>transform).returnType;
         } else if (transform.kind === 'function_declaration_body') {
             this._children.pushMany((<FunctionDeclarationBodyTransform>transform).symbols);
         }
@@ -1215,12 +1215,12 @@ class MethodDeclarationTransform implements SymbolNodeTransform {
 
 class ReturnTypeTransform implements NodeTransform {
 
-    kind = 'return_statement';
+    kind = 'return_type';
     returnType = '';
 
     push(transform: NodeTransform) {
-        if (transform.kind === 'qualified_name') {
-            this.returnType = (<QualifiedNameTransform>transform).name;
+        if (transform.kind === 'type_declaration') {
+            this.returnType = (<TypeDeclarationTransform>transform).returnType;
         }
     }
 
@@ -1370,6 +1370,8 @@ class FunctionDeclarationTransform implements SymbolNodeTransform {
             const functionBody = <FunctionDeclarationBodyTransform>transform;
 
             this._children.pushMany(functionBody.symbols);
+        } else if (transform.kind === 'return_type') {
+            this.symbol.type = (<ReturnTypeTransform>transform).returnType;
         }
     }
 

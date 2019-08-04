@@ -63,7 +63,7 @@
             }
         },
         {
-            "kind": "Class",
+            "kind": "Interface",
             "name": "F",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/implements-interface.php",

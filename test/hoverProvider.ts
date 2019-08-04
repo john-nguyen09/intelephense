@@ -30,7 +30,7 @@ let fnAssignmentSrc =
 class Foo {
     function bar():int{}
 }
-function factory():Foo;
+function factory():Foo{}
 $var = factory();
 $var = $var->bar();
 `;

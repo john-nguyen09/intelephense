@@ -169,7 +169,25 @@
             }
         },
         {
-            "kind": "Variable",
+            "kind": "Property",
+            "name": "$bar",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",
+                "range": {
+                    "start": {
+                        "line": 8,
+                        "character": 13
+                    },
+                    "end": {
+                        "line": 8,
+                        "character": 17
+                    }
+                }
+            },
+            "type": ""
+        },
+        {
+            "kind": "Property",
             "name": "$bar",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped_access.php",

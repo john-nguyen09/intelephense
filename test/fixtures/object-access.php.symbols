@@ -1,0 +1,96 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 8,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Class",
+            "name": "Test",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 4,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "Property",
+                    "name": "$foo",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 11
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 15
+                            }
+                        }
+                    },
+                    "modifiers": "Public",
+                    "scope": "Test"
+                },
+                {
+                    "kind": "Method",
+                    "name": "bar",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                        "range": {
+                            "start": {
+                                "line": 3,
+                                "character": 4
+                            },
+                            "end": {
+                                "line": 3,
+                                "character": 20
+                            }
+                        }
+                    },
+                    "modifiers": "",
+                    "children": [],
+                    "scope": "Test"
+                }
+            ],
+            "associated": [],
+            "modifiers": ""
+        },
+        {
+            "kind": "Variable",
+            "name": "$var",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 4
+                    }
+                }
+            }
+        }
+    ]
+}

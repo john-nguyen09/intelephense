@@ -32,8 +32,8 @@ export namespace PhpSymbolIdentifier {
 export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     public static readonly NAMED_SYMBOL_KIND_MASK = SymbolKind.Namespace |
         SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait |
-        SymbolKind.Method | SymbolKind.Function | SymbolKind.File;
-        // SymbolKind.Constant | SymbolKind.ClassConstant;
+        SymbolKind.Method | SymbolKind.Function | SymbolKind.File |
+        SymbolKind.Constant | SymbolKind.ClassConstant;
     public static readonly NAMED_SYMBOL_EXCLUDE_MODIFIERS = SymbolModifier.Magic;
     public static readonly IDENTIFIER_JOINER = '#';
     

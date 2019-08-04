@@ -14,7 +14,7 @@
     },
     "children": [
         {
-            "kind": "Class",
+            "kind": "Constant",
             "name": "true",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
@@ -83,6 +83,23 @@
             }
         },
         {
+            "kind": "Property",
+            "name": "$initProp1",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
+                "range": {
+                    "start": {
+                        "line": 4,
+                        "character": 12
+                    },
+                    "end": {
+                        "line": 4,
+                        "character": 21
+                    }
+                }
+            }
+        },
+        {
             "kind": "Variable",
             "name": "$first",
             "location": {
@@ -117,7 +134,7 @@
             }
         },
         {
-            "kind": "Class",
+            "kind": "Constant",
             "name": "true",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
@@ -220,7 +237,25 @@
             }
         },
         {
-            "kind": "Variable",
+            "kind": "Property",
+            "name": "$staticTestProperty",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",
+                "range": {
+                    "start": {
+                        "line": 21,
+                        "character": 11
+                    },
+                    "end": {
+                        "line": 21,
+                        "character": 30
+                    }
+                }
+            },
+            "type": ""
+        },
+        {
+            "kind": "Property",
             "name": "$staticTestProperty",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/references.php",

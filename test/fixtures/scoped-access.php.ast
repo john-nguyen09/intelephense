@@ -1,0 +1,93 @@
+{"type":"program","text":"<?php\nclass Test {\n    const FOO = 1;\n    static public $bar;\n    static function baz(){}\n}\nTest::FOO;\nTest::$bar;\nTest::baz();\n"}
+	{"type":"script_section","text":"<?php\nclass Test {\n    const FOO = 1;\n    static public $bar;\n    static function baz(){}\n}\nTest::FOO;\nTest::$bar;\nTest::baz();"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"class_declaration","text":"class Test {\n    const FOO = 1;\n    static public $bar;\n    static function baz(){}\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"Test"}
+			{"type":"{","text":"{"}
+			{"type":"class_const_declaration","text":"const FOO = 1;"}
+				{"type":"const","text":"const"}
+				{"type":"const_element","text":"FOO = 1"}
+					{"type":"name","text":"FOO"}
+					{"type":"=","text":"="}
+					{"type":"integer","text":"1"}
+				
+				{"type":";","text":";"}
+			
+			{"type":"property_declaration","text":"static public $bar;"}
+				{"type":"property_modifier","text":"static public"}
+					{"type":"static_modifier","text":"static"}
+						{"type":"static","text":"static"}
+					
+					{"type":"visibility_modifier","text":"public"}
+						{"type":"public","text":"public"}
+					
+				
+				{"type":"property_element","text":"$bar"}
+					{"type":"variable_name","text":"$bar"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"bar"}
+					
+				
+				{"type":";","text":";"}
+			
+			{"type":"method_declaration","text":"static function baz(){}"}
+				{"type":"static_modifier","text":"static"}
+					{"type":"static","text":"static"}
+				
+				{"type":"function_definition","text":"function baz(){}"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"baz"}
+					{"type":"formal_parameters","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{}"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"expression_statement","text":"Test::FOO;"}
+			{"type":"class_constant_access_expression","text":"Test::FOO"}
+				{"type":"qualified_name","text":"Test"}
+					{"type":"name","text":"Test"}
+				
+				{"type":"::","text":"::"}
+				{"type":"name","text":"FOO"}
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"Test::$bar;"}
+			{"type":"scoped_property_access_expression","text":"Test::$bar"}
+				{"type":"qualified_name","text":"Test"}
+					{"type":"name","text":"Test"}
+				
+				{"type":"::","text":"::"}
+				{"type":"variable_name","text":"$bar"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"bar"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"Test::baz();"}
+			{"type":"scoped_call_expression","text":"Test::baz()"}
+				{"type":"qualified_name","text":"Test"}
+					{"type":"name","text":"Test"}
+				
+				{"type":"::","text":"::"}
+				{"type":"member_name","text":"baz"}
+					{"type":"name","text":"baz"}
+				
+				{"type":"arguments","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"end_tag","text":""}
+	

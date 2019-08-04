@@ -46,7 +46,7 @@
             "children": []
         },
         {
-            "kind": "Class",
+            "kind": "Interface",
             "name": "B",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/interface-base.php",

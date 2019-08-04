@@ -168,7 +168,7 @@
                     "type": ""
                 },
                 {
-                    "kind": "Class",
+                    "kind": "Constant",
                     "name": "false",
                     "location": {
                         "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
@@ -310,7 +310,7 @@
                     "type": ""
                 },
                 {
-                    "kind": "Class",
+                    "kind": "Constant",
                     "name": "true",
                     "location": {
                         "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
@@ -581,7 +581,7 @@
                             },
                             "children": [
                                 {
-                                    "kind": "Class",
+                                    "kind": "Interface",
                                     "name": "TestInterface",
                                     "location": {
                                         "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
@@ -629,7 +629,7 @@
                                     },
                                     "children": [
                                         {
-                                            "kind": "Class",
+                                            "kind": "Interface",
                                             "name": "TestInterface",
                                             "location": {
                                                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
@@ -646,7 +646,7 @@
                                             }
                                         },
                                         {
-                                            "kind": "Class",
+                                            "kind": "Interface",
                                             "name": "TestInterface2",
                                             "location": {
                                                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",
@@ -780,7 +780,7 @@
                                             }
                                         },
                                         {
-                                            "kind": "Class",
+                                            "kind": "Interface",
                                             "name": "TestInterface2",
                                             "location": {
                                                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/symbols.php",

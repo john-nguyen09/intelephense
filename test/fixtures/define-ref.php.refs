@@ -31,7 +31,7 @@
             }
         },
         {
-            "kind": "Class",
+            "kind": "Constant",
             "name": "FOO",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/define-ref.php",

@@ -1,0 +1,97 @@
+{
+    "kind": "File",
+    "name": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/hover-vars.php",
+    "location": {
+        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/hover-vars.php",
+        "range": {
+            "start": {
+                "line": 0,
+                "character": 0
+            },
+            "end": {
+                "line": 7,
+                "character": 0
+            }
+        }
+    },
+    "children": [
+        {
+            "kind": "Class",
+            "name": "Foo",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/hover-vars.php",
+                "range": {
+                    "start": {
+                        "line": 1,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 3,
+                        "character": 1
+                    }
+                }
+            },
+            "children": [
+                {
+                    "kind": "Method",
+                    "name": "bar",
+                    "location": {
+                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/hover-vars.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 4
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 24
+                            }
+                        }
+                    },
+                    "modifiers": "",
+                    "children": [],
+                    "type": "",
+                    "scope": "Foo"
+                }
+            ],
+            "associated": [],
+            "modifiers": ""
+        },
+        {
+            "kind": "Function",
+            "name": "factory",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/hover-vars.php",
+                "range": {
+                    "start": {
+                        "line": 4,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 4,
+                        "character": 24
+                    }
+                }
+            },
+            "children": [],
+            "type": "Foo"
+        },
+        {
+            "kind": "Variable",
+            "name": "$var",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/hover-vars.php",
+                "range": {
+                    "start": {
+                        "line": 5,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 5,
+                        "character": 4
+                    }
+                }
+            }
+        }
+    ]
+}

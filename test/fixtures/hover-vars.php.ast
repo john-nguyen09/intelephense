@@ -1,0 +1,102 @@
+{"type":"program","text":"<?php\nclass Foo {\n    function bar():int{}\n}\nfunction factory():Foo{}\n$var = factory();\n$var = $var->bar();\n"}
+	{"type":"script_section","text":"<?php\nclass Foo {\n    function bar():int{}\n}\nfunction factory():Foo{}\n$var = factory();\n$var = $var->bar();"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"class_declaration","text":"class Foo {\n    function bar():int{}\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"Foo"}
+			{"type":"{","text":"{"}
+			{"type":"method_declaration","text":"function bar():int{}"}
+				{"type":"function_definition","text":"function bar():int{}"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"bar"}
+					{"type":"formal_parameters","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+					{"type":"return_type","text":":int"}
+						{"type":":","text":":"}
+						{"type":"type_declaration","text":"int"}
+							{"type":"base_type_declaration","text":"int"}
+								{"type":"scalar_type","text":"int"}
+									{"type":"int","text":"int"}
+								
+							
+						
+					
+					{"type":"compound_statement","text":"{}"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"function_definition","text":"function factory():Foo{}"}
+			{"type":"function","text":"function"}
+			{"type":"name","text":"factory"}
+			{"type":"formal_parameters","text":"()"}
+				{"type":"(","text":"("}
+				{"type":")","text":")"}
+			
+			{"type":"return_type","text":":Foo"}
+				{"type":":","text":":"}
+				{"type":"type_declaration","text":"Foo"}
+					{"type":"base_type_declaration","text":"Foo"}
+						{"type":"qualified_name","text":"Foo"}
+							{"type":"name","text":"Foo"}
+						
+					
+				
+			
+			{"type":"compound_statement","text":"{}"}
+				{"type":"{","text":"{"}
+				{"type":"}","text":"}"}
+			
+		
+		{"type":"expression_statement","text":"$var = factory();"}
+			{"type":"assignment_expression","text":"$var = factory()"}
+				{"type":"variable_name","text":"$var"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"var"}
+				
+				{"type":"=","text":"="}
+				{"type":"function_call_expression","text":"factory()"}
+					{"type":"qualified_name","text":"factory"}
+						{"type":"name","text":"factory"}
+					
+					{"type":"arguments","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"expression_statement","text":"$var = $var->bar();"}
+			{"type":"assignment_expression","text":"$var = $var->bar()"}
+				{"type":"variable_name","text":"$var"}
+					{"type":"$","text":"$"}
+					{"type":"name","text":"var"}
+				
+				{"type":"=","text":"="}
+				{"type":"member_call_expression","text":"$var->bar()"}
+					{"type":"dereferencable_expression","text":"$var"}
+						{"type":"variable_name","text":"$var"}
+							{"type":"$","text":"$"}
+							{"type":"name","text":"var"}
+						
+					
+					{"type":"->","text":"->"}
+					{"type":"member_name","text":"bar"}
+						{"type":"name","text":"bar"}
+					
+					{"type":"arguments","text":"()"}
+						{"type":"(","text":"("}
+						{"type":")","text":")"}
+					
+				
+			
+			{"type":";","text":";"}
+		
+		{"type":"end_tag","text":""}
+	

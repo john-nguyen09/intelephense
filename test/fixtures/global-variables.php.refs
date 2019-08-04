@@ -50,7 +50,7 @@
             "type": "database"
         },
         {
-            "kind": "Class",
+            "kind": "Constant",
             "name": "null",
             "location": {
                 "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",

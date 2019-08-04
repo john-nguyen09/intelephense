@@ -59,10 +59,12 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
         namedSymbols: PhpSymbol[],
         globalVariables: PhpSymbol[]
     ) {
+        const excludeMask = SymbolKind.ClassConstant | SymbolKind.Constant;
+
         this._transformStack = [];
         this._variableTable = new VariableTable();
         this._classStack = [];
-        this._symbols = namedSymbols;
+        this._symbols = namedSymbols.filter(symbol => (symbol.kind & excludeMask) === 0);
 
         const fileSymbol = this.shiftSymbol(SymbolKind.File);
         const fileRange = fileSymbol.location ? fileSymbol.location.range : lsp.Range.create(
@@ -353,9 +355,9 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                 );
                 break;
 
-            case 'scoped_property_access_expression':
+            case 'member_access_expression':
                 this._transformStack.push(
-                    new MemberAccessExpressionTransform('scoped_property_access_expression', SymbolKind.Property, this._referenceSymbols)
+                    new MemberAccessExpressionTransform('member_access_expression', SymbolKind.Property, this._referenceSymbols)
                 );
                 break;
 
@@ -475,6 +477,7 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
             case 'variable_name':
             case 'scoped_call_expression':
             case 'member_call_expression':
+            case 'member_access_expression':
             case 'class_constant_access_expression':
             case 'scoped_property_access_expression':
             case 'namespace_use_clause':
@@ -598,15 +601,39 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
 
     private _nameSymbolType(parent: SyntaxNode | null): SymbolKind {
         if (!parent) {
-            return SymbolKind.Class;
+            return SymbolKind.Constant;
         }
 
         switch (parent.type) {
             case 'function_call_expression':
                 return SymbolKind.Function;
+            case 'object_creation_expression':
+            case 'trait_use_clause':
+            case 'class_declaration':
+            case 'class_base_clause':
+            case 'binary_expression':
+            case 'catch_clause':
+            case 'catch_name_list':
+            case 'scoped_call_expression':
+            case 'class_constant_access_expression':
+            case 'scoped_property_access_expression':
+            case 'namespace_use_clause':
+                if (parent.type === 'binary_expression') {
+                    const operator = parent.child(1);
+                    if (operator !== null && operator.type === 'instanceof') {
+                        return SymbolKind.Class;
+                    }
+
+                    break;
+                }
+
+                return SymbolKind.Class;
+            case 'class_interface_clause':
+            case 'interface_base_clause':
+                return SymbolKind.Interface;
         }
 
-        return SymbolKind.Class;
+        return SymbolKind.Constant;
     }
 
     private _methodDeclaration(node: SyntaxNode) {
@@ -970,7 +997,6 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
         if (this._pushCount === 1) {
             this._lhs(transform);
         } else if (this._pushCount === 2) {
-            TypeString.resolve((<TypeNodeTransform>transform).type);
             this.type = (<TypeNodeTransform>transform).type || '';
         }
 
@@ -1479,6 +1505,7 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
 
         switch (transform.kind) {
             case 'member_name':
+            case 'variable_name':
                 this.reference = (<ReferenceNodeTransform>transform).reference;
                 this.reference.kind = this.symbolKind;
                 this.reference.scope = this._scope;
@@ -1491,7 +1518,6 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
             case 'scoped_property_access_expression':
             case 'function_call_expression':
             case 'subscript_expression':
-            case 'variable_name':
             case 'qualified_name':
             case 'relative_scope':
             case 'dereferencable_expression':

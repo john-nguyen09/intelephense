@@ -66,6 +66,23 @@
                 }
             },
             "type": "database"
+        },
+        {
+            "kind": "Property",
+            "name": "$DB",
+            "location": {
+                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "range": {
+                    "start": {
+                        "line": 8,
+                        "character": 0
+                    },
+                    "end": {
+                        "line": 8,
+                        "character": 3
+                    }
+                }
+            }
         }
     ]
 }
