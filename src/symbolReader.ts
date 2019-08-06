@@ -612,7 +612,7 @@ class ParameterDeclarationTransform implements SymbolNodeTransform {
 
     push(transform: NodeTransform) {
         if (transform.kind === 'type_declaration') {
-            this.symbol.type = (<TypeDeclarationTransform>transform).kind;
+            this.symbol.type = (<TypeDeclarationTransform>transform).returnType;
         } else if (transform.kind === '&') {
             this.symbol.modifiers = SymbolModifier.Reference;
         } else if (transform.kind === '...') {
@@ -1237,11 +1237,11 @@ class TypeDeclarationTransform implements NodeTransform {
     push(transform: NodeTransform) {
         if (transform.kind === 'qualified_name') {
             const qualifiedName = <QualifiedNameTransform>transform;
-
-            if (TypeDeclarationTransform._scalarTypes[qualifiedName.unresolved.toLowerCase()] === 1) {
-                this.returnType = qualifiedName.unresolved;
-            } else {
-                this.returnType = qualifiedName.name;
+            this.returnType = qualifiedName.name;
+        } else if (transform.kind === 'scalar_type') {
+            const nodeTransform = <DefaultNodeTransform>transform;
+            if (TypeDeclarationTransform._scalarTypes[nodeTransform.name.toLowerCase()] === 1) {
+                this.returnType = nodeTransform.name.toLowerCase();
             }
         }
 
