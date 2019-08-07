@@ -283,7 +283,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         let limit = this.config.maxItems;
         let isIncomplete = false;
 
-        for (let s of iterator) {
+        for await (let s of iterator) {
             if (importMap[s.name] || uniqueSymbols.has(s)) {
                 continue;
             }
@@ -1257,7 +1257,7 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
         //replace from the last \
         const fqnOffset = word.lastIndexOf('\\') + 1;
 
-        for (let s of matches) {
+        for await (let s of matches) {
 
             if (uniqueSymbols.has(s)) {
                 continue;
@@ -1338,7 +1338,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
         const fqnOffset = word.lastIndexOf('\\') + 1;
         const lcWord = word.toLowerCase();
 
-        for (let s of matches) {
+        for await (let s of matches) {
 
             if (uniqueSymbols.has(s)) {
                 continue;
@@ -1463,7 +1463,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
         let n = this.config.maxItems;
         const fqnOffset = word.lastIndexOf('\\') + 1;
 
-        for (let s of matches) {
+        for await (let s of matches) {
 
             if (uniqueSymbols.has(s)) {
                 continue;

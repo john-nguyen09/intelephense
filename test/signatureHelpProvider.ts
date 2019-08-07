@@ -9,6 +9,8 @@ import {ReferenceStore} from '../src/reference';
 import 'mocha';
 import LevelConstructor from 'levelup';
 import MemDown from 'memdown';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 
 let constructorHelpSrc =
@@ -243,6 +245,13 @@ describe('SignatureHelpProvider', function () {
             };
             assert.deepEqual(help, expected);
 
+        });
+
+        it('Should not provide signature help', async () => {
+			const provider = await setup(readFileSync(join(__dirname, 'fixtures', 'no-signature-help-in-array.php'))
+				.toString());
+			const help = await provider.provideSignatureHelp('test', {line: 7, character: 8});
+			assert.equal(help, null);
         });
        
 

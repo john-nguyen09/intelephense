@@ -66,34 +66,20 @@ export class CompletionIndex {
         });
     }
 
-    async match(keyword: string): Promise<CompletionValue[]> {
-        const db = this.db;
-        let completions: CompletionValue[] = [];
+    async *match(keyword: string): AsyncIterableIterator<CompletionValue> {
+        const options: AbstractIteratorOptions<string> = {};
 
-        return new Promise<CompletionValue[]>((resolve, reject) => {
-            const options: AbstractIteratorOptions<string> = {
-                limit: CompletionIndex.LIMIT,
-            };
+        if (keyword.length !== 0) {
+            options.gte = keyword;
+            options.lte = keyword + '\xFF';
+        }
+        const readStream: NodeJS.ReadableStream = this.db.createValueStream(options);
 
-            if (keyword.length !== 0) {
-                options.gte = keyword;
-                options.lte = keyword + '\xFF';
-            }
-            const readStream: NodeJS.ReadableStream = db.createValueStream(options);
+        for await (const data of readStream) {
+            const value: CompletionValue = <any>data;
 
-            readStream
-                .on('data', (data) => {
-                    completions.push(data);
-                })
-                .on('end', () => {
-                    resolve(completions);
-                })
-                .on('reject', (err) => {
-                    if (err) {
-                        reject(err);
-                    }
-                });
-        });
+            yield value;
+        }
     }
 
     async del(uri: string, name: string) {
