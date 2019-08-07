@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -29,8 +29,25 @@
             },
             "children": [
                 {
+                    "kind": "Class",
+                    "name": "Foo",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                        "range": {
+                            "start": {
+                                "line": 1,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 1,
+                                "character": 9
+                            }
+                        }
+                    }
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                         "range": {
                             "start": {
                                 "line": 2,
@@ -42,7 +59,26 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "fn",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                                "range": {
+                                    "start": {
+                                        "line": 2,
+                                        "character": 13
+                                    },
+                                    "end": {
+                                        "line": 2,
+                                        "character": 15
+                                    }
+                                }
+                            },
+                            "scope": "Foo"
+                        }
+                    ]
                 }
             ]
         },
@@ -50,7 +86,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                 "range": {
                     "start": {
                         "line": 4,
@@ -68,7 +104,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -86,7 +122,7 @@
             "kind": "Class",
             "name": "Foo",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -103,7 +139,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                 "range": {
                     "start": {
                         "line": 6,
@@ -120,7 +156,7 @@
             "kind": "Method",
             "name": "fn",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                 "range": {
                     "start": {
                         "line": 6,
@@ -137,7 +173,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                 "range": {
                     "start": {
                         "line": 9,
@@ -154,7 +190,7 @@
             "kind": "Class",
             "name": "B",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/instance-of.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/instance-of.php",
                 "range": {
                     "start": {
                         "line": 9,

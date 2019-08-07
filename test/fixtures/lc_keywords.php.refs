@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/lc_keywords.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/lc_keywords.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,7 +17,7 @@
             "kind": "Variable",
             "name": "$foo",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/lc_keywords.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/lc_keywords.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -35,7 +35,7 @@
             "kind": "Function",
             "name": "Array",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/lc_keywords.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/lc_keywords.php",
                 "range": {
                     "start": {
                         "line": 1,

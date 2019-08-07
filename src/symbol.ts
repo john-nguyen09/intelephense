@@ -53,7 +53,7 @@ export function symbolKindToString(kind: SymbolKind) {
         case SymbolKind.ClassConstant:
             return 'ClassConstant';
         case SymbolKind.Constructor :
-            return 'Constructor ';
+            return 'Constructor';
         case SymbolKind.File:
             return 'File';
         case SymbolKind.GlobalVariable:

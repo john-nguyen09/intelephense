@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -27,11 +27,29 @@
                     }
                 }
             },
-            "children": []
+            "children": [
+                {
+                    "kind": "Class",
+                    "name": "Foo",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
+                        "range": {
+                            "start": {
+                                "line": 1,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 1,
+                                "character": 9
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
                 "range": {
                     "start": {
                         "line": 2,
@@ -43,13 +61,31 @@
                     }
                 }
             },
-            "children": []
+            "children": [
+                {
+                    "kind": "Interface",
+                    "name": "FooInterface",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 10
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 22
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
             "kind": "Class",
             "name": "Foo",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
                 "range": {
                     "start": {
                         "line": 3,
@@ -66,7 +102,7 @@
             "kind": "Interface",
             "name": "F",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/implements-interface.php",
                 "range": {
                     "start": {
                         "line": 3,

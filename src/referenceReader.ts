@@ -684,7 +684,6 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
         switch (parent.type) {
             case 'function_call_expression':
                 return SymbolKind.Function;
-            case 'object_creation_expression':
             case 'trait_use_clause':
             case 'class_declaration':
             case 'class_base_clause':
@@ -708,6 +707,8 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
             case 'class_interface_clause':
             case 'interface_base_clause':
                 return SymbolKind.Interface;
+            case 'object_creation_expression':
+                return SymbolKind.Constructor;
         }
 
         return SymbolKind.Constant;

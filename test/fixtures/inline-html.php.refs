@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/inline-html.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,7 +17,7 @@
             "kind": "Variable",
             "name": "$one",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/inline-html.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -35,7 +35,7 @@
             "kind": "Variable",
             "name": "$two",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/inline-html.php",
                 "range": {
                     "start": {
                         "line": 2,
@@ -53,7 +53,7 @@
             "kind": "Variable",
             "name": "$three",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/inline-html.php",
                 "range": {
                     "start": {
                         "line": 3,
@@ -71,7 +71,7 @@
             "kind": "Variable",
             "name": "$test",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/inline-html.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/inline-html.php",
                 "range": {
                     "start": {
                         "line": 6,

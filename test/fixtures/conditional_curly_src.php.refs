@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/conditional_curly_src.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/conditional_curly_src.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,7 +17,7 @@
             "kind": "Constant",
             "name": "true",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/conditional_curly_src.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/conditional_curly_src.php",
                 "range": {
                     "start": {
                         "line": 1,

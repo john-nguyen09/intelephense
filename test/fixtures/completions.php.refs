@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/completions.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,7 +17,7 @@
             "kind": "GlobalVariable",
             "name": "$DB",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/completions.php",
                 "range": {
                     "start": {
                         "line": 3,
@@ -35,7 +35,7 @@
             "kind": "Variable",
             "name": "$DB",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/completions.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -53,7 +53,7 @@
             "kind": "Variable",
             "name": "$DB",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/completions.php",
                 "range": {
                     "start": {
                         "line": 8,
@@ -71,7 +71,7 @@
             "kind": "Property",
             "name": "$DB",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/completions.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/completions.php",
                 "range": {
                     "start": {
                         "line": 8,

@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/group-use.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/group-use.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/group-use.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/group-use.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -32,7 +32,7 @@
                     "kind": "Namespace",
                     "name": "Foo\\Bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/group-use.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/group-use.php",
                         "range": {
                             "start": {
                                 "line": 1,
@@ -51,7 +51,7 @@
             "kind": "None",
             "name": "B",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/group-use.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/group-use.php",
                 "range": {
                     "start": {
                         "line": 3,
@@ -66,7 +66,7 @@
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/group-use.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/group-use.php",
                 "range": {
                     "start": {
                         "line": 6,
@@ -78,7 +78,25 @@
                     }
                 }
             },
-            "children": []
+            "children": [
+                {
+                    "kind": "Class",
+                    "name": "Foo\\Bar\\Baz",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/group-use.php",
+                        "range": {
+                            "start": {
+                                "line": 6,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 6,
+                                "character": 9
+                            }
+                        }
+                    }
+                }
+            ]
         }
     ]
 }

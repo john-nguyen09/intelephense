@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -29,10 +29,27 @@
             },
             "children": [
                 {
+                    "kind": "Class",
+                    "name": "Test",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                        "range": {
+                            "start": {
+                                "line": 1,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 1,
+                                "character": 10
+                            }
+                        }
+                    }
+                },
+                {
                     "kind": "Variable",
                     "name": "$foo",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                         "range": {
                             "start": {
                                 "line": 2,
@@ -47,8 +64,26 @@
                     "type": ""
                 },
                 {
+                    "kind": "Property",
+                    "name": "$foo",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 11
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 15
+                            }
+                        }
+                    },
+                    "scope": "Test"
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                         "range": {
                             "start": {
                                 "line": 3,
@@ -60,11 +95,30 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "bar",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                                "range": {
+                                    "start": {
+                                        "line": 3,
+                                        "character": 20
+                                    },
+                                    "end": {
+                                        "line": 3,
+                                        "character": 23
+                                    }
+                                }
+                            },
+                            "scope": "Test"
+                        }
+                    ]
                 },
                 {
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                         "range": {
                             "start": {
                                 "line": 4,
@@ -76,11 +130,30 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "baz",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                                "range": {
+                                    "start": {
+                                        "line": 4,
+                                        "character": 21
+                                    },
+                                    "end": {
+                                        "line": 4,
+                                        "character": 24
+                                    }
+                                }
+                            },
+                            "scope": "Test"
+                        }
+                    ]
                 },
                 {
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                         "range": {
                             "start": {
                                 "line": 5,
@@ -92,7 +165,26 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "foo",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                                "range": {
+                                    "start": {
+                                        "line": 5,
+                                        "character": 20
+                                    },
+                                    "end": {
+                                        "line": 5,
+                                        "character": 23
+                                    }
+                                }
+                            },
+                            "scope": "Test"
+                        }
+                    ]
                 }
             ]
         },
@@ -100,7 +192,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                 "range": {
                     "start": {
                         "line": 8,
@@ -118,7 +210,7 @@
             "kind": "Class",
             "name": "Test",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                 "range": {
                     "start": {
                         "line": 8,
@@ -135,7 +227,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                 "range": {
                     "start": {
                         "line": 9,
@@ -152,7 +244,7 @@
             "kind": "Property",
             "name": "$b",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-member.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-member.php",
                 "range": {
                     "start": {
                         "line": 9,

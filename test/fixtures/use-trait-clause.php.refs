@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -32,7 +32,7 @@
                     "kind": "Namespace",
                     "name": "Foo",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
                         "range": {
                             "start": {
                                 "line": 1,
@@ -49,7 +49,7 @@
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
                 "range": {
                     "start": {
                         "line": 2,
@@ -61,11 +61,29 @@
                     }
                 }
             },
-            "children": []
+            "children": [
+                {
+                    "kind": "Trait",
+                    "name": "Foo\\Bar",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 9
+                            }
+                        }
+                    }
+                }
+            ]
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
                 "range": {
                     "start": {
                         "line": 3,
@@ -82,7 +100,7 @@
                     "kind": "Namespace",
                     "name": "Bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
                         "range": {
                             "start": {
                                 "line": 3,
@@ -99,7 +117,7 @@
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
                 "range": {
                     "start": {
                         "line": 4,
@@ -114,9 +132,26 @@
             "children": [
                 {
                     "kind": "Class",
+                    "name": "Bar\\Foo",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                        "range": {
+                            "start": {
+                                "line": 4,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 4,
+                                "character": 9
+                            }
+                        }
+                    }
+                },
+                {
+                    "kind": "Class",
                     "name": "Bar\\Bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/use-trait-clause.php",
                         "range": {
                             "start": {
                                 "line": 5,

@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -29,10 +29,45 @@
             },
             "children": [
                 {
+                    "kind": "Class",
+                    "name": "Test",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                        "range": {
+                            "start": {
+                                "line": 1,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 1,
+                                "character": 10
+                            }
+                        }
+                    }
+                },
+                {
+                    "kind": "ClassConstant",
+                    "name": "FOO",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 10
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 13
+                            }
+                        }
+                    },
+                    "scope": "Test"
+                },
+                {
                     "kind": "Variable",
                     "name": "$bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                         "range": {
                             "start": {
                                 "line": 3,
@@ -47,8 +82,26 @@
                     "type": ""
                 },
                 {
+                    "kind": "Property",
+                    "name": "$bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                        "range": {
+                            "start": {
+                                "line": 3,
+                                "character": 18
+                            },
+                            "end": {
+                                "line": 3,
+                                "character": 22
+                            }
+                        }
+                    },
+                    "scope": "Test"
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                         "range": {
                             "start": {
                                 "line": 4,
@@ -60,7 +113,26 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "baz",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                                "range": {
+                                    "start": {
+                                        "line": 4,
+                                        "character": 20
+                                    },
+                                    "end": {
+                                        "line": 4,
+                                        "character": 23
+                                    }
+                                }
+                            },
+                            "scope": "Test"
+                        }
+                    ]
                 }
             ]
         },
@@ -68,7 +140,7 @@
             "kind": "Class",
             "name": "Test",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                 "range": {
                     "start": {
                         "line": 6,
@@ -85,7 +157,7 @@
             "kind": "ClassConstant",
             "name": "FOO",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                 "range": {
                     "start": {
                         "line": 6,
@@ -102,7 +174,7 @@
             "kind": "Class",
             "name": "Test",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                 "range": {
                     "start": {
                         "line": 7,
@@ -119,7 +191,7 @@
             "kind": "Property",
             "name": "$bar",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                 "range": {
                     "start": {
                         "line": 7,
@@ -137,7 +209,7 @@
             "kind": "Property",
             "name": "$bar",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                 "range": {
                     "start": {
                         "line": 7,
@@ -155,7 +227,7 @@
             "kind": "Class",
             "name": "Test",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                 "range": {
                     "start": {
                         "line": 8,
@@ -172,7 +244,7 @@
             "kind": "Method",
             "name": "baz",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/scoped-access.php",
                 "range": {
                     "start": {
                         "line": 8,

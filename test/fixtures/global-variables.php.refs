@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/global-variables.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,7 +17,7 @@
             "kind": "GlobalVariable",
             "name": "$DB",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/global-variables.php",
                 "range": {
                     "start": {
                         "line": 7,
@@ -35,7 +35,7 @@
             "kind": "Variable",
             "name": "$test_class",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/global-variables.php",
                 "range": {
                     "start": {
                         "line": 12,
@@ -53,7 +53,7 @@
             "kind": "Constant",
             "name": "null",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/global-variables.php",
                 "range": {
                     "start": {
                         "line": 12,
@@ -68,7 +68,7 @@
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/global-variables.php",
                 "range": {
                     "start": {
                         "line": 14,
@@ -82,8 +82,25 @@
             },
             "children": [
                 {
+                    "kind": "Interface",
+                    "name": "database",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/global-variables.php",
+                        "range": {
+                            "start": {
+                                "line": 14,
+                                "character": 10
+                            },
+                            "end": {
+                                "line": 14,
+                                "character": 18
+                            }
+                        }
+                    }
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/global-variables.php",
                         "range": {
                             "start": {
                                 "line": 15,
@@ -98,7 +115,7 @@
                     "children": [
                         {
                             "location": {
-                                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/global-variables.php",
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/global-variables.php",
                                 "range": {
                                     "start": {
                                         "line": 16,

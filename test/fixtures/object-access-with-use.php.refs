@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,7 +17,7 @@
             "kind": "Class",
             "name": "Foo\\Bar\\Baz",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -51,7 +51,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
                 "range": {
                     "start": {
                         "line": 2,
@@ -69,7 +69,7 @@
             "kind": "Class",
             "name": "Foo\\Bar\\Baz",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
                 "range": {
                     "start": {
                         "line": 2,
@@ -86,7 +86,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access-with-use.php",
                 "range": {
                     "start": {
                         "line": 3,

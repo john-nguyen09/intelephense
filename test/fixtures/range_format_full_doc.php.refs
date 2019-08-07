@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/range_format_full_doc.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/range_format_full_doc.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,7 +17,7 @@
             "kind": "Variable",
             "name": "$a",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/range_format_full_doc.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/range_format_full_doc.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -35,7 +35,7 @@
             "kind": "Variable",
             "name": "$v",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/range_format_full_doc.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/range_format_full_doc.php",
                 "range": {
                     "start": {
                         "line": 1,

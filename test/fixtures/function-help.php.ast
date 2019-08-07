@@ -1,0 +1,39 @@
+{"type":"program","text":"<?php\r\nfunction fn($p1, $p2){}\r\nfn($x,)\r\n"}
+	{"type":"ERROR","text":"<?php\r\nfunction fn($p1, $p2){}\r\nfn($x,)"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"function_definition","text":"function fn($p1, $p2){}"}
+			{"type":"function","text":"function"}
+			{"type":"name","text":"fn"}
+			{"type":"formal_parameters","text":"($p1, $p2)"}
+				{"type":"(","text":"("}
+				{"type":"simple_parameter","text":"$p1"}
+					{"type":"variable_name","text":"$p1"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"p1"}
+					
+				
+				{"type":",","text":","}
+				{"type":"simple_parameter","text":"$p2"}
+					{"type":"variable_name","text":"$p2"}
+						{"type":"$","text":"$"}
+						{"type":"name","text":"p2"}
+					
+				
+				{"type":")","text":")"}
+			
+			{"type":"compound_statement","text":"{}"}
+				{"type":"{","text":"{"}
+				{"type":"}","text":"}"}
+			
+		
+		{"type":"qualified_name","text":"fn"}
+			{"type":"name","text":"fn"}
+		
+		{"type":"(","text":"("}
+		{"type":"variable_name","text":"$x"}
+			{"type":"$","text":"$"}
+			{"type":"name","text":"x"}
+		
+		{"type":",","text":","}
+		{"type":")","text":")"}
+	

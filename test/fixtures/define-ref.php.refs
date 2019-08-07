@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/define-ref.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/define-ref.php",
         "range": {
             "start": {
                 "line": 0,
@@ -17,7 +17,7 @@
             "kind": "Function",
             "name": "define",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/define-ref.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/define-ref.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -34,7 +34,7 @@
             "kind": "Constant",
             "name": "FOO",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/define-ref.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/define-ref.php",
                 "range": {
                     "start": {
                         "line": 2,

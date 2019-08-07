@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
         "range": {
             "start": {
                 "line": 0,
@@ -8,14 +8,14 @@
             },
             "end": {
                 "line": 5,
-                "character": 10
+                "character": 0
             }
         }
     },
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -32,7 +32,7 @@
                     "kind": "Class",
                     "name": "Foo",
                     "location": {
-                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
                         "range": {
                             "start": {
                                 "line": 1,
@@ -47,7 +47,7 @@
                 },
                 {
                     "location": {
-                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
                         "range": {
                             "start": {
                                 "line": 2,
@@ -55,7 +55,7 @@
                             },
                             "end": {
                                 "line": 2,
-                                "character": 30
+                                "character": 36
                             }
                         }
                     },
@@ -64,7 +64,7 @@
                             "kind": "Method",
                             "name": "__construct",
                             "location": {
-                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
                                 "range": {
                                     "start": {
                                         "line": 2,
@@ -80,9 +80,9 @@
                         },
                         {
                             "kind": "Variable",
-                            "name": "$p",
+                            "name": "$p1",
                             "location": {
-                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
                                 "range": {
                                     "start": {
                                         "line": 2,
@@ -90,7 +90,7 @@
                                     },
                                     "end": {
                                         "line": 2,
-                                        "character": 27
+                                        "character": 28
                                     }
                                 }
                             },
@@ -98,9 +98,9 @@
                         },
                         {
                             "kind": "Parameter",
-                            "name": "$p",
+                            "name": "$p1",
                             "location": {
-                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
                                 "range": {
                                     "start": {
                                         "line": 2,
@@ -108,7 +108,42 @@
                                     },
                                     "end": {
                                         "line": 2,
-                                        "character": 27
+                                        "character": 28
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "kind": "Variable",
+                            "name": "$p2",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
+                                "range": {
+                                    "start": {
+                                        "line": 2,
+                                        "character": 30
+                                    },
+                                    "end": {
+                                        "line": 2,
+                                        "character": 33
+                                    }
+                                }
+                            },
+                            "type": ""
+                        },
+                        {
+                            "kind": "Parameter",
+                            "name": "$p2",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
+                                "range": {
+                                    "start": {
+                                        "line": 2,
+                                        "character": 30
+                                    },
+                                    "end": {
+                                        "line": 2,
+                                        "character": 33
                                     }
                                 }
                             }
@@ -121,7 +156,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
                 "range": {
                     "start": {
                         "line": 4,
@@ -136,10 +171,10 @@
             "type": ""
         },
         {
-            "kind": "Class",
-            "name": "F",
+            "kind": "Constructor",
+            "name": "Foo",
             "location": {
-                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/constructor-help.php",
                 "range": {
                     "start": {
                         "line": 4,
@@ -147,24 +182,7 @@
                     },
                     "end": {
                         "line": 4,
-                        "character": 12
-                    }
-                }
-            }
-        },
-        {
-            "kind": "Variable",
-            "name": "$var",
-            "location": {
-                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object_creation.php",
-                "range": {
-                    "start": {
-                        "line": 5,
-                        "character": 0
-                    },
-                    "end": {
-                        "line": 5,
-                        "character": 4
+                        "character": 14
                     }
                 }
             }

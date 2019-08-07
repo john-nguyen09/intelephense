@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -29,10 +29,27 @@
             },
             "children": [
                 {
+                    "kind": "Class",
+                    "name": "Test",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                        "range": {
+                            "start": {
+                                "line": 1,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 1,
+                                "character": 10
+                            }
+                        }
+                    }
+                },
+                {
                     "kind": "Variable",
                     "name": "$foo",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                         "range": {
                             "start": {
                                 "line": 2,
@@ -47,8 +64,26 @@
                     "type": ""
                 },
                 {
+                    "kind": "Property",
+                    "name": "$foo",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 11
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 15
+                            }
+                        }
+                    },
+                    "scope": "Test"
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                         "range": {
                             "start": {
                                 "line": 3,
@@ -60,7 +95,26 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "bar",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                                "range": {
+                                    "start": {
+                                        "line": 3,
+                                        "character": 13
+                                    },
+                                    "end": {
+                                        "line": 3,
+                                        "character": 16
+                                    }
+                                }
+                            },
+                            "scope": "Test"
+                        }
+                    ]
                 }
             ]
         },
@@ -68,7 +122,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -86,7 +140,7 @@
             "kind": "Class",
             "name": "Test",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                 "range": {
                     "start": {
                         "line": 5,
@@ -103,7 +157,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                 "range": {
                     "start": {
                         "line": 6,
@@ -120,7 +174,7 @@
             "kind": "Method",
             "name": "bar",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                 "range": {
                     "start": {
                         "line": 6,
@@ -137,7 +191,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                 "range": {
                     "start": {
                         "line": 7,
@@ -154,7 +208,7 @@
             "kind": "Property",
             "name": "$foo",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/object-access.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/object-access.php",
                 "range": {
                     "start": {
                         "line": 7,

@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/extends-implements.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/extends-implements.php",
         "range": {
             "start": {
                 "line": 0,

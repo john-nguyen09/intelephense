@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -29,8 +29,25 @@
             },
             "children": [
                 {
+                    "kind": "Class",
+                    "name": "Foo",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "range": {
+                            "start": {
+                                "line": 1,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 1,
+                                "character": 9
+                            }
+                        }
+                    }
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 2,
@@ -42,13 +59,32 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "fooFn",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
+                                "range": {
+                                    "start": {
+                                        "line": 2,
+                                        "character": 13
+                                    },
+                                    "end": {
+                                        "line": 2,
+                                        "character": 18
+                                    }
+                                }
+                            },
+                            "scope": "Foo"
+                        }
+                    ]
                 }
             ]
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                 "range": {
                     "start": {
                         "line": 4,
@@ -62,8 +98,25 @@
             },
             "children": [
                 {
+                    "kind": "Class",
+                    "name": "Bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "range": {
+                            "start": {
+                                "line": 4,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 4,
+                                "character": 9
+                            }
+                        }
+                    }
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 5,
@@ -75,7 +128,26 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "barFn",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
+                                "range": {
+                                    "start": {
+                                        "line": 5,
+                                        "character": 13
+                                    },
+                                    "end": {
+                                        "line": 5,
+                                        "character": 18
+                                    }
+                                }
+                            },
+                            "scope": "Bar"
+                        }
+                    ]
                 }
             ]
         },
@@ -83,7 +155,7 @@
             "kind": "Variable",
             "name": "$var",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                 "range": {
                     "start": {
                         "line": 7,
@@ -101,7 +173,7 @@
             "kind": "Class",
             "name": "Foo",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                 "range": {
                     "start": {
                         "line": 7,
@@ -118,7 +190,7 @@
             "kind": "Variable",
             "name": "$fn",
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                 "range": {
                     "start": {
                         "line": 8,
@@ -134,7 +206,7 @@
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                 "range": {
                     "start": {
                         "line": 8,
@@ -151,7 +223,7 @@
                     "kind": "Variable",
                     "name": "$param",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 8,
@@ -163,13 +235,13 @@
                             }
                         }
                     },
-                    "type": "type_declaration"
+                    "type": "string"
                 },
                 {
                     "kind": "Parameter",
                     "name": "$param",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 8,
@@ -186,7 +258,7 @@
                     "kind": "Variable",
                     "name": "$var",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 8,
@@ -203,7 +275,7 @@
                     "kind": "Variable",
                     "name": "$bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 9,
@@ -221,7 +293,7 @@
                     "kind": "Class",
                     "name": "Bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 9,
@@ -238,7 +310,7 @@
                     "kind": "Variable",
                     "name": "$var",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 10,
@@ -255,7 +327,7 @@
                     "kind": "Method",
                     "name": "fooFn",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 10,
@@ -272,7 +344,7 @@
                     "kind": "Variable",
                     "name": "$param",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 11,
@@ -284,13 +356,13 @@
                             }
                         }
                     },
-                    "type": "type_declaration"
+                    "type": "string"
                 },
                 {
                     "kind": "Variable",
                     "name": "$bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 12,
@@ -307,7 +379,7 @@
                     "kind": "Method",
                     "name": "barFn",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/closure.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/closure.php",
                         "range": {
                             "start": {
                                 "line": 12,

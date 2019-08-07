@@ -293,6 +293,24 @@
                     "type": ""
                 },
                 {
+                    "kind": "Property",
+                    "name": "$p",
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/function-refs.php",
+                        "range": {
+                            "start": {
+                                "line": 10,
+                                "character": 11
+                            },
+                            "end": {
+                                "line": 10,
+                                "character": 13
+                            }
+                        }
+                    },
+                    "scope": "Foo"
+                },
+                {
                     "location": {
                         "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/function-refs.php",
                         "range": {
@@ -411,7 +429,7 @@
                                     }
                                 }
                             },
-                            "altName": "static"
+                            "altName": "self"
                         },
                         {
                             "kind": "ClassConstant",

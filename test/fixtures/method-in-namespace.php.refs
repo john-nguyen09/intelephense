@@ -1,6 +1,6 @@
 {
     "location": {
-        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
+        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
         "range": {
             "start": {
                 "line": 0,
@@ -15,7 +15,7 @@
     "children": [
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
                 "range": {
                     "start": {
                         "line": 1,
@@ -32,7 +32,7 @@
                     "kind": "Namespace",
                     "name": "Foo\\Bar",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
                         "range": {
                             "start": {
                                 "line": 1,
@@ -49,7 +49,7 @@
         },
         {
             "location": {
-                "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
+                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
                 "range": {
                     "start": {
                         "line": 2,
@@ -63,8 +63,25 @@
             },
             "children": [
                 {
+                    "kind": "Class",
+                    "name": "Foo\\Bar\\Baz",
                     "location": {
-                        "uri": "file:///C:/Users/johnn/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
+                        "range": {
+                            "start": {
+                                "line": 2,
+                                "character": 6
+                            },
+                            "end": {
+                                "line": 2,
+                                "character": 9
+                            }
+                        }
+                    }
+                },
+                {
+                    "location": {
+                        "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
                         "range": {
                             "start": {
                                 "line": 3,
@@ -76,7 +93,26 @@
                             }
                         }
                     },
-                    "children": []
+                    "children": [
+                        {
+                            "kind": "Method",
+                            "name": "Foo\\Bar\\fn",
+                            "location": {
+                                "uri": "file:///C:/Users/snowk/Development/nodejs/intelephense/test/fixtures/method-in-namespace.php",
+                                "range": {
+                                    "start": {
+                                        "line": 3,
+                                        "character": 13
+                                    },
+                                    "end": {
+                                        "line": 3,
+                                        "character": 15
+                                    }
+                                }
+                            },
+                            "scope": "Foo\\Bar\\Baz"
+                        }
+                    ]
                 }
             ]
         }
