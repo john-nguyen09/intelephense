@@ -169,7 +169,7 @@ export class SignatureHelpProvider {
                 }
                 return undefined;
             case 'object_creation_expression':
-                if (traverser.child(this._isClassTypeDesignator) && traverser.child(this._isNamePhraseOrRelativeScope)) {
+                if (traverser.child(this._isClassTypeDesignator) && traverser.child(this._isNameOrRelativeScope)) {
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Override))
                         .shift();
                 }
@@ -222,9 +222,9 @@ export class SignatureHelpProvider {
         ].includes(node.type);
     }
 
-    private _isNamePhraseOrRelativeScope(node: SyntaxNode) {
+    private _isNameOrRelativeScope(node: SyntaxNode) {
         return [
-            'qualified_name',
+            'name',
             'relative_scope',
         ].includes(node.type);
     }

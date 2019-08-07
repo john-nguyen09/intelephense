@@ -22,6 +22,39 @@ import { SymbolIndex } from './indexes/symbolIndex';
 import { SyntaxNode } from 'tree-sitter';
 import { SymbolReader } from './symbolReader';
 
+const HEADER_TRANSFORM_KIND = new Set<string>([
+    'class_name',
+    'interface_name',
+    'function_name',
+    'trait_name',
+    'const_name',
+    'method_name',
+    'class_const_name',
+]);
+
+const HEADER_SYMBOL_KIND_MAPPING = new Map<SymbolKind, string>([
+    [SymbolKind.Class, 'class_name'],
+    [SymbolKind.Interface, 'interface_name'],
+    [SymbolKind.Function, 'function_name'],
+    [SymbolKind.Trait, 'trait_name'],
+    [SymbolKind.Constant, 'const_name'],
+    [SymbolKind.Method, 'method_name'],
+    [SymbolKind.ClassConstant, 'class_const_name'],
+]);
+
+const HEADER_NODE_TYPE_MAPPING = new Map<string, SymbolKind>([
+    ['class_declaration', SymbolKind.Class],
+    ['interface_declaration', SymbolKind.Interface],
+    ['function_definition', SymbolKind.Function],
+    ['trait_declaration', SymbolKind.Trait],
+    ['const_element', SymbolKind.Constant],
+]);
+
+const HEADER_SCOPED_NODE_TYPE_MAPPING = new Map<string, SymbolKind>([
+    ['class_const_declaration', SymbolKind.ClassConstant],
+    ['method_declaration', SymbolKind.Method],
+]);
+
 interface TypeNodeTransform extends NodeTransform {
     type: string | TypeResolvable;
 }
@@ -107,6 +140,11 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
         }
 
         return this._symbols[this._symbolOffset];
+    }
+
+    private _currentClassName() {
+        let c = this._classStack.length ? this._classStack[this._classStack.length - 1] : undefined;
+        return c ? c.name : '';
     }
 
     preorder(node: SyntaxNode, spine: SyntaxNode[]) {
@@ -274,7 +312,30 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                 this._transformStack.push(new NamespaceNameAsPrefixTransform());
                 break;
 
+            case '__construct':
+                this._transformStack.push(new HeaderTransform(
+                    this.nameResolver, this.doc, node,
+                    SymbolKind.Method,
+                    this._currentClassName()
+                ));
+                break;
+
             case 'name':
+                if (HEADER_NODE_TYPE_MAPPING.has(parent.type)) {
+                    if (parent.parent && HEADER_SCOPED_NODE_TYPE_MAPPING.has(parent.parent.type)) {
+                        this._transformStack.push(new HeaderTransform(
+                            this.nameResolver, this.doc, node,
+                            HEADER_SCOPED_NODE_TYPE_MAPPING.get(parent.parent.type),
+                            this._currentClassName()
+                        ));
+                        break;
+                    }
+
+                    this._transformStack.push(new HeaderTransform(
+                        this.nameResolver, this.doc, node, HEADER_NODE_TYPE_MAPPING.get(parent.type)
+                    ));
+                    break;
+                }
                 if (this._isScope(parent)) {
                     this._transformStack.push(
                         new MemberNameTransform(node, this.doc.nodeLocation(node))
@@ -414,6 +475,10 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                 let context = this._classStack.length ? this._classStack[this._classStack.length - 1] : null;
                 let name = context ? context.name : '';
                 this._transformStack.push(new RelativeScopeTransform(name, this.doc.nodeLocation(node)));
+                break;
+
+            case 'property_element':
+                this._transformStack.push(new PropertyElementTransform(this._currentClassName()));
                 break;
 
             case 'conditional_expression':
@@ -573,6 +638,18 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                 this._scopeStack.pop();
                 this._variableTable.popScope();
                 break;
+
+            case 'name':
+            case '__construct':
+                {
+                    if (scope && transform && HEADER_TRANSFORM_KIND.has(transform.kind)) {
+                        const ref = (<ReferenceNodeTransform>transform).reference;
+                        if (ref) {
+                            scope.children.push(ref);
+                        }
+                    }
+                    break;
+                }
 
             default:
                 break;
@@ -777,6 +854,54 @@ class NamespaceNameAsPrefixTransform implements NodeTransform {
             this.text = (<NamespaceNameTransform>transform).text;
         }
     }
+}
+
+class PropertyElementTransform implements ReferenceNodeTransform {
+
+    kind = 'property_element';
+    reference: Reference;
+    private _scope = '';
+
+    constructor(scope: string) {
+        this._scope = scope;
+    }
+
+    push(transform: NodeTransform) {
+        if (transform.kind === 'variable_name') {
+            const ref = (<SimpleVariableTransform>transform).reference;
+            const name = ref.name;
+            const loc = ref.location;
+            this.reference = Reference.create(SymbolKind.Property, name, loc);
+            this.reference.scope = this._scope;
+        }
+    }
+
+}
+
+class HeaderTransform implements ReferenceNodeTransform {
+
+    kind = 'unknown_name';
+    reference: Reference;
+
+    constructor(
+        public nameResolver: NameResolver, doc: ParsedDocument,
+        node: SyntaxNode, kind: SymbolKind, scope?: string
+    ) {
+        if (HEADER_SYMBOL_KIND_MAPPING.has(kind)) {
+            this.kind = HEADER_SYMBOL_KIND_MAPPING.get(kind);
+        }
+
+        const name = node.text;
+        const loc = doc.nodeLocation(node);
+        this.reference = Reference.create(kind, this.nameResolver.resolveRelative(name), loc);
+
+        if (scope !== undefined) {
+            this.reference.scope = scope;
+        }
+    }
+
+    push(transform: NodeTransform) { }
+
 }
 
 class NamespaceUseDeclarationTransform implements NodeTransform {
@@ -1329,14 +1454,20 @@ class FunctionCallExpressionTransform implements TypeNodeTransform {
 
 class RelativeScopeTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
+    private static readonly ALLOWED_KINDS = new Set([
+        'static', 'self',
+    ]);
     kind = 'relative_scope';
     reference: Reference;
     constructor(public type: string, loc: lsp.Location) {
         this.reference = Reference.create(SymbolKind.Class, type, loc);
-        // TODO: self, parent
         this.reference.altName = 'static';
     }
-    push(transform: NodeTransform) { }
+    push(transform: NodeTransform) {
+        if (RelativeScopeTransform.ALLOWED_KINDS.has(transform.kind)) {
+            this.reference.altName = transform.kind;
+        }
+    }
 }
 
 class TypeDesignatorTransform implements TypeNodeTransform {
@@ -1365,7 +1496,6 @@ class ObjectCreationExpressionTransform implements TypeNodeTransform {
     type: string | TypeResolvable = '';
 
     push(transform: NodeTransform) {
-        console.log(transform);
         if (transform.kind === '_class_type_designator') {
             this.type = (<TypeNodeTransform>transform).type;
         }

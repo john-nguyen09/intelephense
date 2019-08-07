@@ -1,0 +1,54 @@
+{"type":"program","text":"<?php\r\nclass Foo {\r\n    function __construct($p1, $p2){}\r\n}\r\n$var = new Foo()\r\n"}
+	{"type":"ERROR","text":"<?php\r\nclass Foo {\r\n    function __construct($p1, $p2){}\r\n}\r\n$var = new Foo()"}
+		{"type":"start_tag","text":"<?php"}
+		{"type":"class_declaration","text":"class Foo {\r\n    function __construct($p1, $p2){}\r\n}"}
+			{"type":"class","text":"class"}
+			{"type":"name","text":"Foo"}
+			{"type":"{","text":"{"}
+			{"type":"method_declaration","text":"function __construct($p1, $p2){}"}
+				{"type":"function_definition","text":"function __construct($p1, $p2){}"}
+					{"type":"function","text":"function"}
+					{"type":"name","text":"__construct"}
+					{"type":"formal_parameters","text":"($p1, $p2)"}
+						{"type":"(","text":"("}
+						{"type":"simple_parameter","text":"$p1"}
+							{"type":"variable_name","text":"$p1"}
+								{"type":"$","text":"$"}
+								{"type":"name","text":"p1"}
+							
+						
+						{"type":",","text":","}
+						{"type":"simple_parameter","text":"$p2"}
+							{"type":"variable_name","text":"$p2"}
+								{"type":"$","text":"$"}
+								{"type":"name","text":"p2"}
+							
+						
+						{"type":")","text":")"}
+					
+					{"type":"compound_statement","text":"{}"}
+						{"type":"{","text":"{"}
+						{"type":"}","text":"}"}
+					
+				
+			
+			{"type":"}","text":"}"}
+		
+		{"type":"assignment_expression","text":"$var = new Foo()"}
+			{"type":"variable_name","text":"$var"}
+				{"type":"$","text":"$"}
+				{"type":"name","text":"var"}
+			
+			{"type":"=","text":"="}
+			{"type":"object_creation_expression","text":"new Foo()"}
+				{"type":"new","text":"new"}
+				{"type":"qualified_name","text":"Foo"}
+					{"type":"name","text":"Foo"}
+				
+				{"type":"arguments","text":"()"}
+					{"type":"(","text":"("}
+					{"type":")","text":")"}
+				
+			
+		
+	
