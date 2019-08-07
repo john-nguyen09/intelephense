@@ -31,7 +31,7 @@ export class SignatureHelpProvider {
     
             let traverser = new ParseTreeTraverser(doc, table, refTable);
             let token = traverser.position(position);
-            let callableExpr = traverser.ancestor(this._isCallablePhrase) as Phrase;
+            let callableExpr = traverser.ancestor(this._isCallablePhrase, this._isStopToCallablePhrase) as Phrase;
             if (!callableExpr || !token || token.kind === TokenKind.CloseParenthesis) {
                 return;
             }
@@ -185,6 +185,15 @@ export class SignatureHelpProvider {
             default:
                 return false;
         }
+    }
+
+    private _isStopToCallablePhrase(node: Phrase | Token) {
+        switch ((<Phrase>node).kind) {
+            case PhraseKind.ArrayCreationExpression:
+                return true;
+        }
+
+        return false;
     }
 
     private _isNamePhrase(node:Phrase|Token) {
