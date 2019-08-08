@@ -144,6 +144,29 @@ export class TreeTraverser<T extends TreeLike> {
         return null;
     }
 
+    next(predicate: Predicate<T>) {
+        let nextNode: T | null = null;
+        while ((nextNode = this.nextSibling()) !== null) {
+            if (predicate(nextNode)) {
+                break;
+            }
+        }
+
+        return this.node;
+    }
+
+    filterNext(predicate: Predicate<T>, end: Predicate<T>) {
+        const filtered: T[] = [];
+        let nextNode: T | null = null;
+        while ((nextNode = this.nextSibling()) !== null && !end(nextNode)) {
+            if (predicate(nextNode)) {
+                filtered.push(nextNode);
+            }
+        }
+
+        return filtered;
+    }
+
     nthChild(n: number) {
         const parent = this.node;
         const children = parent.children;

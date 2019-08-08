@@ -12,6 +12,7 @@ import { ParsedDocument, ParsedDocumentStore } from '../parsedDocument';
 import { MemberMergeStrategy } from '../typeAggregate';
 import { ReferenceStore } from '../reference';
 import { SyntaxNode } from 'tree-sitter';
+import { Predicate } from '../types';
 
 
 export class SignatureHelpProvider {
@@ -31,16 +32,43 @@ export class SignatureHelpProvider {
 
             const traverser = new ParseTreeTraverser(doc, table, refTable);
             const token = traverser.position(position);
-            const callableExpr = traverser.ancestor(this._isCallablePhrase);
-            if (!callableExpr || !token || token.type === ')') {
+
+            if (!token || token.type === ')') {
                 return;
             }
 
-            const symbol = await this._getSymbol(traverser.clone());
+            const previous = traverser.clone();
+            const callableExpr = traverser.ancestor(this._isCallablePhrase);
+            const startArguments: Predicate<SyntaxNode> = node => node.type === '(';
+            let symbol: PhpSymbol | undefined = undefined;
+            let argumentsTraverser = traverser.clone();
+            if (!callableExpr) {
+                let prev: SyntaxNode | null = null;
+                while ((prev = previous.prevSibling()) !== null) {
+                    if (prev.type === '(') {
+                        break;
+                    }
+                }
+                prev = previous.prevSibling();
+                if (prev.type !== 'qualified_name') {
+                    return;
+                }
+                symbol = await this._getSymbol(previous.clone());
+                argumentsTraverser = previous.clone();
+                argumentsTraverser.next(startArguments);
+            } else {
+                symbol = await this._getSymbol(traverser.clone());
+                argumentsTraverser = traverser.clone();
+                argumentsTraverser.child(startArguments);
+            }
+
             const delimFilterFn = (x: SyntaxNode) => {
                 return x.type === ',' && x.startIndex <= token.startIndex;
             };
-            const argNumber = ParsedDocument.filterChildren(ParsedDocument.findChild(callableExpr, this._isArgExprList), delimFilterFn).length;
+            const stopFn = (node: SyntaxNode) => {
+                return node.type === ')';
+            };
+            const argNumber = argumentsTraverser.filterNext(delimFilterFn, stopFn).length;
 
             if (symbol) {
                 response = this._createSignatureHelp(symbol, argNumber);
@@ -128,7 +156,7 @@ export class SignatureHelpProvider {
         labelParts.push(s.name);
 
         if (s.value) {
-            labelParts.push('= ' + s.value);
+            labelParts.push(s.value);
         }
 
         let info = <lsp.ParameterInformation>{
@@ -174,6 +202,16 @@ export class SignatureHelpProvider {
                         .shift();
                 }
                 return undefined;
+
+            case 'qualified_name':
+                const ref = traverser.reference;
+                // A workaround for parser's issue since if there is an error
+                // `function_call_expression` will not be constructed therefore
+                // qualified_name is identified as `Constant`, however if there
+                // is a `(`, it will make it a `function_call_expression`
+                ref.kind = SymbolKind.Function; 
+                return (await this.symbolStore.findSymbolsByReference(traverser.reference))
+                    .shift();
 
             default:
                 throw new Error('Invalid Argument');

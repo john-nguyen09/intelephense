@@ -620,7 +620,7 @@ class ParameterDeclarationTransform implements SymbolNodeTransform {
         } else if (transform.kind === 'variable_name') {
             this.symbol.name = (<SimpleVariableTransform>transform).symbol.name;
             SymbolReader.assignPhpDocInfoToSymbol(this.symbol, this._doc, this._docLocation, this._nameResolver);
-        } else {
+        } else if (transform.kind === 'default_argument_specifier') {
             this.symbol.value = (<TextNodeTransform>transform).name;
         }
     }
