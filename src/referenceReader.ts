@@ -321,18 +321,18 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                 break;
 
             case 'name':
-                if (HEADER_NODE_TYPE_MAPPING.has(parent.type)) {
+                if (parent !== null && HEADER_NODE_TYPE_MAPPING.has(parent.type)) {
                     if (parent.parent && HEADER_SCOPED_NODE_TYPE_MAPPING.has(parent.parent.type)) {
                         this._transformStack.push(new HeaderTransform(
                             this.nameResolver, this.doc, node,
-                            HEADER_SCOPED_NODE_TYPE_MAPPING.get(parent.parent.type),
+                            HEADER_SCOPED_NODE_TYPE_MAPPING.get(parent.parent.type)!,
                             this._currentClassName()
                         ));
                         break;
                     }
 
                     this._transformStack.push(new HeaderTransform(
-                        this.nameResolver, this.doc, node, HEADER_NODE_TYPE_MAPPING.get(parent.type)
+                        this.nameResolver, this.doc, node, HEADER_NODE_TYPE_MAPPING.get(parent.type)!
                     ));
                     break;
                 }
@@ -889,7 +889,7 @@ class HeaderTransform implements ReferenceNodeTransform {
         node: SyntaxNode, kind: SymbolKind, scope?: string
     ) {
         if (HEADER_SYMBOL_KIND_MAPPING.has(kind)) {
-            this.kind = HEADER_SYMBOL_KIND_MAPPING.get(kind);
+            this.kind = HEADER_SYMBOL_KIND_MAPPING.get(kind)!;
         }
 
         const name = node.text;

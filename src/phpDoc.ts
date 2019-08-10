@@ -27,7 +27,7 @@ export namespace PhpDocParser {
         let text: string = '';
 
         if (split.length && split[0].indexOf('@') !== 0) {
-            text = split.shift().trim();
+            text = split.shift()!.trim();
         }
 
         let tagString: string | undefined;

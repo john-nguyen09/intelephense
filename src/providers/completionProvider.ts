@@ -206,7 +206,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
             const node = traverser.node;
             if (node !== null && node.type === '\\') {
                 const prevNode = traverser.clone().prevSibling();
-                if (prevNode.type === 'name') {
+                if (prevNode !== null && prevNode.type === 'name') {
                     namePhrase = prevNode;
                 }
             }
@@ -540,7 +540,7 @@ class InstanceOfTypeDesignatorCompletion extends AbstractNameCompletion {
 
     protected _symbolFilter(s: PhpSymbol) {
         return (s.kind & (SymbolKind.Class | SymbolKind.Interface | SymbolKind.Namespace)) > 0 &&
-            s.modifiers === null || !(s.modifiers & (SymbolModifier.Anonymous));
+            (s.modifiers === undefined || !(s.modifiers & (SymbolModifier.Anonymous)));
     }
 
     protected _getKeywords(traverser: ParseTreeTraverser):string[] {
@@ -1711,7 +1711,7 @@ class DeclarationBodyCompletion implements CompletionStrategy {
         const parentOfParent = traverser.parent();
 
         return parent !== null && parent.type === 'ERROR' &&
-            DeclarationBodyCompletion._phraseTypes.includes(parentOfParent.type);
+            parentOfParent !== null && DeclarationBodyCompletion._phraseTypes.includes(parentOfParent.type);
     }
 
     async completions(traverser: ParseTreeTraverser, word: string) {

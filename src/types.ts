@@ -129,6 +129,9 @@ export class TreeTraverser<T extends TreeLike> {
     child(predicate: Predicate<T>) {
 
         const parent = this.node;
+        if (parent === null) {
+            return null;
+        }
         const children = parent.children;
         if (!parent || !children) {
             return null;
@@ -169,6 +172,9 @@ export class TreeTraverser<T extends TreeLike> {
 
     nthChild(n: number) {
         const parent = this.node;
+        if (parent === null) {
+            return null;
+        }
         const children = parent.children;
         if (!parent || !children || n < 0 || n > children.length - 1) {
             return null;

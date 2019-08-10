@@ -50,7 +50,7 @@ export class SignatureHelpProvider {
                     }
                 }
                 prev = previous.prevSibling();
-                if (prev.type !== 'qualified_name') {
+                if (prev !== null && prev.type !== 'qualified_name') {
                     return;
                 }
                 symbol = await this._getSymbol(previous.clone());
@@ -205,6 +205,9 @@ export class SignatureHelpProvider {
 
             case 'qualified_name':
                 const ref = traverser.reference;
+                if (ref == null) {
+                    return undefined;
+                }
                 // A workaround for parser's issue since if there is an error
                 // `function_call_expression` will not be constructed therefore
                 // qualified_name is identified as `Constant`, however if there

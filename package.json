@@ -9,7 +9,7 @@
     "watch": "tsc -w -p tsconfig.build.json",
     "build": "tsc -p tsconfig.build.json && node ./lib/install.js",
     "bundle": "webpack",
-    "fake": "tsc -p tsconfig.fake.json && node ./lib/install.js"
+    "validate-typescript": "tsc --noEmit --watch -p tsconfig.build.json"
   },
   "author": "Ben Mewburn <ben@mewburn.id.au>",
   "license": "ISC",
