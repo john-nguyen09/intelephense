@@ -11,7 +11,7 @@ import {
     Predicate, Traversable
 } from './types';
 import * as AsyncLock from 'async-lock';
-import { SyntaxNode, Tree } from 'tree-sitter';
+import { SyntaxNode, Tree, Edit } from 'tree-sitter';
 import { Parser } from './parser';
 
 const textDocumentChangeDebounceWait = 250;
@@ -33,7 +33,7 @@ export class ParsedDocument implements Traversable<SyntaxNode>{
     private _changeEvent: Event<ParsedDocumentChangeEventArgs>;
     private _debounce: Debounce<null>;
     private _reparse = (x) => {
-        this._tree = Parser.parse(this._textDocument.text);
+        this._tree = Parser.parse(this._textDocument.text, this._tree);
         this._changeEvent.trigger({ parsedDocument: this });
     };
 
@@ -100,6 +100,11 @@ export class ParsedDocument implements Traversable<SyntaxNode>{
             } else {
                 this._textDocument.applyEdit(change.range.start, change.range.end, change.text);
             }
+
+            const delta = this._toTreeSitterDelta(change);
+            if (delta) {
+                this._tree.edit(delta);
+            }
         }
 
         this._debounce.handle(null);
@@ -144,6 +149,31 @@ export class ParsedDocument implements Traversable<SyntaxNode>{
         let visitor = new DocumentLanguageRangesVisitor(this);
         this.traverse(visitor);
         return visitor.ranges;
+    }
+
+    private _toTreeSitterDelta(e: lsp.TextDocumentContentChangeEvent): Edit | null {
+        if (!e.range || !e.rangeLength) {
+            return null;
+        }
+
+        const startIndex = this.offsetAtPosition(e.range.start);
+        const oldEndIndex = startIndex + e.rangeLength;
+        const newEndIndex = startIndex + e.text.length;
+        const startPos = this.positionAtOffset(startIndex);
+        const oldEndPos = this.positionAtOffset(oldEndIndex);
+        const newEndPos = this.positionAtOffset(newEndIndex);
+        const startPosition = Parser.toPoint(startPos);
+        const oldEndPosition = Parser.toPoint(oldEndPos);
+        const newEndPosition = Parser.toPoint(newEndPos);
+
+        return {
+            startIndex,
+            oldEndIndex,
+            newEndIndex,
+            startPosition,
+            oldEndPosition,
+            newEndPosition
+        };
     }
 
 }

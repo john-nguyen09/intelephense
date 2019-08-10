@@ -6,7 +6,7 @@ import { Position } from 'vscode-languageserver';
  * A helper functions bridge to tree sitter
  */
 export namespace Parser {
-    export function parse(src: string) {
+    export function parse(src: string, previousTree?: TreeSitterParser.Tree) {
         // Create parser every parse because it can causes error
         // if parsing multiple files.
         // Following is an example of error occur on the last source:
@@ -39,12 +39,18 @@ export namespace Parser {
         // no error
         const parser = new TreeSitterParser();
         parser.setLanguage(Php);
-        return parser.parse(src);
+        return parser.parse(src, previousTree);
     }
 
     export function toPosition(point: TreeSitterParser.Point) {
         return Position.create(
             point.row, point.column
         );
+    }
+
+    export function toPoint(position: Position) {
+        return {
+            row: position.line, column: position.character
+        };
     }
 }
