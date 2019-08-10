@@ -19,6 +19,7 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
     lastPhpDocLocation: Location | null = null;
 
     private _transformStack: (NodeTransform | null)[];
+    private _globalVars: Map<string, PhpSymbol> = new Map<string, PhpSymbol>();
 
     constructor(
         public document: ParsedDocument,
@@ -194,9 +195,20 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
                     );
                     this._transformStack.push(t);
                     this.nameResolver.pushClass(t.symbol);
-                } else {
-                    this._transformStack.push(null);
+                    break;
                 }
+                
+                // ClassTypeDesignator
+                const secondChild = node.child(1);
+                if (
+                    secondChild &&
+                    (secondChild.type == 'qualified_name' || secondChild.type === 'new_variable')
+                ) {
+                    this._transformStack.push(new TypeDesignatorTransform());
+                    break;
+                }
+
+                this._transformStack.push(null);
                 break;
 
             case 'anonymous_function_creation_expression':
@@ -275,12 +287,14 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
             
             case 'global_declaration':
                 if (this.lastPhpDoc && this.lastPhpDoc.globalTags.length > 0) {
-                    this._transformStack.push(new GlobalVariableTransform(
+                    const transform = new GlobalVariableTransform(
                         this.nameResolver,
+                        this._globalVars,
                         this.document.nodeLocation(node),
                         this.lastPhpDoc,
                         this.lastPhpDocLocation
-                    ));
+                    );
+                    this._transformStack.push(transform);
                 } else {
                     this._transformStack.push(null);
                 }
@@ -1688,6 +1702,7 @@ class GlobalVariableTransform implements NodeTransform {
 
     constructor(
         private nameResolver: NameResolver,
+        private globalVars: Map<string, PhpSymbol>,
         location: Location,
         private doc: PhpDoc | null,
         private docLocation: Location | null
@@ -1701,8 +1716,57 @@ class GlobalVariableTransform implements NodeTransform {
         if (transform instanceof SimpleVariableTransform) {
             this.symbol.name = (<SimpleVariableTransform>transform).symbol.name;
             SymbolReader.assignPhpDocInfoToSymbol(this.symbol, this.doc, this.docLocation, this.nameResolver);
+
+            if (this.symbol.name) {
+                this.globalVars.set(this.symbol.name, this.symbol);
+            }
         }
 
+    }
+
+}
+
+class SimpleAssignmentTransform implements NodeTransform {
+
+    kind = 'simple_assignment';
+    private _pushCount = 0;
+    private _symbol: PhpSymbol | null = null;
+
+    constructor(private _globalVars: Map<string, PhpSymbol>) { }
+
+    push(transform: NodeTransform) {
+        this._pushCount++;
+
+        if (this._pushCount === 1 && transform.kind == 'variable_name') {
+            const varName = (<SimpleVariableTransform>transform).symbol.name;
+            if (this._globalVars.has(varName)) {
+                this._symbol = this._globalVars.get(varName);
+            }
+        } else if (this._symbol !== null) {
+            if (transform.kind == '_class_type_designator') {
+                this._symbol.type = TypeString.merge(
+                    this._symbol.type,
+                    (<TypeDesignatorTransform>transform).type
+                );
+            }
+        }
+    }
+}
+
+class TypeDesignatorTransform implements NodeTransform {
+
+    kind = '_class_type_designator';
+    type: string = '';
+
+    push(transform: NodeTransform) {
+        switch (transform.kind) {
+            case 'qualified_name':
+                this.type = (<NameNodeTransform>transform).name;
+                break;
+
+            default:
+                break;
+        }
     }
 
 }

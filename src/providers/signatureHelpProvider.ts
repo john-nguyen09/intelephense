@@ -38,7 +38,7 @@ export class SignatureHelpProvider {
             }
 
             const previous = traverser.clone();
-            const callableExpr = traverser.ancestor(this._isCallablePhrase);
+            const callableExpr = traverser.ancestor(this._isCallablePhrase, this._isStopToCallablePhrase);
             const startArguments: Predicate<SyntaxNode> = node => node.type === '(';
             let symbol: PhpSymbol | undefined = undefined;
             let argumentsTraverser = traverser.clone();
@@ -233,6 +233,12 @@ export class SignatureHelpProvider {
     private _isNamePhrase(node: SyntaxNode) {
         return [
             'qualified_name',
+        ].includes(node.type);
+    }
+
+    private _isStopToCallablePhrase(node: SyntaxNode) {
+        return [
+            'array_creation_expression'
         ].includes(node.type);
     }
 

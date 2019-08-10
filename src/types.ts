@@ -239,9 +239,13 @@ export class TreeTraverser<T extends TreeLike> {
 
     }
 
-    ancestor(predicate: Predicate<T>) {
+    ancestor(predicate: Predicate<T>, stopPredicate?: Predicate<T>) {
 
         for (let n = this._spine.length - 2; n >= 0; --n) {
+            if (stopPredicate !== undefined && stopPredicate(this._spine[n])) {
+                return undefined;
+            }
+
             if (predicate(this._spine[n])) {
                 this._spine = this._spine.slice(0, n + 1);
                 return this.node;

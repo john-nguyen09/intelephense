@@ -55,13 +55,10 @@ export class SymbolProvider {
      * @param query 
      */
     async provideWorkspaceSymbols(query: string) {
-        let matches = await this.symbolStore.match(query);
+        const matches = this.symbolStore.match(query);
         let symbolInformationList: SymbolInformation[] = [];
 
-        let s: PhpSymbol;
-
-        for (let n = 0, l = matches.length; n < l; ++n) {
-            s = matches[n];
+        for await (const s of matches) {
             if (this.workspaceSymbolFilter(s)) {
                 symbolInformationList.push(await this.toSymbolInformation(s));
             }

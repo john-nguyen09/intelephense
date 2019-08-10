@@ -6,7 +6,7 @@ import * as Subleveldown from 'subleveldown';
 import { CodecEncoder } from "level-codec";
 import { CompletionIndex, CompletionValue } from "./completionIndex";
 import { Position } from "vscode-languageserver";
-import { elapsed } from "../utils";
+import { TypeString } from "../typeString";
 
 export type PhpSymbolIdentifier = [string, string, number, number, number, number];
 
@@ -120,15 +120,12 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
             .filter(filter);
     }
 
-    async match(text: string): Promise<PhpSymbol[]> {
+    async *match(text: string): AsyncIterableIterator<PhpSymbol> {
         const completionValues = await this._completion.match(text);
-        const promises: Promise<PhpSymbol>[] = [];
 
-        for (const completionValue of completionValues) {
-            promises.push(this._namedSymbols.get(SymbolIndex.getSymbolKey(completionValue.identifier)));
+        for await (const completionValue of completionValues) {
+            yield this._namedSymbols.get(SymbolIndex.getSymbolKey(completionValue.identifier));
         }
-
-        return Promise.all(promises);
     }
 
     async getGlobalVariables() {
@@ -150,7 +147,18 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         }
 
         if (SymbolIndex._isGlobalVariables(node)) {
-            this._globalVariableJobs.push(this._globalVariables.put(node.name, node));
+            this._globalVariableJobs.push((async () => {
+                let currentGlobalVar: PhpSymbol | null = null;
+                try {
+                    currentGlobalVar = await this._globalVariables.get(node.name);
+                } catch (e) { }
+
+                if (currentGlobalVar) {
+                    node.type = TypeString.merge(node.type, currentGlobalVar.type);
+                }
+
+                await this._globalVariables.put(node.name, node);
+            })());
         }
 
         return true;

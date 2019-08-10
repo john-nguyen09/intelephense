@@ -171,7 +171,7 @@ describe('SymbolReader', () => {
                     }
                 }
             },
-            type: 'database',
+            type: 'database|renderer',
             associated: [],
             children: [],
             doc: {

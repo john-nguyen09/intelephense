@@ -1152,7 +1152,13 @@ describe('CompletionProvider', () => {
                     detail: 'write_records()',
                     sortText: 'write_records',
                     insertText: 'write_records()'
-                }
+                }, {
+                    kind: lsp.CompletionItemKind.Method,
+                    label: 'render',
+                    detail: 'render()',
+                    sortText: 'render',
+                    insertText: 'render()'
+                },
             ];
             
             assert.deepEqual(completions.items, exptectedItems);

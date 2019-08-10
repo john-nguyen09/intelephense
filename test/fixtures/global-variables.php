@@ -16,3 +16,11 @@ interface database {
     public function read_records();
     public function write_records();
 }
+
+class renderer {
+    public function render();
+}
+
+if (false) {
+    $DB = new renderer();
+}
