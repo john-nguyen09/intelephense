@@ -490,7 +490,7 @@ class FileTransform implements SymbolNodeTransform {
 }
 
 class ProgramTransform implements SymbolsNodeTransform {
-    static readonly EXCLUDE_KINDS =[
+    static readonly EXCLUDE_KINDS = [
         'class_interface_clause',
         'class_base_clause',
         'interface_base_clause',
@@ -799,6 +799,9 @@ class FunctionDeclarationBodyTransform implements SymbolsNodeTransform {
             case 'anonymous_class_declaration':
             case 'function_call_expression': //define
                 this._value.push((<SymbolNodeTransform>transform).symbol);
+                break;
+            case 'simple_assignment':
+                this._value.pushMany((<SymbolsNodeTransform>transform).symbols);
                 break;
         }
 
@@ -1730,11 +1733,12 @@ class GlobalVariableTransform implements NodeTransform {
 
 }
 
-class SimpleAssignmentTransform implements NodeTransform {
+class SimpleAssignmentTransform implements SymbolsNodeTransform {
 
     kind = 'simple_assignment';
     private _pushCount = 0;
     private _symbol: PhpSymbol | null = null;
+    public symbols: PhpSymbol[] = [];
 
     constructor(private _globalVars: Map<string, PhpSymbol>) { }
 
@@ -1753,6 +1757,12 @@ class SimpleAssignmentTransform implements NodeTransform {
                     (<TypeDesignatorTransform>transform).type
                 );
             }
+        }
+
+        if ((<SymbolNodeTransform>transform).symbol !== undefined) {
+            this.symbols.push((<SymbolNodeTransform>transform).symbol);
+        } else if ((<SymbolsNodeTransform>transform).symbols !== undefined) {
+            this.symbols.push(...(<SymbolsNodeTransform>transform).symbols);
         }
     }
 }

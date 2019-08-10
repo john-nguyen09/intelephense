@@ -50,7 +50,7 @@ export class SignatureHelpProvider {
                     }
                 }
                 prev = previous.prevSibling();
-                if (prev !== null && prev.type !== 'qualified_name') {
+                if (prev === null || prev.type !== 'qualified_name') {
                     return;
                 }
                 symbol = await this._getSymbol(previous.clone());
