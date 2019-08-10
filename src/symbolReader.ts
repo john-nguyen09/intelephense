@@ -197,7 +197,7 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
                     this.nameResolver.pushClass(t.symbol);
                     break;
                 }
-                
+
                 // ClassTypeDesignator
                 const secondChild = node.child(1);
                 if (
@@ -243,6 +243,10 @@ export class SymbolReader implements TreeVisitor<SyntaxNode> {
                 }
                 
                 this._transformStack.push(new SimpleVariableTransform(this.document.nodeLocation(node)));
+                break;
+
+            case 'assignment_expression':
+                this._transformStack.push(new SimpleAssignmentTransform(this._globalVars));
                 break;
 
             case 'function_call_expression':
