@@ -203,10 +203,14 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         let namePhrase = traverser.clone().ancestor(this._isNamePhrase);
         if (namePhrase === null) {
             const node = traverser.node;
-            if (node !== null && node.type === '\\') {
-                const prevNode = traverser.clone().prevSibling();
-                if (prevNode !== null && prevNode.type === 'name') {
-                    namePhrase = prevNode;
+            if (node !== null) {
+                if (node.type === '\\') {
+                    const prevNode = traverser.clone().prevSibling();
+                    if (prevNode !== null && prevNode.type === 'name') {
+                        namePhrase = prevNode;
+                    }
+                } else if (node.type === 'name') {
+                    namePhrase = node;
                 }
             }
         }
@@ -485,6 +489,7 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
     protected _isNamePhrase(node: SyntaxNode) {
         return [
+            'name',
             'qualified_name',
             'named_label_statement',
         ].includes(node.type);

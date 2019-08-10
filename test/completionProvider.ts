@@ -1169,6 +1169,59 @@ describe('CompletionProvider', () => {
 
     });
 
+    describe('completion at the end', async () => {
+        let completionProvider: CompletionProvider;
+
+        before(async() => {
+            const files = [
+                path.join(__dirname, 'fixtures', 'func-or-const-completion.php'),
+            ];
+            const fileContents: string[] = [];
+            for (const file of files) {
+                fileContents.push(fs.readFileSync(file).toString('utf8'));
+            }
+            completionProvider = await setup(fileContents);
+        });
+
+        it('provides func completion', async () => {
+            const results = await completionProvider.provideCompletions('test', {
+                line: 10, character: 4,
+            });
+            // console.log(JSON.stringify(results, null, 4));
+            assert.deepEqual(results.items, [
+                {
+                    "kind": 3,
+                    "label": "test_func1",
+                    "insertText": "test_func1($0)",
+                    "detail": "test_func1($arg1, $arg2)",
+                    "insertTextFormat": 2,
+                    "command": {
+                        "title": "Trigger Parameter Hints",
+                        "command": "editor.action.triggerParameterHints"
+                    }
+                }
+            ]);
+        });
+
+        it('provides const completion', async () => {
+            const results = await completionProvider.provideCompletions('test', {
+                line: 8, character: 3,
+            });
+            // console.log(JSON.stringify(results, null, 4));
+            assert.deepEqual(results.items, [
+                {
+                    "label": "__halt_compiler",
+                    "kind": 14
+                },
+                {
+                    "kind": 12,
+                    "label": "COMPLETION_COMPLETE",
+                    "detail": "COMPLETION_COMPLETE = 1"
+                }
+            ]);
+        });
+    });
+
 });
 
 
