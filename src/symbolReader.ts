@@ -16,7 +16,7 @@ import { SyntaxNode } from 'tree-sitter';
 export class SymbolReader implements TreeVisitor<SyntaxNode> {
 
     lastPhpDoc: PhpDoc | null = null;
-    lastPhpDocLocation: Location | null;
+    lastPhpDocLocation: Location | null = null;
 
     private _transformStack: (NodeTransform | null)[];
 
@@ -550,7 +550,7 @@ class NamespaceNameTransform implements TextNodeTransform {
 class NamespaceNameAsPrefixTransform implements TextNodeTransform {
 
     kind = 'namespace_name_as_prefix';
-    name: string;
+    name: string = '';
 
     push(transform: NodeTransform) {
         if (transform.kind === 'namespace_name') {
@@ -1670,7 +1670,7 @@ class NamespaceAliasingClause implements TextNodeTransform {
 
     kind = 'namespace_aliasing_clause';
     name = '';
-    location: Location;
+    location: Location | undefined;
 
     push(transform: NodeTransform) {
         if (transform.kind === 'name') {

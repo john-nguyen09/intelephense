@@ -349,7 +349,7 @@ class FilterVisitor<T> implements TreeVisitor<T>{
 class FindVisitor<T> implements TreeVisitor<T> {
 
     private _predicate: Predicate<T>;
-    private _found: T[];
+    private _found: T[] = [];
 
     haltTraverse: boolean;
 
@@ -379,8 +379,8 @@ class FindVisitor<T> implements TreeVisitor<T> {
 export class Debounce<T> {
 
     private _handler: (e: T) => void;
-    private _lastEvent: T | null;
-    private _timer: number | NodeJS.Timer | null;
+    private _lastEvent: T | null = null;
+    private _timer: number | NodeJS.Timer | null = null;
 
     constructor(handler: (e: T) => void, public wait: number) {
         this._handler = handler;

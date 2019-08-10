@@ -93,7 +93,6 @@ const triggerParameterHintsCommand: lsp.Command = {
 
 export class CompletionProvider {
 
-    private _maxItems: number;
     private _strategies: CompletionStrategy[];
     private _config: CompletionOptions;
     private static _defaultConfig: CompletionOptions = defaultCompletionOptions;

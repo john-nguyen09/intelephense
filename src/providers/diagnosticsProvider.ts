@@ -24,7 +24,7 @@ export class DiagnosticsProvider {
     private _startDiagnostics: Event<string>;
     private _debounceMap: { [index: string]: Debounce<ParsedDocumentChangeEventArgs> };
     private _unsubscribeMap: { [index: string]: Unsubscribe };
-    private _maxItems: number;
+    private _maxItems: number = 0;
 
     private _onParsedDocumentChanged = (args: ParsedDocumentChangeEventArgs) => {
         this._startDiagnostics.trigger(args.parsedDocument.uri);

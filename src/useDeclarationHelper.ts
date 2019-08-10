@@ -15,8 +15,8 @@ import { SyntaxNode } from 'tree-sitter';
 export class UseDeclarationHelper {
 
     private _useDeclarations: PhpSymbol[];
-    private _afterNode: SyntaxNode;
-    private _afterNodeRange: Range;
+    private _afterNode: SyntaxNode | undefined;
+    private _afterNodeRange: Range | undefined;
     private _cursor: Position;
 
     constructor(public doc: ParsedDocument, public table: SymbolTable, cursor: Position) {
@@ -28,11 +28,14 @@ export class UseDeclarationHelper {
         let afterNode = this._insertAfterNode();
 
         let text = '\n';
-        if (afterNode.type === 'namespace_definition') {
+        if (afterNode !== undefined && afterNode.type === 'namespace_definition') {
             text += '\n';
         }
 
-        text += util.whitespace(this._insertAfterNodeRange().start.character);
+        const afterNodeRange = this._insertAfterNodeRange();
+        if (afterNodeRange != undefined) {
+            text += util.whitespace(afterNodeRange.start.character);
+        }
         text += 'use ';
 
         switch (symbol.kind) {
@@ -54,11 +57,17 @@ export class UseDeclarationHelper {
 
         text += ';';
 
-        if (afterNode.type !== 'namespace_use_declaration') {
+        if (afterNode !== undefined && afterNode.type !== 'namespace_use_declaration') {
             text += '\n';
         }
 
-        return TextEdit.insert(this._insertPosition(), text);
+        let insertPosition = this._insertPosition();
+        if (!insertPosition) {
+            text = '';
+            insertPosition = Position.create(0, 0);
+        }
+
+        return TextEdit.insert(insertPosition, text);
 
     }
 
@@ -141,12 +150,23 @@ export class UseDeclarationHelper {
             return this._afterNodeRange;
         }
 
-        return this._afterNodeRange = this.doc.nodeRange(this._insertAfterNode());
+        const afterNode = this._insertAfterNode();
+
+        if (afterNode == undefined) {
+            return undefined;
+        }
+
+        return this._afterNodeRange = this.doc.nodeRange(afterNode);
 
     }
 
-    private _insertPosition() {
-        return this._insertAfterNodeRange().end;
+    private _insertPosition(): Position | undefined {
+        const afterNodeRange = this._insertAfterNodeRange();
+        if (!afterNodeRange) {
+            return undefined;
+        }
+
+        return afterNodeRange.end;
     }
 
     private _isNamespaceAliasingClause(node: SyntaxNode) {
@@ -157,9 +177,9 @@ export class UseDeclarationHelper {
 
 class InsertAfterNodeVisitor implements TreeVisitor<SyntaxNode> {
 
-    private _openingInlineText: SyntaxNode;
-    private _lastNamespaceUseDeclaration: SyntaxNode;
-    private _namespaceDefinition: SyntaxNode;
+    private _openingInlineText: SyntaxNode | undefined;
+    private _lastNamespaceUseDeclaration: SyntaxNode | undefined;
+    private _namespaceDefinition: SyntaxNode | undefined;
 
     haltTraverse = false;
     haltAtOffset = -1;

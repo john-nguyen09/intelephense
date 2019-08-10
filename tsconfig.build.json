@@ -1,8 +1,7 @@
 {
 	"extends": "./tsconfig.base.json",
-	"compilerOptions": {
-		"strictNullChecks": true,
-	},
+	"strictNullChecks": true,
+	"strictPropertyInitialization": true,
 	"include": [
 		"src"
 	]

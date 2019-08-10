@@ -60,11 +60,11 @@ interface TypeNodeTransform extends NodeTransform {
 }
 
 export interface ReferenceNodeTransform extends NodeTransform {
-    reference: Reference;
+    reference: Reference | undefined;
 }
 
 interface VariableNodeTransform extends NodeTransform {
-    variable: Variable;
+    variable: Variable | undefined;
 }
 
 interface TextNodeTransform extends NodeTransform {
@@ -82,7 +82,7 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
     private _classStack: PhpSymbol[];
     private _scopeStack: Scope[];
     private _symbols: PhpSymbol[];
-    private _lastVarTypehints: Tag[] | null;
+    private _lastVarTypehints: Tag[] | null = null;
     private _symbolOffset = 0;
 
     constructor(
@@ -564,11 +564,11 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                 if (scope && transform) {
                     let ref = (<ReferenceNodeTransform>transform).reference;
 
-                    if (transform instanceof GlobalVariableTransform) {
-                        this._variableTable.setVariable(Variable.create(ref.name, ref.type || ''));
-                    }
-
                     if (ref) {
+                        if (transform instanceof GlobalVariableTransform) {
+                            this._variableTable.setVariable(Variable.create(ref.name, ref.type || ''));
+                        }
+
                         scope.children.push(ref);
                     }
                 }
@@ -860,7 +860,7 @@ class NamespaceNameAsPrefixTransform implements NodeTransform {
 class PropertyElementTransform implements ReferenceNodeTransform {
 
     kind = 'property_element';
-    reference: Reference;
+    reference: Reference | undefined;
     private _scope = '';
 
     constructor(scope: string) {
@@ -1002,7 +1002,7 @@ class CatchNameListTransform implements TypeNodeTransform {
 
 class AnonymousFunctionUseVariableTransform implements ReferenceNodeTransform {
     kind = 'anonymous_function_use_clause';
-    reference: Reference;
+    reference: Reference | undefined;
 
     push(transform: NodeTransform) {
         if (transform.kind === 'variable_name') {
@@ -1334,7 +1334,7 @@ class TernaryExpressionTransform implements TypeNodeTransform {
 class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTransform {
 
     kind = 'subscript_expression';
-    variable: Variable;
+    variable: Variable | undefined;
     type: string | TypeResolvable = '';
     private _pushCount = 0;
 
@@ -1398,8 +1398,8 @@ class InstanceOfExpressionTransform implements TypeNodeTransform, VariableNodeTr
     kind = 'instanceof';
     type = 'bool';
     private _pushCount = 0;
-    private _varName = '';
-    private _varType: string | TypeResolvable;
+    private _varName: string | undefined;
+    private _varType: string | TypeResolvable | undefined;
 
     push(transform: NodeTransform) {
 
@@ -1440,6 +1440,10 @@ class FunctionCallExpressionTransform implements TypeNodeTransform {
                 {
                     let ref = (<ReferenceNodeTransform>transform).reference;
                     this.type = async () => {
+                        if (!ref) {
+                            return '';
+                        }
+
                         return (await this.referenceSymbolDelegate(ref))
                             .reduce(symbolsToTypeReduceFn, '');
                     };
@@ -1623,7 +1627,7 @@ class MemberNameTransform implements ReferenceNodeTransform {
 
 class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
-    reference: Reference;
+    reference: Reference | undefined;
     private _scope: string | TypeResolvable = '';
 
     constructor(
@@ -1638,10 +1642,12 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
             case 'member_name':
             case 'variable_name':
                 this.reference = (<ReferenceNodeTransform>transform).reference;
-                this.reference.kind = this.symbolKind;
-                this.reference.scope = this._scope;
-                if (this.symbolKind === SymbolKind.Property && this.reference.name && this.reference.name[0] !== '$') {
-                    this.reference.name = '$' + this.reference.name;
+                if (this.reference) {
+                    this.reference.kind = this.symbolKind;
+                    this.reference.scope = this._scope;
+                    if (this.symbolKind === SymbolKind.Property && this.reference.name && this.reference.name[0] !== '$') {
+                        this.reference.name = '$' + this.reference.name;
+                    }
                 }
                 break;
 
@@ -1665,6 +1671,10 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
 
     get type(): TypeResolvable {
         return async () => {
+            if (!this.reference) {
+                return '';
+            }
+
             return (await this.referenceSymbolDelegate(this.reference))
                 .reduce(symbolsToTypeReduceFn, '');
         };
@@ -1675,7 +1685,7 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
 class NamespaceDefinitionTransform implements ReferenceNodeTransform {
 
     kind = 'namespace_definition';
-    reference: Reference;
+    reference: Reference | undefined;
 
     push(transform: NodeTransform) {
         if (transform.kind === 'namespace_name') {
@@ -1692,7 +1702,7 @@ class NamespaceDefinitionTransform implements ReferenceNodeTransform {
 class ParameterDeclarationTransform implements ReferenceNodeTransform {
 
     kind = 'simple_parameter';
-    reference: Reference;
+    reference: Reference | undefined;
 
     push(transform: NodeTransform) {
         if (transform.kind === 'variable_name') {

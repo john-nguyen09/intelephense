@@ -12,7 +12,7 @@ export class NameResolver {
 
     private _classStack: PhpSymbol[];
     rules: PhpSymbol[];
-    namespace: PhpSymbol;
+    namespace: PhpSymbol | null = null;
 
     constructor() {
         this.rules = [];

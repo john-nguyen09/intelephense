@@ -10,8 +10,8 @@ import { Position } from 'vscode-languageserver-types';
 export class TextDocument {
 
     private _uri: string;
-    private _text: string;
-    private _lineOffsets: number[];
+    private _text: string = '';
+    private _lineOffsets: number[] = [];
 
     constructor(uri: string, text: string) {
         this._uri = uri;

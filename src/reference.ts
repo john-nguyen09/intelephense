@@ -387,7 +387,7 @@ interface Locatable {
 
 class LocateVisitor implements TreeVisitor<Locatable> {
 
-    private _node: Locatable;
+    private _node: Locatable | null = null;
 
     constructor(private position: Position) { }
 

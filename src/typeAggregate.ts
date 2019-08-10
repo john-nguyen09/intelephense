@@ -20,7 +20,7 @@ export const enum MemberMergeStrategy {
 export class TypeAggregate {
 
     private _symbol: PhpSymbol | PhpSymbol[];
-    private _associated: PhpSymbol[];
+    private _associated: PhpSymbol[] | undefined;
     private _excludeTraits = false;
 
     constructor(public symbolStore: SymbolStore, symbol: PhpSymbol | PhpSymbol[] | undefined, excludeTraits?: boolean) {
