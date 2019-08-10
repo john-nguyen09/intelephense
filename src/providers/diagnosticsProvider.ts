@@ -6,8 +6,8 @@
 
 import { ParsedDocument, ParsedDocumentChangeEventArgs } from '../parsedDocument';
 import { TreeVisitor, Event, Debounce, Unsubscribe } from '../types';
-import { Phrase, Token, ParseError, tokenKindToString, PhraseKind } from 'php7parser';
 import * as lsp from 'vscode-languageserver-types';
+import { SyntaxNode } from 'tree-sitter';
 
 export interface PublishDiagnosticsEventArgs {
     uri: string;
@@ -24,7 +24,7 @@ export class DiagnosticsProvider {
     private _startDiagnostics: Event<string>;
     private _debounceMap: { [index: string]: Debounce<ParsedDocumentChangeEventArgs> };
     private _unsubscribeMap: { [index: string]: Unsubscribe };
-    private _maxItems: number;
+    private _maxItems: number = 0;
 
     private _onParsedDocumentChanged = (args: ParsedDocumentChangeEventArgs) => {
         this._startDiagnostics.trigger(args.parsedDocument.uri);
@@ -100,7 +100,7 @@ export class DiagnosticsProvider {
         let parseErrorVisitor = new ErrorVisitor();
         let doc = this._docs[uri];
 
-        if(!doc){
+        if (!doc) {
             return [];
         }
 
@@ -115,38 +115,33 @@ export class DiagnosticsProvider {
 
     }
 
-    private _parseErrorToDiagnostic(err: ParseError, doc: ParsedDocument) {
+    private _parseErrorToDiagnostic(err: SyntaxNode, doc: ParsedDocument) {
         return lsp.Diagnostic.create(this._errorRange(err, doc), this._message(err), lsp.DiagnosticSeverity.Error, undefined, 'intelephense');
     }
 
-    private _message(err:ParseError) {
+    private _message(err: SyntaxNode) {
         let msg = '';
 
-        if (err.unexpected) {
-            msg += `Unexpected ${tokenKindToString(err.unexpected.kind)}.`;
-        }
-        if(err.expected) {
-            msg += ` Expected ${tokenKindToString(err.expected)}.`;
-        }
+        // if (err.unexpected) {
+        //     msg += `Unexpected ${tokenKindToString(err.unexpected.kind)}.`;
+        // }
+        // if (err.expected) {
+        //     msg += ` Expected ${tokenKindToString(err.expected)}.`;
+        // }
+
         return msg;
     }
 
-    private _errorRange(err:ParseError, doc:ParsedDocument) {
-        if(!err.children || err.children.length < 1) {
-            return doc.tokenRange(err.unexpected);
-        }
-
-        let tFirst = err.children[0] as Token;
-        let tLast = err.children[err.children.length - 1] as Token;
-        return lsp.Range.create(doc.tokenRange(tFirst).start, doc.tokenRange(tLast).end);
+    private _errorRange(err: SyntaxNode, doc: ParsedDocument) {
+        return doc.nodeRange(err);
     }
 
 
 }
 
-class ErrorVisitor implements TreeVisitor<Phrase | Token>{
+class ErrorVisitor implements TreeVisitor<SyntaxNode>{
 
-    private _errors: ParseError[];
+    private _errors: SyntaxNode[];
 
     constructor() {
         this._errors = [];
@@ -156,10 +151,10 @@ class ErrorVisitor implements TreeVisitor<Phrase | Token>{
         return this._errors;
     }
 
-    preorder(node: Token | Phrase, spine: (Token | Phrase)[]) {
+    preorder(node: SyntaxNode, spine: SyntaxNode[]) {
 
-        if ((<Phrase>node).kind === PhraseKind.Error) {
-            this._errors.push(<ParseError>node);
+        if (node.type === 'ERROR') {
+            this._errors.push(node);
             return false;
         }
 

@@ -73,7 +73,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 			},
 			definitionProvider: true,
 			//documentFormattingProvider: true,
-			documentRangeFormattingProvider: false,
+			// documentRangeFormattingProvider: false,
 			referencesProvider: true,
 			documentLinkProvider: { resolveProvider: false },
 			hoverProvider: true,
@@ -83,7 +83,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
 });
 
-let docFormatRegister: Thenable<Disposable> = null;
+let docFormatRegister: Thenable<Disposable> | null = null;
 
 connection.onDidChangeConfiguration((params) => {
 
@@ -156,10 +156,6 @@ connection.onSignatureHelp((params) => {
 
 connection.onDefinition((params) => {
 	return Intelephense.provideDefinition(params.textDocument, params.position);
-});
-
-connection.onDocumentRangeFormatting((params) => {
-	return Intelephense.provideDocumentRangeFormattingEdits(params.textDocument, params.range, params.options);
 });
 
 connection.onShutdown(Intelephense.shutdown);

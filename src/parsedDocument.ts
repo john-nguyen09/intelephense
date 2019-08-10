@@ -4,9 +4,6 @@
 
 'use strict';
 
-import { Phrase, Token, TokenKind, PhraseKind, Parser, Node,
-    isToken as baseIsToken, isPhrase as baseIsPhrase
-} from 'php7parser';
 import { TextDocument } from './textDocument';
 import * as lsp from 'vscode-languageserver-types';
 import {
@@ -14,40 +11,41 @@ import {
     Predicate, Traversable
 } from './types';
 import * as AsyncLock from 'async-lock';
+import { SyntaxNode, Tree } from 'tree-sitter';
+import { Parser } from './parser';
 
 const textDocumentChangeDebounceWait = 250;
 
 export interface NodeTransform {
-    phraseKind?: PhraseKind;
-    tokenKind?: TokenKind;
-    push(transform: NodeTransform): void;
+    kind: string;
+    push?(transform: NodeTransform): void;
 }
 
 export interface ParsedDocumentChangeEventArgs {
     parsedDocument: ParsedDocument;
 }
 
-export class ParsedDocument implements Traversable<Phrase | Token>{
+export class ParsedDocument implements Traversable<SyntaxNode>{
 
     private static _wordRegex = /[$a-zA-Z_\x80-\xff][\\a-zA-Z0-9_\x80-\xff]*$/;
     private _textDocument: TextDocument;
-    private _parseTree: Phrase;
+    private _tree: Tree;
     private _changeEvent: Event<ParsedDocumentChangeEventArgs>;
     private _debounce: Debounce<null>;
     private _reparse = (x) => {
-        this._parseTree = Parser.parse(this._textDocument.text);
+        this._tree = Parser.parse(this._textDocument.text);
         this._changeEvent.trigger({ parsedDocument: this });
     };
 
     constructor(uri: string, text: string, public version = 0) {
-        this._parseTree = Parser.parse(text);
+        this._tree = Parser.parse(text);
         this._textDocument = new TextDocument(uri, text);
         this._debounce = new Debounce<null>(this._reparse, textDocumentChangeDebounceWait);
         this._changeEvent = new Event<ParsedDocumentChangeEventArgs>();
     }
 
     get tree() {
-        return this._parseTree;
+        return this._tree;
     }
 
     get uri() {
@@ -62,8 +60,8 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
         return this._changeEvent;
     }
 
-    find(predicate: Predicate<Phrase | Token>) {
-        let traverser = new TreeTraverser([this._parseTree]);
+    find(predicate: Predicate<SyntaxNode>) {
+        let traverser = new TreeTraverser([this._tree.rootNode]);
         return traverser.find(predicate);
     }
 
@@ -85,8 +83,8 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
         this._debounce.flush();
     }
 
-    traverse(visitor: TreeVisitor<Phrase | Token>) {
-        let traverser = new TreeTraverser<Phrase | Token>([this._parseTree]);
+    traverse(visitor: TreeVisitor<SyntaxNode>) {
+        let traverser = new TreeTraverser<SyntaxNode>([this._tree.rootNode]);
         traverser.traverse(visitor);
         return visitor;
     }
@@ -108,90 +106,30 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
 
     }
 
-    tokenRange(t: Token) {
-        if (!t) {
-            return null;
-        }
-
-        let r = <lsp.Range>{
-            start: this._textDocument.positionAtOffset(t.offset),
-            end: this._textDocument.positionAtOffset(t.offset + t.length)
-        }
-
-        return r;
-    }
-
-    nodeLocation(node: Node) {
-
-        if (!node) {
-            return undefined;
-        }
+    nodeLocation(node: SyntaxNode) {
 
         let range = this.nodeRange(node);
-
-        if (!range) {
-            return undefined;
-        }
 
         return lsp.Location.create(this.uri, range);
 
     }
 
-    nodeRange(node: Node) {
+    nodeRange(node: SyntaxNode) {
 
-        if (!node) {
-            return null;
-        }
+        const nodeStart = node.startPosition;
+        const nodeEnd = node.endPosition;
 
-        if (ParsedDocument.isToken(node)) {
-            return this.tokenRange(node);
-        }
-
-        let tFirst = ParsedDocument.firstToken(node);
-        let tLast = ParsedDocument.lastToken(node);
-
-        if (!tFirst || !tLast) {
-            return lsp.Range.create(0, 0, 0, 0);
-        }
-
-        let range = <lsp.Range>{
-            start: this._textDocument.positionAtOffset(tFirst.offset),
-            end: this._textDocument.positionAtOffset(tLast.offset + tLast.length)
+        const range = <lsp.Range> {
+            start: lsp.Position.create(nodeStart.row, nodeStart.column),
+            end: lsp.Position.create(nodeEnd.row, nodeEnd.column),
         }
 
         return range;
 
     }
 
-    tokenText(t: Token) {
-        return t && t.kind !== undefined ? this._textDocument.textAtOffset(t.offset, t.length) : '';
-    }
-
-    nodeText(node: Node) {
-
-        if (!node) {
-            return '';
-        }
-
-        if (ParsedDocument.isToken(node)) {
-            return this._textDocument.textAtOffset((<Token>node).offset, (<Token>node).length);
-        }
-
-        let tFirst = ParsedDocument.firstToken(node);
-        let tLast = ParsedDocument.lastToken(node);
-
-        if (!tFirst || !tLast) {
-            return '';
-        }
-
-        return this._textDocument.text.slice(tFirst.offset, tLast.offset + tLast.length);
-
-    }
-
-    createAnonymousName(node: Phrase) {
-        let tFirst = ParsedDocument.firstToken(node);
-        let offset = tFirst ? tFirst.offset : 0;
-        return `#anon#${this.uri}#${offset}`;
+    createAnonymousName(node: SyntaxNode) {
+        return `#anon#${this.uri}#${node.startIndex}`;
     }
 
     positionAtOffset(offset: number) {
@@ -212,122 +150,43 @@ export class ParsedDocument implements Traversable<Phrase | Token>{
 
 export namespace ParsedDocument {
 
-    export function firstToken(node: Node) {
-
-        if (isToken(node)) {
-            return node as Token;
-        }
-
-        let t: Token;
-        for (let n = 0, l = (<Phrase>node).children.length; n < l; ++n) {
-            t = this.firstToken((<Phrase>node).children[n]);
-            if (t !== null) {
-                return t;
-            }
-        }
-
-        return null;
+    export function isOffsetInNode(offset: number, node: SyntaxNode) {
+        return offset > - 1 &&
+            node.startIndex <= offset &&
+            node.endIndex >= offset;
     }
 
-    export function lastToken(node: Node) {
-        if (isToken(node)) {
-            return node;
-        }
-
-        let t: Token;
-        for (let n = (<Phrase>node).children.length - 1; n >= 0; --n) {
-            t = this.lastToken((<Phrase>node).children[n]);
-            if (t !== null) {
-                return t;
-            }
-        }
-
-        return null;
-    }
-
-    export function isToken(node: Node, types?: TokenKind[]): node is Token {
-        return baseIsToken(node) &&
-            (!types || types.indexOf(node.kind) > -1);
-    }
-
-    export function isPhrase(node: Node, types?: PhraseKind[]): node is Phrase {
-        return baseIsPhrase(node) &&
-            (!types || types.indexOf(node.kind) > -1);
-    }
-
-    export function isOffsetInToken(offset: number, t: Token) {
-        return offset > -1 && isToken(t) &&
-            t.offset <= offset &&
-            t.offset + t.length - 1 >= offset;
-    }
-
-    export function isOffsetInNode(offset, node: Phrase | Token) {
-
-        if (!node || offset < 0) {
-            return false;
-        }
-
-        if (isToken(node)) {
-            return ParsedDocument.isOffsetInToken(offset, <Token>node);
-        }
-
-        let tFirst = ParsedDocument.firstToken(node);
-        let tLast = ParsedDocument.lastToken(node);
-
-        if (!tFirst || !tLast) {
-            return false;
-        }
-
-        return tFirst.offset <= offset && tLast.offset + tLast.length - 1 >= offset;
-
-    }
-
-    export function findChild(parent: Phrase, fn: Predicate<Node>) {
+    export function findChild(parent: SyntaxNode, predicate: Predicate<SyntaxNode>) {
 
         if (!parent || !parent.children) {
             return undefined;
         }
 
-        let child: Node;
-        for (let n = 0, l = parent.children.length; n < l; ++n) {
-            child = parent.children[n];
-            if (fn(child)) {
+        for (const child of parent.children) {
+            if (predicate(child)) {
                 return child;
             }
         }
         return undefined;
     }
 
-    export function filterChildren(parent: Phrase, fn: Predicate<Node>) {
+    export function filterChildren(parent: SyntaxNode | undefined, predicate: Predicate<SyntaxNode>) {
 
-        let filtered: Node[] = [];
+        const filtered: SyntaxNode[] = [];
         if (!parent || !parent.children) {
             return filtered;
         }
 
-        let child: Node;
-        for (let n = 0, l = parent.children.length; n < l; ++n) {
-            child = parent.children[n];
-            if (fn(child)) {
+        for (const child of parent.children) {
+            if (predicate(child)) {
                 filtered.push(child);
             }
         }
         return filtered;
     }
 
-    export function isNamePhrase(node: Phrase | Token) {
-        if (!node) {
-            return false;
-        }
-
-        switch (node.kind) {
-            case PhraseKind.QualifiedName:
-            case PhraseKind.RelativeQualifiedName:
-            case PhraseKind.FullyQualifiedName:
-                return true;
-            default:
-                return false;
-        }
+    export function isNamePhrase(node: SyntaxNode) {
+        return node.isNamed;
     }
 
 }
@@ -398,88 +257,24 @@ export class ParsedDocumentStore {
 
 }
 
-class ToStringVisitor implements TreeVisitor<Phrase | Token> {
-
-    private _text: string;
-    private _doc: ParsedDocument;
-    private _ignore: TokenKind[];
-
-    constructor(doc: ParsedDocument, ignore?: TokenKind[]) {
-        this._text = '';
-        this._doc = doc;
-    }
-
-    get text() {
-        return this._text;
-    }
-
-    postorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
-
-        if (ParsedDocument.isToken(node) && (!this._ignore || this._ignore.indexOf(node.kind) < 0)) {
-            this._text += this._doc.tokenText(<Token>node);
-        }
-
-    }
-
-}
-
 export interface LanguageRange {
     range: lsp.Range;
     languageId?: string;
 }
 
-const phpLanguageId = 'php';
-
-class DocumentLanguageRangesVisitor implements TreeVisitor<Phrase | Token> {
+class DocumentLanguageRangesVisitor implements TreeVisitor<SyntaxNode> {
 
     private _ranges: LanguageRange[];
-    private _phpOpenPosition: lsp.Position;
-    private _lastToken: Token;
 
     constructor(public doc: ParsedDocument) {
         this._ranges = [];
     }
 
     get ranges() {
-        //handle no close tag
-        if (this._phpOpenPosition && this._lastToken) {
-            this._ranges.push({
-                range: lsp.Range.create(this._phpOpenPosition, this.doc.tokenRange(this._lastToken).end),
-                languageId: phpLanguageId
-            });
-            this._phpOpenPosition = undefined;
-        }
         return this._ranges;
     }
 
-    preorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
-
-        switch (node.kind) {
-            case TokenKind.Text:
-                this._ranges.push({ range: this.doc.tokenRange(<Token>node) });
-                break;
-            case TokenKind.OpenTag:
-            case TokenKind.OpenTagEcho:
-                this._phpOpenPosition = this.doc.tokenRange(<Token>node).start;
-                break;
-            case TokenKind.CloseTag:
-                {
-                    let closeTagRange = this.doc.tokenRange(<Token>node);
-                    this._ranges.push({
-                        range: lsp.Range.create(this._phpOpenPosition || closeTagRange.start, closeTagRange.end),
-                        languageId: phpLanguageId
-                    });
-                    this._phpOpenPosition = undefined;
-                }
-
-                break;
-            default:
-                break;
-        }
-
-        if (ParsedDocument.isToken(node)) {
-            this._lastToken = <Token>node;
-        }
+    preorder(node: SyntaxNode, spine: SyntaxNode[]) {
 
         return true;
 

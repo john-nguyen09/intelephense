@@ -12,7 +12,6 @@ import { DiagnosticsProvider, PublishDiagnosticsEventArgs } from './providers/di
 import { Unsubscribe } from './types';
 import { SignatureHelpProvider } from './providers/signatureHelpProvider';
 import { DefinitionProvider } from './providers/definitionProvider';
-import { FormatProvider } from './providers/formatProvider';
 import * as lsp from 'vscode-languageserver-types';
 import { InitializeParams } from 'vscode-languageserver-protocol';
 import { NameTextEditProvider } from './commands';
@@ -25,7 +24,7 @@ export { LanguageRange } from './parsedDocument';
 import { HoverProvider } from './providers/hoverProvider';
 import { HighlightProvider } from './providers/highlightProvider';
 import * as os from 'os';
-import * as util from './util';
+import * as util from './utils';
 import * as fs from 'fs';
 import * as gracefulFs from 'graceful-fs';
 import Uri from 'vscode-uri';
@@ -51,7 +50,6 @@ export namespace Intelephense {
     let diagnosticsProvider: DiagnosticsProvider;
     let signatureHelpProvider: SignatureHelpProvider;
     let definitionProvider: DefinitionProvider;
-    let formatProvider: FormatProvider;
     let nameTextEditProvider: NameTextEditProvider;
     let referenceProvider: ReferenceProvider;
     let hoverProvider: HoverProvider;
@@ -73,7 +71,7 @@ export namespace Intelephense {
         }
     }
 
-    export function initialise(params: InitializeParams) {
+    export function initialise(params: InitializeParams | null) {
         const initialisedAt = process.hrtime();
 
         Log.info('Initialising');
@@ -94,7 +92,6 @@ export namespace Intelephense {
         diagnosticsProvider = new DiagnosticsProvider();
         signatureHelpProvider = new SignatureHelpProvider(symbolStore, documentStore, refStore);
         definitionProvider = new DefinitionProvider(symbolStore, documentStore, refStore);
-        formatProvider = new FormatProvider(documentStore);
         nameTextEditProvider = new NameTextEditProvider(symbolStore, documentStore, refStore);
         referenceProvider = new ReferenceProvider(documentStore, symbolStore, refStore);
         hoverProvider = new HoverProvider(documentStore, symbolStore, refStore);
@@ -133,7 +130,7 @@ export namespace Intelephense {
                 }
 
                 if (rootUri) {
-                    Intelephense.indexDirectory(Uri.parse(params.rootUri).fsPath);
+                    Intelephense.indexDirectory(Uri.parse(rootUri).fsPath);
                 }
             })
             .catch(err => {
@@ -216,7 +213,7 @@ export namespace Intelephense {
 
         let parsedDocument = documentStore.find(textDocument.uri);
         if (parsedDocument) {
-            parsedDocument.version = textDocument.version;
+            parsedDocument.version = textDocument.version || 0;
             parsedDocument.applyChanges(contentChanges);
         }
 
@@ -298,16 +295,6 @@ export namespace Intelephense {
 
     export function numberSymbolsKnown() {
         return symbolStore.symbolCount;
-    }
-
-    export function provideDocumentFormattingEdits(doc: lsp.TextDocumentIdentifier, formatOptions: lsp.FormattingOptions) {
-        flushParseDebounce(doc.uri);
-        return formatProvider.provideDocumentFormattingEdits(doc, formatOptions);
-    }
-
-    export function provideDocumentRangeFormattingEdits(doc: lsp.TextDocumentIdentifier, range: lsp.Range, formatOptions: lsp.FormattingOptions) {
-        flushParseDebounce(doc.uri);
-        return formatProvider.provideDocumentRangeFormattingEdits(doc, range, formatOptions);
     }
 
     export function provideReferences(doc: lsp.TextDocumentIdentifier, pos: lsp.Position, context: lsp.ReferenceContext) {

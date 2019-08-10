@@ -1,5 +1,5 @@
 import { PhpSymbol, SymbolKind } from '../src/symbol';
-import {acronym} from '../src/util';
+import {acronym} from '../src/utils';
 import { assert } from 'chai';
 import 'mocha';
 
@@ -11,7 +11,7 @@ describe('PhpSymbol', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Class,
                 name:'Foo\\MyFooClass',
-                location: null,
+                location: undefined,
             } 
             assert.equal(acronym(PhpSymbol.notFqn(s.name)), 'mfc');
         });
@@ -20,7 +20,7 @@ describe('PhpSymbol', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Function,
                 name:'_my_function',
-                location: null,
+                location: undefined,
             } 
             assert.equal(acronym(s.name), 'mf');
         });
@@ -29,7 +29,7 @@ describe('PhpSymbol', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Variable,
                 name:'$myProperty',
-                location: null,
+                location: undefined,
             } 
             assert.equal(acronym(s.name), 'mp');
         });
@@ -38,7 +38,7 @@ describe('PhpSymbol', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Variable,
                 name:'THIS_IS_A_CONSTANT',
-                location: null,
+                location: undefined,
             } 
             assert.equal(acronym(s.name), 'tiac');
         });
@@ -51,7 +51,7 @@ describe('PhpSymbol', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Class,
                 name:'Foo\\MyFooClass',
-                location: null,
+                location: undefined,
             }
 
             let expected = [
@@ -65,7 +65,7 @@ describe('PhpSymbol', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Function,
                 name:'_my_function',
-                location: null,
+                location: undefined,
             } 
 
             let expected = [
@@ -79,7 +79,7 @@ describe('PhpSymbol', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Variable,
                 name:'$myProperty',
-                location: null,
+                location: undefined,
             } 
 
             let expected = [
@@ -93,7 +93,7 @@ describe('PhpSymbol', () => {
             let s:PhpSymbol = {
                 kind:SymbolKind.Variable,
                 name:'THIS_IS_A_CONSTANT',
-                location: null,
+                location: undefined,
             } 
 
             let expected = [

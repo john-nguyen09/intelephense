@@ -7,8 +7,9 @@
   "scripts": {
     "test": "mocha -r ts-node/register test/*.ts",
     "watch": "tsc -w -p tsconfig.build.json",
-    "build": "tsc -p tsconfig.build.json && node ./lib/install.js",
-    "bundle": "webpack"
+    "build": "rimraf -r lib & tsc -p tsconfig.build.json && node ./lib/install.js",
+    "bundle": "webpack",
+    "validate-typescript": "tsc --noEmit --watch -p tsconfig.build.json"
   },
   "author": "Ben Mewburn <ben@mewburn.id.au>",
   "license": "ISC",
@@ -36,12 +37,12 @@
     "graceful-fs": "^4.1.15",
     "leveldown": "^5.1.0",
     "levelup": "^4.0.2",
-    "vscode-languageserver": "^5.2.1",
     "subleveldown": "^4.0.0",
-    "php7parser": "file://../php7parser"
+    "tree-sitter": "^0.15.7",
+    "tree-sitter-php": "file://../tree-sitter-php",
+    "vscode-languageserver": "^5.2.1"
   },
   "devDependencies": {
-    "memdown": "^4.0.0",
     "@types/async-lock": "^1.1.1",
     "@types/chai": "^4.1.7",
     "@types/fs-extra": "^7.0.0",
@@ -52,7 +53,9 @@
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.0.10",
     "chai": "^4.2.0",
+    "memdown": "^4.0.0",
     "mocha": "^6.1.4",
+    "rimraf": "^2.6.3",
     "ts-loader": "^6.0.4",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.2",

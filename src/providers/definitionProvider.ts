@@ -13,7 +13,7 @@ import { ReferenceStore, Reference } from '../reference';
 
 export class DefinitionProvider {
 
-    constructor(public symbolStore: SymbolStore, public documentStore: ParsedDocumentStore, public refStore:ReferenceStore) { }
+    constructor(public symbolStore: SymbolStore, public documentStore: ParsedDocumentStore, public refStore: ReferenceStore) { }
 
     async provideDefinition(uri: string, position: Position) {
 
@@ -24,9 +24,9 @@ export class DefinitionProvider {
             return null;
         }
 
-        let ref = table.referenceAtPosition(position);
+        const ref = table.referenceAtPosition(position);
 
-        if (!ref) {
+        if (ref === null) {
             return null;
         }
 
@@ -39,14 +39,14 @@ export class DefinitionProvider {
             });
         }
 
-        if(ref.kind === SymbolKind.Constructor && symbols.length < 1) {
+        if (ref.kind === SymbolKind.Constructor && symbols.length < 1) {
             //fallback to class
             symbols = await this.symbolStore.findSymbolsByReference(Reference.create(SymbolKind.Class, ref.name, ref.location), MemberMergeStrategy.Override);
         }
 
         let locations: Location[] = [];
         let s: PhpSymbol;
-        let loc: Location;
+        let loc: Location | undefined;
 
         for (let n = 0; n < symbols.length; ++n) {
             s = symbols[n];

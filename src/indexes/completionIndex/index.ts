@@ -24,6 +24,10 @@ export class CompletionIndex {
     }
 
     async put(symbol: PhpSymbol) {
+        if (typeof symbol.name === 'undefined') {
+            console.log(symbol);
+        }
+
         const tokens = WordSeparator.getTokens(symbol.name);
         const uri = symbol.location ? symbol.location.uri : '';
         const inputs: AbstractBatch<string, CompletionValue>[] = [];

@@ -10,9 +10,8 @@ import { ParseTreeTraverser } from './parseTreeTraverser';
 import { SymbolStore, SymbolTable } from './symbolStore';
 import { SymbolKind, PhpSymbol } from './symbol';
 import { Reference, ReferenceStore, ReferenceTable} from './reference';
-import { Phrase, PhraseKind, Token } from 'php7parser';
 import {UseDeclarationHelper} from './useDeclarationHelper';
-import * as util from './util';
+import * as util from './utils';
 
 export class NameTextEditProvider {
 
@@ -27,13 +26,13 @@ export class NameTextEditProvider {
         let doc = this.docStore.find(uri);
         let table = await this.symbolStore.getSymbolTable(uri);
         let refTable = this.refStore.getReferenceTable(uri);
-        if(!doc || !table || !refTable || !this._fullyQualifiedNamePhrase(position, doc, table, refTable)) {
+        if(!doc || !table || !refTable) {
             return edits;
         }
 
         let ref = refTable.referenceAtPosition(position);
         
-        if(!(ref.kind & kindMask)) {
+        if(!ref || !(ref.kind & kindMask)) {
             return edits;
         }
 
@@ -51,7 +50,11 @@ export class NameTextEditProvider {
 
         } else if(alias && fqnUseSymbol.name !== alias) {
             //replace existing 
-            edits.push(helper.replaceDeclarationTextEdit(ref, alias));
+            const replaceTextEdit = helper.replaceDeclarationTextEdit(ref, alias);
+
+            if (replaceTextEdit) {
+                edits.push(replaceTextEdit);
+            }
         }
 
         let name = alias || PhpSymbol.notFqn(ref.name);
@@ -61,7 +64,7 @@ export class NameTextEditProvider {
         let fn = (r:Reference) => {
             return (r.kind & kindMask) > 0 && 
                 lcName === r.name.toLowerCase() && 
-                (!fqnUseSymbol || 
+                ((!fqnUseSymbol || !fqnUseSymbol.location) || 
                     (util.isInRange(r.location.range.start, fqnUseSymbol.location.range) !== 0 &&
                     util.isInRange(r.location.range.end, fqnUseSymbol.location.range) !== 0));
         };
@@ -74,16 +77,6 @@ export class NameTextEditProvider {
     
         return edits.reverse();
 
-    }
-
-    private _fullyQualifiedNamePhrase(position:Position, doc:ParsedDocument, table:SymbolTable, refTable:ReferenceTable) {
-        let traverser = new ParseTreeTraverser(doc, table, refTable);
-        traverser.position(position);
-        return traverser.ancestor(this._isFullyQualifiedName);
-    } 
-
-    private _isFullyQualifiedName(node:Phrase|Token) {
-        return (<Phrase>node).kind === PhraseKind.FullyQualifiedName;        
     }
 
 }

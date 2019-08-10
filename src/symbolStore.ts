@@ -13,7 +13,7 @@ import * as builtInSymbols from './builtInSymbols.json';
 import { ParsedDocument, ParsedDocumentChangeEventArgs, ParsedDocumentStore } from './parsedDocument';
 import { SymbolReader } from './symbolReader';
 import { NameResolver } from './nameResolver';
-import * as util from './util';
+import * as util from './utils';
 import { TypeAggregate, MemberMergeStrategy } from './typeAggregate';
 import { SymbolIndex } from './indexes/symbolIndex';
 import { SymbolTableIndex } from './indexes/symbolTableIndex';
@@ -125,7 +125,7 @@ export class SymbolTable implements Traversable<PhpSymbol> {
     symbolAtPosition(position: Position) {
 
         let pred = (x: PhpSymbol) => {
-            return x.location && util.positionEquality(x.location.range.start, position);
+            return typeof x.location !== 'undefined' && util.positionEquality(x.location.range.start, position);
         };
 
         return this.filter(pred).pop();
@@ -218,7 +218,7 @@ export class SymbolStore {
     };
 
     async getSymbolTable(uri: string): Promise<SymbolTable | undefined> {
-        let table: SymbolTable = undefined;
+        let table: SymbolTable | undefined = undefined;
 
         table = await this._tableIndex.find(uri);
 
@@ -305,14 +305,14 @@ export class SymbolStore {
         }
     }
 
-    async findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): Promise<PhpSymbol[]> {
+    async findSymbolsByReference(ref: Reference | null, memberMergeStrategy?: MemberMergeStrategy): Promise<PhpSymbol[]> {
         if (!ref) {
             return [];
         }
 
-        let symbols: PhpSymbol[];
+        let symbols: PhpSymbol[] = [];
         let fn: Predicate<PhpSymbol>;
-        let table: SymbolTable;
+        let table: SymbolTable | undefined;
 
         switch (ref.kind) {
             case SymbolKind.Class:
@@ -389,15 +389,17 @@ export class SymbolStore {
 
         }
 
-        return symbols || [];
+        return symbols;
     }
 
     private async findMembers(
-        scope: string | TypeResolvable, memberMergeStrategy: MemberMergeStrategy, predicate?: Predicate<PhpSymbol>
+        scope: string | TypeResolvable | undefined,
+        memberMergeStrategy: MemberMergeStrategy,
+        predicate?: Predicate<PhpSymbol>
     ) {
 
         let fqnArray = TypeString.atomicClassArray(await TypeString.resolve(scope));
-        let type: TypeAggregate;
+        let type: TypeAggregate | null;
         let members: PhpSymbol[] = [];
         for (let n = 0; n < fqnArray.length; ++n) {
             type = await TypeAggregate.create(this, fqnArray[n]);
@@ -413,7 +415,7 @@ export class SymbolStore {
         if (
             !symbol || !symbol.scope ||
             !(symbol.kind & (SymbolKind.Property | SymbolKind.Method | SymbolKind.ClassConstant)) ||
-            (symbol.modifiers & SymbolModifier.Private) > 0
+            (symbol.modifiers && (symbol.modifiers & SymbolModifier.Private) > 0)
         ) {
             return symbol;
         }
@@ -475,9 +477,9 @@ export class SymbolStore {
     }
     */
 
-    async symbolLocation(symbol: PhpSymbol): Promise<Location> {
+    async symbolLocation(symbol: PhpSymbol): Promise<Location | undefined> {
         let table = await this._tableIndex.findBySymbol(symbol);
-        return table ? Location.create(table.uri, symbol.location.range) : undefined;
+        return table && symbol.location ? Location.create(table.uri, symbol.location.range) : undefined;
     }
 
     async referenceToTypeString(ref: Reference) {
@@ -565,7 +567,7 @@ class NameResolverVisitor implements TreeVisitor<PhpSymbol> {
             return false;
         }
 
-        if ((node.modifiers & SymbolModifier.Use) > 0 && (node.kind & this._kindMask) > 0) {
+        if (node.modifiers && (node.modifiers & SymbolModifier.Use) > 0 && (node.kind & this._kindMask) > 0) {
             this.nameResolver.rules.push(node);
         } else if (node.kind === SymbolKind.Namespace) {
             this.nameResolver.namespace = node;
@@ -620,8 +622,11 @@ class ScopeVisitor implements TreeVisitor<PhpSymbol> {
 
         if (
             (node.kind & this._kindMask) > 0 &&
-            !(node.modifiers & SymbolModifier.Use) &&
-            (!this._absolute || node.kind !== SymbolKind.Function || !(node.modifiers & SymbolModifier.Anonymous))
+            !(node.modifiers && (node.modifiers & SymbolModifier.Use)) &&
+            (
+                !this._absolute || node.kind !== SymbolKind.Function ||
+                !(node.modifiers && (node.modifiers & SymbolModifier.Anonymous))
+            )
         ) {
             this._scopeStack.push(node);
         }
@@ -652,7 +657,11 @@ class ContainsVisitor implements TreeVisitor<PhpSymbol> {
             return false;
         }
 
-        if (node.location && util.isInRange(this._symbol.location.range.start, node.location.range) !== 0) {
+        if (
+            node.location &&
+            this._symbol.location &&
+            util.isInRange(this._symbol.location.range.start, node.location.range) !== 0
+        ) {
             return false;
         }
 

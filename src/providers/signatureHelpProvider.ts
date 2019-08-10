@@ -9,39 +9,67 @@ import { SymbolKind, PhpSymbol, SymbolModifier } from '../symbol';
 import { SymbolStore } from '../symbolStore';
 import { ParseTreeTraverser } from '../parseTreeTraverser';
 import { ParsedDocument, ParsedDocumentStore } from '../parsedDocument';
-import { Phrase, PhraseKind, Token, TokenKind } from 'php7parser';
 import { MemberMergeStrategy } from '../typeAggregate';
 import { ReferenceStore } from '../reference';
+import { SyntaxNode } from 'tree-sitter';
+import { Predicate } from '../types';
 
 
 export class SignatureHelpProvider {
 
-    constructor(public symbolStore: SymbolStore, public docStore: ParsedDocumentStore, public refStore:ReferenceStore) { }
+    constructor(public symbolStore: SymbolStore, public docStore: ParsedDocumentStore, public refStore: ReferenceStore) { }
 
-    async provideSignatureHelp(uri: string, position: lsp.Position) {
+    async provideSignatureHelp(uri: string, position: lsp.Position): Promise<lsp.SignatureHelp | null> {
         let response: lsp.SignatureHelp | null = null;
-        
-        await this.docStore.acquireLock(uri, async() => {
-            let doc = this.docStore.find(uri);
-            let table = await this.symbolStore.getSymbolTable(uri);
-            let refTable = this.refStore.getReferenceTable(uri);
+
+        await this.docStore.acquireLock(uri, async () => {
+            const doc = this.docStore.find(uri);
+            const table = await this.symbolStore.getSymbolTable(uri);
+            const refTable = this.refStore.getReferenceTable(uri);
             if (!doc || !table || !refTable) {
                 return;
             }
-    
-            let traverser = new ParseTreeTraverser(doc, table, refTable);
-            let token = traverser.position(position);
-            let callableExpr = traverser.ancestor(this._isCallablePhrase, this._isStopToCallablePhrase) as Phrase;
-            if (!callableExpr || !token || token.kind === TokenKind.CloseParenthesis) {
+
+            const traverser = new ParseTreeTraverser(doc, table, refTable);
+            const token = traverser.position(position);
+
+            if (!token || token.type === ')') {
                 return;
             }
-    
-            let symbol = await this._getSymbol(traverser.clone());
-            let delimFilterFn = (x:Phrase|Token) => {
-                return (<Token>x).kind === TokenKind.Comma && (<Token>x).offset <= token.offset;
+
+            const previous = traverser.clone();
+            const callableExpr = traverser.ancestor(this._isCallablePhrase, this._isStopToCallablePhrase);
+            const startArguments: Predicate<SyntaxNode> = node => node.type === '(';
+            let symbol: PhpSymbol | undefined = undefined;
+            let argumentsTraverser = traverser.clone();
+            if (!callableExpr) {
+                let prev: SyntaxNode | null = null;
+                while ((prev = previous.prevSibling()) !== null) {
+                    if (prev.type === '(') {
+                        break;
+                    }
+                }
+                prev = previous.prevSibling();
+                if (prev === null || prev.type !== 'qualified_name') {
+                    return;
+                }
+                symbol = await this._getSymbol(previous.clone());
+                argumentsTraverser = previous.clone();
+                argumentsTraverser.next(startArguments);
+            } else {
+                symbol = await this._getSymbol(traverser.clone());
+                argumentsTraverser = traverser.clone();
+                argumentsTraverser.child(startArguments);
+            }
+
+            const delimFilterFn = (x: SyntaxNode) => {
+                return x.type === ',' && x.startIndex <= token.startIndex;
             };
-            let argNumber = ParsedDocument.filterChildren(<Phrase>ParsedDocument.findChild(callableExpr, this._isArgExprList), delimFilterFn).length;
-    
+            const stopFn = (node: SyntaxNode) => {
+                return node.type === ')';
+            };
+            const argNumber = argumentsTraverser.filterNext(delimFilterFn, stopFn).length;
+
             if (symbol) {
                 response = this._createSignatureHelp(symbol, argNumber);
             }
@@ -128,7 +156,7 @@ export class SignatureHelpProvider {
         labelParts.push(s.name);
 
         if (s.value) {
-            labelParts.push('= ' + s.value);
+            labelParts.push(s.value);
         }
 
         let info = <lsp.ParameterInformation>{
@@ -142,105 +170,110 @@ export class SignatureHelpProvider {
         return info;
     }
 
-    private async _getSymbol(traverser:ParseTreeTraverser) {
-        let expr = traverser.node as Phrase;
-        switch (expr.kind) {
-            case PhraseKind.FunctionCallExpression:
-                if(traverser.child(this._isNamePhrase)){
+    private async _getSymbol(traverser: ParseTreeTraverser) {
+        const expr = traverser.node;
+
+        if (expr === null) {
+            return undefined;
+        }
+
+        switch (expr.type) {
+            case 'function_call_expression':
+                if (traverser.child(this._isNamePhrase)) {
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference))
                         .shift();
                 }
                 return undefined;
-            case PhraseKind.MethodCallExpression:
-                if(traverser.child(this._isMemberName) && traverser.child(this._isNameToken)) {
+            case 'member_call_expression':
+                if (traverser.child(this._isMemberName) && traverser.child(this._isNameToken)) {
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Documented))
                         .shift();
                 }
                 return undefined;
-            case PhraseKind.ScopedCallExpression:
-                if(traverser.child(this._isScopedMemberName) && traverser.child(this._isIdentifier)) {
+            case 'scoped_call_expression':
+                if (traverser.child(this._isScopedMemberName) && traverser.child(this._isIdentifier)) {
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Documented))
                         .shift();
                 }
                 return undefined;
-            case PhraseKind.ObjectCreationExpression:
-                if(traverser.child(this._isClassTypeDesignator) && traverser.child(this._isNamePhraseOrRelativeScope)) {
+            case 'object_creation_expression':
+                if (traverser.child(this._isClassTypeDesignator) && traverser.child(this._isNameOrRelativeScope)) {
                     return (await this.symbolStore.findSymbolsByReference(traverser.reference, MemberMergeStrategy.Override))
                         .shift();
                 }
                 return undefined;
-                
+
+            case 'qualified_name':
+                const ref = traverser.reference;
+                if (ref == null) {
+                    return undefined;
+                }
+                // A workaround for parser's issue since if there is an error
+                // `function_call_expression` will not be constructed therefore
+                // qualified_name is identified as `Constant`, however if there
+                // is a `(`, it will make it a `function_call_expression`
+                ref.kind = SymbolKind.Function; 
+                return (await this.symbolStore.findSymbolsByReference(traverser.reference))
+                    .shift();
+
             default:
                 throw new Error('Invalid Argument');
         }
     }
 
-    private _isCallablePhrase(node: Phrase | Token) {
-        switch ((<Phrase>node).kind) {
-            case PhraseKind.FunctionCallExpression:
-            case PhraseKind.MethodCallExpression:
-            case PhraseKind.ScopedCallExpression:
-            case PhraseKind.ObjectCreationExpression:
-                return true;
-            default:
-                return false;
-        }
+    private _isCallablePhrase(node: SyntaxNode) {
+        return [
+            'function_call_expression',
+            'member_call_expression',
+            'scoped_call_expression',
+            'object_creation_expression',
+        ].includes(node.type);
     }
 
-    private _isStopToCallablePhrase(node: Phrase | Token) {
-        switch ((<Phrase>node).kind) {
-            case PhraseKind.ArrayCreationExpression:
-                return true;
-        }
-
-        return false;
+    private _isNamePhrase(node: SyntaxNode) {
+        return [
+            'qualified_name',
+        ].includes(node.type);
     }
 
-    private _isNamePhrase(node:Phrase|Token) {
-        switch((<Phrase>node).kind) {
-            case PhraseKind.FullyQualifiedName:
-            case PhraseKind.RelativeQualifiedName:
-            case PhraseKind.QualifiedName:
-                return true;
-            default:
-                return false;
-        }
+    private _isStopToCallablePhrase(node: SyntaxNode) {
+        return [
+            'array_creation_expression'
+        ].includes(node.type);
     }
 
-    private _isArgExprList(node:Phrase|Token) {
-        return (<Phrase>node).kind === PhraseKind.ArgumentExpressionList;
+    private _isArgExprList(node: SyntaxNode) {
+        return node.type === 'arguments';
     }
 
-    private _isMemberName(node:Phrase|Token) {
-        return (<Phrase>node).kind === PhraseKind.MemberName;
+    private _isMemberName(node: SyntaxNode) {
+        return node.type === 'member_name';
     }
 
-    private _isScopedMemberName(node:Phrase|Token) {
-        return (<Phrase>node).kind === PhraseKind.ScopedMemberName;
+    private _isScopedMemberName(node: SyntaxNode) {
+        return node.type === 'member_name';
     }
 
-    private _isNameToken(node:Phrase|Token) {
-        return (<Token>node).kind === TokenKind.Name;
+    private _isNameToken(node: SyntaxNode) {
+        return node.type === 'name';
     }
 
-    private _isIdentifier(node:Phrase|Token) {
-        return (<Phrase>node).kind === PhraseKind.Identifier;
+    private _isIdentifier(node: SyntaxNode) {
+        return node.type === 'name';
     }
 
-    private _isClassTypeDesignator(node:Phrase|Token) {
-        return (<Phrase>node).kind === PhraseKind.ClassTypeDesignator;
+    private _isClassTypeDesignator(node: SyntaxNode) {
+        return [
+            'qualified_name',
+            'new_variable',
+        ].includes(node.type);
     }
 
-    private _isNamePhraseOrRelativeScope(node:Phrase|Token) {
-        switch((<Phrase>node).kind) {
-            case PhraseKind.FullyQualifiedName:
-            case PhraseKind.RelativeQualifiedName:
-            case PhraseKind.QualifiedName:
-            case PhraseKind.RelativeScope:
-                return true;
-            default:
-                return false;
-        }
+    private _isNameOrRelativeScope(node: SyntaxNode) {
+        return [
+            'name',
+            'relative_scope',
+        ].includes(node.type);
     }
 
 }

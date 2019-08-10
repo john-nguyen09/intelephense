@@ -27,19 +27,18 @@ export namespace PhpDocParser {
         let text: string = '';
 
         if (split.length && split[0].indexOf('@') !== 0) {
-            text = split.shift().trim();
+            text = split.shift()!.trim();
         }
 
-        let match: RegExpMatchArray;
-        let tagString: string;
+        let tagString: string | undefined;
         let tags: Tag[] = [];
-        let tag:Tag;
+        let tag: Tag | null;
 
         while (tagString = split.shift()) {
 
             //parse @param, @var, @property*, @return, @method tags
             tag = parseTag(tagString);
-            if(tag){
+            if (tag) {
                 tags.push(tag);
             }
 
@@ -57,7 +56,7 @@ export namespace PhpDocParser {
     function parseTag(text:string){
 
         let substring = text.slice(0, 4);
-        let match: RegExpMatchArray;
+        let match: RegExpMatchArray | null;
 
         switch(substring){
             case '@par':
@@ -122,12 +121,12 @@ export namespace PhpDocParser {
 
         let params: MethodTagParam[] = [];
         let paramSplit = input.split(',');
-        let typeString: string, name: string;
-        let param:string[];
+        let typeString: string = '', name: string, paramBit: string | undefined;
+        let param: string[];
 
-        while (paramSplit.length) {
+        while ((paramBit = paramSplit.pop()) !== undefined) {
 
-            param = paramSplit.pop().trim().split(whitespacePattern);
+            param = paramBit.trim().split(whitespacePattern);
             if(param.length === 1) {
                 typeString = 'mixed';
                 name = param[0];

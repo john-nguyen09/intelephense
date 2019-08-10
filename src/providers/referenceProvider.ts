@@ -12,7 +12,7 @@ import { PhpSymbol, SymbolKind, SymbolModifier, SymbolIdentifier } from '../symb
 import { MemberMergeStrategy, TypeAggregate } from '../typeAggregate';
 import { Reference, ReferenceStore, ReferenceTable, Scope } from '../reference';
 import { Predicate, TreeVisitor, TreeTraverser, AsyncPredicate } from '../types';
-import * as util from '../util';
+import * as util from '../utils';
 import { TypeString } from '../typeString';
 
 
@@ -22,7 +22,7 @@ function _sameNameAndScope(
 ): AsyncPredicate<Reference | Scope> {
     return async (ref: Reference): Promise<boolean> => {
         return ref.name.toLowerCase() === name &&
-            (ref.scope && (await TypeString.resolve(ref.scope)).toLowerCase() === scope);
+            (ref.scope !== undefined && (await TypeString.resolve(ref.scope)).toLowerCase() === scope);
     };
 }
 
@@ -78,10 +78,10 @@ export class ReferenceProvider {
 
         return new Promise<Reference[]>((resolve, reject) => {
 
-            let onResolve = (r:Reference[]) => {
+            let onResolve = (r: Reference[]) => {
                 Array.prototype.push.apply(refs, r);
                 let s = symbols.pop();
-                if(s) {
+                if (s) {
                     provideRefsFn(s, table).then(onResolve);
                 } else {
                     resolve(Array.from(new Set<Reference>(refs)));
@@ -98,8 +98,14 @@ export class ReferenceProvider {
         switch (symbol.kind) {
             case SymbolKind.Parameter:
             case SymbolKind.Variable:
+                const symbolTable = await this.symbolStore.getSymbolTable(table.uri);
+
+                if (symbolTable === undefined) {
+                    return [];
+                }
+
                 return this._variableReferences(
-                    symbol, table, await this.symbolStore.getSymbolTable(table.uri)
+                    symbol, table, symbolTable
                 );
             case SymbolKind.Class:
             case SymbolKind.Interface:
@@ -121,7 +127,7 @@ export class ReferenceProvider {
 
     private async _methodReferences(symbol: PhpSymbol, table: ReferenceTable) {
 
-        if ((symbol.modifiers & SymbolModifier.Private) > 0) {
+        if (symbol.modifiers !== undefined && (symbol.modifiers & SymbolModifier.Private) > 0) {
             let lcScope = symbol.scope ? symbol.scope.toLowerCase() : '';
             let name = symbol.name.toLowerCase();
             let fn = (x: Reference) => {
@@ -145,7 +151,7 @@ export class ReferenceProvider {
 
     private async _classConstantReferences(symbol: PhpSymbol, table: ReferenceTable) {
 
-        if ((symbol.modifiers & SymbolModifier.Private) > 0) {
+        if (symbol.modifiers !== undefined && (symbol.modifiers & SymbolModifier.Private) > 0) {
             let lcScope = symbol.scope ? symbol.scope.toLowerCase() : '';
             let name = symbol.name.toLowerCase();
             let fn = (x: Reference) => {
@@ -170,7 +176,7 @@ export class ReferenceProvider {
     private async _propertyReferences(symbol: PhpSymbol, table: ReferenceTable) {
 
         let name = symbol.name;
-        if ((symbol.modifiers & SymbolModifier.Private) > 0) {
+        if (symbol.modifiers !== undefined && (symbol.modifiers & SymbolModifier.Private) > 0) {
             let lcScope = symbol.scope ? symbol.scope.toLowerCase() : '';
             let fn = (x: Reference) => {
                 return x.kind === SymbolKind.Property;
@@ -224,38 +230,40 @@ export class ReferenceProvider {
 
     }
 
-    private _variableReferences(symbol: PhpSymbol, refTable: ReferenceTable, symbolTable:SymbolTable) {
+    private _variableReferences(symbol: PhpSymbol, refTable: ReferenceTable, symbolTable: SymbolTable) {
 
         let symbolTreeTraverser = symbolTable.createTraverser();
-        symbolTreeTraverser.find((x)=>{
+        symbolTreeTraverser.find((x) => {
             return PhpSymbol.equality(x, symbol);
         });
 
         let outerScope = symbolTreeTraverser.parent();
         let useVarFn = (s: PhpSymbol) => {
             return s.kind === SymbolKind.Variable &&
-                (s.modifiers & SymbolModifier.Use) > 0 &&
+                s.modifiers !== undefined && (s.modifiers & SymbolModifier.Use) > 0 &&
                 s.name === symbol.name;
         };
 
-        let isScopeSymbol:Predicate<PhpSymbol> = (x) => {
-            return x.kind === SymbolKind.Function && (x.modifiers & SymbolModifier.Anonymous) > 0 && util.find(x.children, useVarFn) !== undefined;
+        let isScopeSymbol: Predicate<PhpSymbol> = (x) => {
+            return x.kind === SymbolKind.Function &&
+                x.modifiers !== undefined && (x.modifiers & SymbolModifier.Anonymous) > 0 &&
+                util.find(x.children, useVarFn) !== undefined;
         }
 
-        while(outerScope && isScopeSymbol(outerScope)) {
+        while (outerScope && isScopeSymbol(outerScope)) {
             outerScope = symbolTreeTraverser.parent();
         }
 
-        if(!outerScope) {
+        if (!outerScope) {
             return [];
         }
-        
+
         //collect all scope positions to look for refs
-        let scopePositions:Position[] = [];
-        let varScopeVisitor:TreeVisitor<PhpSymbol> = {
-            preorder:(node:PhpSymbol, spine:PhpSymbol[]) => {
-                if(node === outerScope || isScopeSymbol(node)) {
-                    if(node.location) {
+        let scopePositions: Position[] = [];
+        let varScopeVisitor: TreeVisitor<PhpSymbol> = {
+            preorder: (node: PhpSymbol, spine: PhpSymbol[]) => {
+                if (node === outerScope || isScopeSymbol(node)) {
+                    if (node.location) {
                         scopePositions.push(node.location.range.start);
                     }
                     return true;
@@ -265,30 +273,32 @@ export class ReferenceProvider {
         }
 
         symbolTreeTraverser.traverse(varScopeVisitor);
-        if(!scopePositions.length) {
+        if (!scopePositions.length) {
             return [];
         }
-        
+
         let refTreeTraverser = refTable.createTraverser();
-        let refs:Reference[] = [];
+        let refs: Reference[] = [];
         let refFn = (r: Reference) => {
             return (r.kind === SymbolKind.Variable || r.kind === SymbolKind.Parameter) && r.name === symbol.name;
         };
-        let isScope:Predicate<Scope|Reference> = (x:Scope|Reference) => {
-            return (<Reference>x).kind === undefined && x.location && scopePositions.length && util.positionEquality(x.location.range.start, scopePositions[0])
+        let isScope: Predicate<Scope | Reference> = (x: Scope | Reference): boolean => {
+            return (<Reference>x).kind === undefined &&
+                scopePositions.length !== 0 &&
+                util.positionEquality(x.location.range.start, scopePositions[0])
         }
-        if(!refTreeTraverser.find(isScope)) {
+        if (!refTreeTraverser.find(isScope)) {
             return [];
         }
-        
-        let refVisitor:TreeVisitor<Scope|Reference> = {
 
-            preorder:(node:Scope|Reference, spine:(Scope|Reference)[]) => {
+        let refVisitor: TreeVisitor<Scope | Reference> = {
 
-                if(isScope(node)) {
+            preorder: (node: Scope | Reference, spine: (Scope | Reference)[]) => {
+
+                if (isScope(node)) {
                     scopePositions.shift();
                     return true;
-                } else if(refFn(<Reference>node)) {
+                } else if (refFn(<Reference>node)) {
                     refs.push(<Reference>node);
                 }
                 return false;
@@ -308,7 +318,7 @@ export class ReferenceProvider {
     ): Promise<Reference[]> {
 
         let traverser = refTable.createTraverser();
-        let pos = symbol.location ? symbol.location.range.start : undefined;
+        const pos = symbol.location ? symbol.location.range.start : undefined;
         if (!pos) {
             return [];
         }

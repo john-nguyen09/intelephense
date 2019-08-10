@@ -6,7 +6,6 @@ import * as Subleveldown from 'subleveldown';
 import { CodecEncoder } from "level-codec";
 import { CompletionIndex, CompletionValue } from "./completionIndex";
 import { Position } from "vscode-languageserver";
-import { elapsed } from "../util";
 import { TypeString } from "../typeString";
 
 export type PhpSymbolIdentifier = [string, string, number, number, number, number];
@@ -39,7 +38,9 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     public static readonly IDENTIFIER_JOINER = '#';
     
     public static isNamedSymbol(s: PhpSymbol) {
-        return (s.kind & this.NAMED_SYMBOL_KIND_MASK) && !(s.modifiers & this.NAMED_SYMBOL_EXCLUDE_MODIFIERS);
+        return ((s.kind & this.NAMED_SYMBOL_KIND_MASK) > 0) && !(
+            s.modifiers && ((s.modifiers & this.NAMED_SYMBOL_EXCLUDE_MODIFIERS) > 0)
+        );
     }
 
     private _belongsToUri: LevelUp<AbstractLevelDOWN<string, PhpSymbolIdentifier[]>>;
@@ -98,7 +99,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         }
         promises.push((async () => {
             await this.deleteSymbols(this._globalVariables, {}, (s: PhpSymbol) => {
-                return s.location.uri === uri;
+                return typeof s.location !== 'undefined' && s.location.uri === uri;
             });
         })());
 

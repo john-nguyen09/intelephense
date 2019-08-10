@@ -7,3 +7,6 @@ node_modules
 tools/convert.js
 lib
 benchmarks/moodle
+*.ast
+*.refs
+*.symbols

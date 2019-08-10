@@ -4,9 +4,9 @@
 
 'use strict';
 
-import {Location, SymbolInformation, SymbolKind as Kind} from 'vscode-languageserver-types';
+import { Location, SymbolInformation, SymbolKind as Kind, Range, Position } from 'vscode-languageserver-types';
 import { PhpSymbol, SymbolKind, SymbolModifier } from '../symbol';
-import {SymbolStore} from '../symbolStore';
+import { SymbolStore } from '../symbolStore';
 import { ParsedDocumentStore } from '../parsedDocument';
 
 const namespacedSymbolMask =
@@ -16,7 +16,7 @@ const namespacedSymbolMask =
     SymbolKind.Constant |
     SymbolKind.Function;
 
-const symbolsDisplayMask = 
+const symbolsDisplayMask =
     SymbolKind.Interface |
     SymbolKind.Class |
     SymbolKind.Trait |
@@ -38,9 +38,9 @@ export class SymbolProvider {
         await this.documentStore.acquireLock(uri, async () => {
             let symbolTable = await this.symbolStore.getSymbolTable(uri);
             let symbols = symbolTable ? symbolTable.symbols : [];
-    
+
             for (let n = 0, l = symbols.length; n < l; ++n) {
-    
+
                 if (symbols[n].location && (symbols[n].kind & symbolsDisplayMask)) {
                     symbolInformationList.push(await this.toSymbolInformation(symbols[n]));
                 }
@@ -68,19 +68,22 @@ export class SymbolProvider {
 
     workspaceSymbolFilter(s: PhpSymbol) {
 
-        return !(s.modifiers & (SymbolModifier.Anonymous | SymbolModifier.Use | SymbolModifier.Private)) &&
+        return s.modifiers !== undefined &&
+            !(s.modifiers & (SymbolModifier.Anonymous | SymbolModifier.Use | SymbolModifier.Private)) &&
             s.location &&   //no inbuilt or unlocatable
             s.kind !== SymbolKind.Parameter &&  //no params
             (s.kind !== SymbolKind.Variable || !s.scope); //global vars 
 
     }
 
-    async toSymbolInformation(s: PhpSymbol, uri?:string) {
+    async toSymbolInformation(s: PhpSymbol, uri?: string) {
+        const emptyLocation = Location.create('', Range.create(Position.create(0, 0), Position.create(0, 0)));
 
-        let si: SymbolInformation = {
+        const si: SymbolInformation = {
             kind: Kind.File,
             name: s.name,
-            location: uri ? Location.create(uri, s.location.range) : await this.symbolStore.symbolLocation(s),
+            location: uri && s.location ?
+                Location.create(uri, s.location.range) : (await this.symbolStore.symbolLocation(s) || emptyLocation),
             containerName: s.scope
         };
 

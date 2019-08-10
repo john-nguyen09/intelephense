@@ -7,8 +7,7 @@
 import {
     TreeVisitor, TreeTraverser
 } from './types';
-import { Phrase, Token, PhraseKind, TokenKind } from 'php7parser';
-import { SymbolKind, PhpSymbol, SymbolModifier } from './symbol';
+import { SymbolKind, PhpSymbol, SymbolModifier, symbolKindToString } from './symbol';
 import { SymbolStore, SymbolTable } from './symbolStore';
 import { ParsedDocument, NodeTransform } from './parsedDocument';
 import { NameResolver } from './nameResolver';
@@ -16,21 +15,56 @@ import { Predicate } from './types';
 import * as lsp from 'vscode-languageserver-types';
 import { TypeString, TypeResolvable } from './typeString';
 import { MemberMergeStrategy } from './typeAggregate';
-import * as util from './util';
+import * as util from './utils';
 import { PhpDocParser, Tag } from './phpDoc';
 import { Reference, Scope, ReferenceTable } from './reference';
 import { SymbolIndex } from './indexes/symbolIndex';
+import { SyntaxNode } from 'tree-sitter';
+import { SymbolReader } from './symbolReader';
+
+const HEADER_TRANSFORM_KIND = new Set<string>([
+    'class_name',
+    'interface_name',
+    'function_name',
+    'trait_name',
+    'const_name',
+    'method_name',
+    'class_const_name',
+]);
+
+const HEADER_SYMBOL_KIND_MAPPING = new Map<SymbolKind, string>([
+    [SymbolKind.Class, 'class_name'],
+    [SymbolKind.Interface, 'interface_name'],
+    [SymbolKind.Function, 'function_name'],
+    [SymbolKind.Trait, 'trait_name'],
+    [SymbolKind.Constant, 'const_name'],
+    [SymbolKind.Method, 'method_name'],
+    [SymbolKind.ClassConstant, 'class_const_name'],
+]);
+
+const HEADER_NODE_TYPE_MAPPING = new Map<string, SymbolKind>([
+    ['class_declaration', SymbolKind.Class],
+    ['interface_declaration', SymbolKind.Interface],
+    ['function_definition', SymbolKind.Function],
+    ['trait_declaration', SymbolKind.Trait],
+    ['const_element', SymbolKind.Constant],
+]);
+
+const HEADER_SCOPED_NODE_TYPE_MAPPING = new Map<string, SymbolKind>([
+    ['class_const_declaration', SymbolKind.ClassConstant],
+    ['method_declaration', SymbolKind.Method],
+]);
 
 interface TypeNodeTransform extends NodeTransform {
     type: string | TypeResolvable;
 }
 
-interface ReferenceNodeTransform extends NodeTransform {
-    reference: Reference;
+export interface ReferenceNodeTransform extends NodeTransform {
+    reference: Reference | undefined;
 }
 
 interface VariableNodeTransform extends NodeTransform {
-    variable: Variable;
+    variable: Variable | undefined;
 }
 
 interface TextNodeTransform extends NodeTransform {
@@ -41,18 +75,14 @@ function symbolsToTypeReduceFn(prev: string, current: PhpSymbol, index: number, 
     return TypeString.merge(prev, PhpSymbol.type(current));
 }
 
-export class ReferenceReader implements TreeVisitor<Phrase | Token> {
+export class ReferenceReader implements TreeVisitor<SyntaxNode> {
 
-    private _transformStack: NodeTransform[];
+    private _transformStack: (NodeTransform | null)[];
     private _variableTable: VariableTable;
     private _classStack: PhpSymbol[];
     private _scopeStack: Scope[];
     private _symbols: PhpSymbol[];
-    private _symbolFilter: Predicate<PhpSymbol> = (x) => {
-        const mask = SymbolKind.Namespace | SymbolKind.Class | SymbolKind.Interface | SymbolKind.Trait | SymbolKind.Method | SymbolKind.Function | SymbolKind.File;
-        return (x.kind & mask) > 0 && !(x.modifiers & SymbolModifier.Magic);
-    };
-    private _lastVarTypehints: Tag[];
+    private _lastVarTypehints: Tag[] | null = null;
     private _symbolOffset = 0;
 
     constructor(
@@ -62,17 +92,26 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         namedSymbols: PhpSymbol[],
         globalVariables: PhpSymbol[]
     ) {
+        const excludeMask = SymbolKind.ClassConstant | SymbolKind.Constant;
+
         this._transformStack = [];
         this._variableTable = new VariableTable();
         this._classStack = [];
-        this._symbols = namedSymbols;
+        this._symbols = namedSymbols.filter(symbol => (symbol.kind & excludeMask) === 0);
+
+        const fileSymbol = this.shiftSymbol(SymbolKind.File);
+        const fileRange = fileSymbol.location ? fileSymbol.location.range : lsp.Range.create(
+            lsp.Position.create(0, 0), lsp.Position.create(0, 0)
+        );
         this._scopeStack = [
-            Scope.create(lsp.Location.create(
-                this.doc.uri, util.cloneRange(this.shiftSymbol().location.range)
-            ))
+            Scope.create(lsp.Location.create(this.doc.uri, util.cloneRange(fileRange)))
         ]; //file/root node
 
         for (const globalVariable of globalVariables) {
+            if (globalVariable.type === undefined) {
+                continue;
+            }
+
             this._variableTable.setVariable(Variable.create(globalVariable.name, globalVariable.type));
         }
     }
@@ -81,12 +120,16 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         return new ReferenceTable(this.doc.uri, this._scopeStack[0]);
     }
 
-    private shiftSymbol() {
+    private shiftSymbol(expectedKind: SymbolKind) {
         if (this._symbolOffset >= this._symbols.length) {
-            return undefined;
+            throw new Error('CodingError: ' +
+                this.doc.uri + ' symbol tree is not in sync with ReferenceReader');
         }
 
-        let result = this._symbols[this._symbolOffset++];
+        const result = this._symbols[this._symbolOffset++];
+        // if ((expectedKind & result.kind) === 0) {
+        //     console.log(`Expected ${symbolKindToString(expectedKind)} but got ${symbolKindToString(result.kind)} ${JSON.stringify(result)}`);
+        // }
 
         return result;
     }
@@ -99,481 +142,519 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         return this._symbols[this._symbolOffset];
     }
 
-    private symbolsLength() {
-        return this._symbols.length - this._symbolOffset;
+    private _currentClassName() {
+        let c = this._classStack.length ? this._classStack[this._classStack.length - 1] : undefined;
+        return c ? c.name : '';
     }
 
-    preorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
+    preorder(node: SyntaxNode, spine: SyntaxNode[]) {
 
-        let parent = spine.length ? spine[spine.length - 1] : null;
-        let parentTransform = this._transformStack.length ? this._transformStack[this._transformStack.length - 1] : null;
+        const parent = spine.length ? spine[spine.length - 1] : null;
+        const parentTransform = this._transformStack.length ?
+            this._transformStack[this._transformStack.length - 1] : null;
 
-        if (ParsedDocument.isPhrase(node)) {
-            switch (node.kind) {
-    
-                case PhraseKind.Error:
+        switch (node.type) {
+
+            case 'ERROR':
+                this._transformStack.push(null);
+                break;
+
+            case 'namespace_definition':
+                {
+                    const s = this.shiftSymbol(SymbolKind.Namespace);
+                    this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
+                    this.nameResolver.namespace = s;
+                    this._transformStack.push(new NamespaceDefinitionTransform());
+                }
+                break;
+
+            case 'function_call_expression':
+                if (parentTransform) {
+                    this._transformStack.push(new FunctionCallExpressionTransform(this._referenceSymbols));
+                } else {
                     this._transformStack.push(null);
-                    return false;
-    
-                case PhraseKind.NamespaceDefinition:
-                    {
-                        let s = this.shiftSymbol();
-                        this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
-                        this.nameResolver.namespace = s;
-                        this._transformStack.push(new NamespaceDefinitionTransform());
+                }
+                break;
+
+            case 'simple_parameter':
+                this._transformStack.push(new ParameterDeclarationTransform());
+                break;
+
+            case 'namespace_use_declaration':
+                this._transformStack.push(new NamespaceUseDeclarationTransform());
+                break;
+
+            case 'namespace_use_clause':
+            case 'namespace_use_group_clause_2':
+                {
+                    const currentSymbol = this.currentSymbol();
+                    if (
+                        currentSymbol && currentSymbol.modifiers &&
+                        (currentSymbol.modifiers & SymbolModifier.Use) > 0
+                    ) {
+                        this.nameResolver.rules.push(this.shiftSymbol(
+                            SymbolKind.Class | SymbolKind.Function | SymbolKind.Constant
+                        ));
                     }
+                    this._transformStack.push(new NamespaceUseClauseTransform(node.type));
                     break;
-    
-                case PhraseKind.ClassDeclarationHeader:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Class));
-                    break;
-    
-                case PhraseKind.InterfaceDeclarationHeader:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Interface));
-                    break;
-    
-                case PhraseKind.TraitDeclarationHeader:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Trait));
-                    break;
-    
-                case PhraseKind.FunctionDeclarationHeader:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Function));
-                    break;
-    
-                case PhraseKind.FunctionCallExpression:
-                    //todo define
-                    if (parentTransform) {
-                        this._transformStack.push(new FunctionCallExpressionTransform(this._referenceSymbols));
-                    } else {
+                }
+
+            case 'function_definition':
+                this._transformStack.push(null);
+                if (parent && parent.type !== 'method_declaration') {
+                    this._functionDeclaration(node);
+                }
+                break;
+
+            case 'method_declaration':
+            case 'constructor_declaration':
+                this._transformStack.push(null);
+                this._methodDeclaration(node);
+                break;
+
+            case 'class_declaration':
+            case 'trait_declaration':
+            case 'interface_declaration':
+                {
+                    let symbolKind = 0;
+                    if (node.type === 'class_declaration') {
+                        symbolKind = SymbolKind.Class;
+                    } else if (node.type === 'interface_declaration') {
+                        symbolKind = SymbolKind.Interface;
+                    } else if (node.type === 'trait_declaration') {
+                        symbolKind = SymbolKind.Trait;
+                    }
+
+                    const location = this.doc.nodeLocation(node);
+                    const s = this.shiftSymbol(symbolKind) || PhpSymbol.create(SymbolKind.Class, '', location);
+                    this._scopeStackPush(Scope.create(location));
+                    this.nameResolver.pushClass(s);
+                    this._classStack.push(s);
+                    this._variableTable.pushScope();
+                    this._variableTable.setVariable(Variable.create('$this', s.name));
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case 'anonymous_function_creation_expression':
+                this._anonymousFunctionCreationExpression(node);
+                this._transformStack.push(null);
+                break;
+
+            case 'if_statement':
+            case 'switch_statement':
+                this._transformStack.push(null);
+                this._variableTable.pushBranch();
+                break;
+
+            case 'case_statement':
+            case 'default_statement':
+            case 'else_clause':
+                this._transformStack.push(null);
+                this._variableTable.popBranch();
+                this._variableTable.pushBranch();
+                break;
+
+            case 'assignment_expression':
+                this._transformStack.push(new SimpleAssignmentExpressionTransform(
+                    'assignment_expression', this._lastVarTypehints
+                ));
+                break;
+
+            case 'binary_expression':
+                {
+                    // Second child is the operator
+                    const operator = node.child(1);
+
+                    if (!operator) {
                         this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ConstElement:
-                    this._transformStack.push(new HeaderTransform(this.nameResolver, SymbolKind.Constant));
-                    break;
-    
-                case PhraseKind.ClassConstElement:
-                    this._transformStack.push(new MemberDeclarationTransform(SymbolKind.ClassConstant, this._currentClassName()));
-                    this.shiftSymbol();
-                    break;
-    
-                case PhraseKind.MethodDeclarationHeader:
-                    this._transformStack.push(new MemberDeclarationTransform(SymbolKind.Method, this._currentClassName()));
-                    break;
-    
-                case PhraseKind.PropertyElement:
-                    this._transformStack.push(new PropertyElementTransform(this._currentClassName()));
-                    break;
-    
-                case PhraseKind.ParameterDeclaration:
-                    this._transformStack.push(new ParameterDeclarationTransform());
-                    break;
-    
-                case PhraseKind.NamespaceUseDeclaration:
-                    this._transformStack.push(new NamespaceUseDeclarationTransform());
-                    break;
-    
-                case PhraseKind.NamespaceUseGroupClauseList:
-                case PhraseKind.NamespaceUseClauseList:
-                    this._transformStack.push(new NamespaceUseClauseListTransform(node.kind));
-                    break;
-    
-                case PhraseKind.NamespaceUseClause:
-                case PhraseKind.NamespaceUseGroupClause:
-                    {
-                        if(this.symbolsLength() && (this.currentSymbol().modifiers & SymbolModifier.Use) > 0) {
-                            this.nameResolver.rules.push(this.shiftSymbol());
-                        }
-                        this._transformStack.push(new NamespaceUseClauseTransform(node.kind));
                         break;
                     }
-    
-                case PhraseKind.FunctionDeclaration:
-                    this._transformStack.push(null);
-                    this._functionDeclaration(<Phrase>node);
-                    break;
-    
-                case PhraseKind.MethodDeclaration:
-                    this._transformStack.push(null);
-                    this._methodDeclaration(<Phrase>node);
-                    break;
-    
-                case PhraseKind.ClassDeclaration:
-                case PhraseKind.TraitDeclaration:
-                case PhraseKind.InterfaceDeclaration:
-                case PhraseKind.AnonymousClassDeclaration:
-                    {
-                        let s = this.shiftSymbol() || PhpSymbol.create(SymbolKind.Class, '', this.doc.nodeLocation(<Phrase>node));
-                        this._scopeStackPush(Scope.create(this.doc.nodeLocation(<Phrase>node)));
-                        this.nameResolver.pushClass(s);
-                        this._classStack.push(s);
-                        this._variableTable.pushScope();
-                        this._variableTable.setVariable(Variable.create('$this', s.name));
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.AnonymousFunctionCreationExpression:
-                    this._anonymousFunctionCreationExpression(<Phrase>node);
-                    this._transformStack.push(null);
-                    break;
-    
-                case PhraseKind.IfStatement:
-                case PhraseKind.SwitchStatement:
-                    this._transformStack.push(null);
-                    this._variableTable.pushBranch();
-                    break;
-    
-                case PhraseKind.CaseStatement:
-                case PhraseKind.DefaultStatement:
-                case PhraseKind.ElseIfClause:
-                case PhraseKind.ElseClause:
-                    this._transformStack.push(null);
-                    this._variableTable.popBranch();
-                    this._variableTable.pushBranch();
-                    break;
-    
-                case PhraseKind.SimpleAssignmentExpression:
-                case PhraseKind.ByRefAssignmentExpression:
-                    this._transformStack.push(new SimpleAssignmentExpressionTransform(node.kind, this._lastVarTypehints));
-                    break;
-    
-                case PhraseKind.InstanceOfExpression:
-                    this._transformStack.push(new InstanceOfExpressionTransform());
-                    break;
-    
-                case PhraseKind.ForeachStatement:
-                    this._transformStack.push(new ForeachStatementTransform());
-                    break;
-    
-                case PhraseKind.ForeachCollection:
-                    this._transformStack.push(new ForeachCollectionTransform());
-                    break;
-    
-                case PhraseKind.ForeachValue:
-                    this._transformStack.push(new ForeachValueTransform());
-                    break;
-    
-                case PhraseKind.CatchClause:
-                    this._transformStack.push(new CatchClauseTransform());
-                    break;
-    
-                case PhraseKind.CatchNameList:
-                    this._transformStack.push(new CatchNameListTransform());
-                    break;
-    
-                case PhraseKind.QualifiedName:
-                    if (
-                        parent &&
-                        parent.kind === PhraseKind.FunctionCallExpression &&
-                        this.doc.nodeText(node).toLowerCase() === 'define'
-                    ) {
-                        this.shiftSymbol();
-                    }
-    
-                    this._transformStack.push(
-                        new QualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node), this.nameResolver)
-                    );
-                    break;
-    
-                case PhraseKind.FullyQualifiedName:
-                    this._transformStack.push(
-                        new FullyQualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node))
-                    );
-                    break;
-    
-                case PhraseKind.RelativeQualifiedName:
-                    this._transformStack.push(
-                        new RelativeQualifiedNameTransform(this._nameSymbolType(<Phrase>parent), this.doc.nodeLocation(node), this.nameResolver)
-                    );
-                    break;
-    
-                case PhraseKind.NamespaceName:
-                    this._transformStack.push(new NamespaceNameTransform(<Phrase>node, this.doc));
-                    break;
-    
-                case PhraseKind.SimpleVariable:
-                    let isGlobal = false;
-    
-                    for (let i = spine.length - 1; i >= 0; i--) {
-                        if ((<Phrase>spine[i]).kind == PhraseKind.GlobalDeclaration) {
-                            isGlobal = true;
-                            break;
-                        }
-                    }
-                    
-                    if (!isGlobal) {
-                        this._transformStack.push(new SimpleVariableTransform(this.doc.nodeLocation(node), this._variableTable));
-                    } else {
-                        this._transformStack.push(new GlobalVariableTransform(this.doc.nodeLocation(node), this._variableTable));
-                    }
-                    break;
-    
-                case PhraseKind.ListIntrinsic:
-                    this._transformStack.push(new ListIntrinsicTransform());
-                    break;
-    
-                case PhraseKind.ArrayInitialiserList:
-                    if (parentTransform) {
-                        this._transformStack.push(new ArrayInititialiserListTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ArrayElement:
-                    if (parentTransform) {
-                        this._transformStack.push(new ArrayElementTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ArrayValue:
-                    if (parentTransform) {
-                        this._transformStack.push(new ArrayValueTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.SubscriptExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new SubscriptExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ScopedCallExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.ScopedCallExpression, SymbolKind.Method, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.ScopedPropertyAccessExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.ScopedPropertyAccessExpression, SymbolKind.Property, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.ClassConstantAccessExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.ClassConstantAccessExpression, SymbolKind.ClassConstant, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.ScopedMemberName:
-                    this._transformStack.push(new ScopedMemberNameTransform(this.doc.nodeLocation(node)));
-                    break;
-    
-                case PhraseKind.Identifier:
-                    if (parentTransform) {
-                        this._transformStack.push(new IdentifierTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.PropertyAccessExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.PropertyAccessExpression, SymbolKind.Property, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.MethodCallExpression:
-                    this._transformStack.push(
-                        new MemberAccessExpressionTransform(PhraseKind.MethodCallExpression, SymbolKind.Method, this._referenceSymbols)
-                    );
-                    break;
-    
-                case PhraseKind.MemberName:
-                    this._transformStack.push(new MemberNameTransform(this.doc.nodeLocation(node)));
-                    break;
-    
-                case PhraseKind.AnonymousFunctionUseVariable:
-                    this._transformStack.push(new AnonymousFunctionUseVariableTransform());
-                    break;
-    
-                case PhraseKind.ObjectCreationExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new ObjectCreationExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.ClassTypeDesignator:
-                case PhraseKind.InstanceofTypeDesignator:
-                    if (parentTransform) {
-                        this._transformStack.push(new TypeDesignatorTransform(node.kind));
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.RelativeScope:
-                    let context = this._classStack.length ? this._classStack[this._classStack.length - 1] : null;
-                    let name = context ? context.name : '';
-                    this._transformStack.push(new RelativeScopeTransform(name, this.doc.nodeLocation(node)));
-                    break;
-    
-                case PhraseKind.TernaryExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new TernaryExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
-                    }
-                    break;
-    
-                case PhraseKind.CoalesceExpression:
-                    if (parentTransform) {
+
+                    if (operator.type === 'instanceof') {
+                        this._transformStack.push(new InstanceOfExpressionTransform());
+                    } else if (operator.type === '??') {
                         this._transformStack.push(new CoalesceExpressionTransform());
                     } else {
                         this._transformStack.push(null);
                     }
                     break;
-    
-                case PhraseKind.EncapsulatedExpression:
-                    if (parentTransform) {
-                        this._transformStack.push(new EncapsulatedExpressionTransform());
-                    } else {
-                        this._transformStack.push(null);
+                }
+
+            case 'foreach_statement':
+                this._transformStack.push(new ForeachStatementTransform());
+                break;
+
+            case 'foreach_collection':
+                this._transformStack.push(new ForeachCollectionTransform());
+                break;
+
+            case 'foreach_value':
+                this._transformStack.push(new ForeachValueTransform());
+                break;
+
+            case 'catch_clause':
+                this._transformStack.push(new CatchClauseTransform());
+                break;
+
+            case 'catch_name_list':
+                this._transformStack.push(new CatchNameListTransform());
+                break;
+
+            case 'qualified_name':
+                this._transformStack.push(
+                    new QualifiedNameTransform(this._nameSymbolType(parent), this.doc.nodeLocation(node), this.nameResolver)
+                );
+                break;
+
+            case 'namespace_name_as_prefix':
+                this._transformStack.push(new NamespaceNameAsPrefixTransform());
+                break;
+
+            case '__construct':
+                this._transformStack.push(new HeaderTransform(
+                    this.nameResolver, this.doc, node,
+                    SymbolKind.Method,
+                    this._currentClassName()
+                ));
+                break;
+
+            case 'name':
+                if (parent !== null && HEADER_NODE_TYPE_MAPPING.has(parent.type)) {
+                    if (parent.parent && HEADER_SCOPED_NODE_TYPE_MAPPING.has(parent.parent.type)) {
+                        this._transformStack.push(new HeaderTransform(
+                            this.nameResolver, this.doc, node,
+                            HEADER_SCOPED_NODE_TYPE_MAPPING.get(parent.parent.type)!,
+                            this._currentClassName()
+                        ));
+                        break;
                     }
+
+                    this._transformStack.push(new HeaderTransform(
+                        this.nameResolver, this.doc, node, HEADER_NODE_TYPE_MAPPING.get(parent.type)!
+                    ));
                     break;
-    
-                default:
+                }
+                if (this._isScope(parent)) {
+                    this._transformStack.push(
+                        new MemberNameTransform(node, this.doc.nodeLocation(node))
+                    );
+                    break;
+                }
+                this._transformStack.push(new TokenTransform(node, this.doc));
+                break;
+
+            case 'namespace_name':
+                this._transformStack.push(new NamespaceNameTransform(node, this.doc));
+                break;
+
+            case 'variable_name':
+                let isGlobal = false;
+
+                for (let i = spine.length - 1; i >= 0; i--) {
+                    if ((spine[i]).type == 'global_declaration') {
+                        isGlobal = true;
+                        break;
+                    }
+                }
+
+                if (!isGlobal) {
+                    this._transformStack.push(new SimpleVariableTransform(this.doc.nodeLocation(node), this._variableTable));
+                } else {
+                    this._transformStack.push(new GlobalVariableTransform(this.doc.nodeLocation(node), this._variableTable));
+                }
+                break;
+
+            case 'dereferencable_expression':
+                this._transformStack.push(new DereferencableExpression());
+                break;
+
+            case 'list_literal':
+                this._transformStack.push(new ListIntrinsicTransform());
+                break;
+
+            case 'array_creation_expression':
+                if (parentTransform) {
+                    this._transformStack.push(new ArrayInititialiserListTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case 'array_element_initializer':
+                if (parentTransform) {
+                    this._transformStack.push(new ArrayValueTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case 'subscript_expression':
+                if (parentTransform) {
+                    this._transformStack.push(new SubscriptExpressionTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case 'scoped_call_expression':
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform('scoped_call_expression', SymbolKind.Method, this._referenceSymbols)
+                );
+                break;
+
+            case 'scoped_property_access_expression':
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform('scoped_property_access_expression', SymbolKind.Property, this._referenceSymbols)
+                );
+                break;
+
+            case 'class_constant_access_expression':
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform('class_constant_access_expression', SymbolKind.ClassConstant, this._referenceSymbols)
+                );
+                break;
+
+            case 'member_access_expression':
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform('member_access_expression', SymbolKind.Property, this._referenceSymbols)
+                );
+                break;
+
+            case 'member_call_expression':
+                this._transformStack.push(
+                    new MemberAccessExpressionTransform('member_call_expression', SymbolKind.Method, this._referenceSymbols)
+                );
+                break;
+
+            case 'member_name':
+                this._transformStack.push(
+                    new MemberNameTransform(node, this.doc.nodeLocation(node))
+                );
+                break;
+
+            case 'anonymous_function_creation_expression':
+                this._transformStack.push(new AnonymousFunctionUseVariableTransform());
+                break;
+
+            case 'object_creation_expression':
+                {
+                    if (SymbolReader.isAnonymousClassDeclaration(node)) {
+                        const location = this.doc.nodeLocation(node);
+                        const s = this.shiftSymbol(SymbolKind.Class) || PhpSymbol.create(SymbolKind.Class, '', location);
+                        this._scopeStackPush(Scope.create(location));
+                        this.nameResolver.pushClass(s);
+                        this._classStack.push(s);
+                        this._variableTable.pushScope();
+                        this._variableTable.setVariable(Variable.create('$this', s.name));
+                        this._transformStack.push(null);
+                        break;
+                    }
+
+                    // ClassTypeDesignator
+                    const secondChild = node.child(1);
+                    if (
+                        secondChild &&
+                        (secondChild.type == 'qualified_name' || secondChild.type === 'new_variable')
+                    ) {
+                        this._transformStack.push(new TypeDesignatorTransform('_class_type_designator'));
+                        break;
+                    }
+
+                    if (parentTransform) {
+                        this._transformStack.push(new ObjectCreationExpressionTransform());
+                        break;
+                    }
+
                     this._transformStack.push(null);
                     break;
-            }
-        } else {
-            if (parentTransform && node.kind > TokenKind.EndOfFile && (<Token>node).kind < TokenKind.Equals) {
-                parentTransform.push(new TokenTransform(<Token>node, this.doc));
-                if (parentTransform.phraseKind === PhraseKind.CatchClause && (<Token>node).kind === TokenKind.VariableName) {
-                    this._variableTable.setVariable((<CatchClauseTransform>parentTransform).variable);
                 }
-            } else if ((<Token>node).kind === TokenKind.DocumentComment) {
-                let phpDoc = PhpDocParser.parse(this.doc.tokenText(<Token>node));
-                if (phpDoc) {
-                    this._lastVarTypehints = phpDoc.varTags;
-                    let varTag: Tag;
-                    for (let n = 0, l = this._lastVarTypehints.length; n < l; ++n) {
-                        varTag = this._lastVarTypehints[n];
-                        varTag.typeString = TypeString.nameResolve(varTag.typeString, this.nameResolver);
-                        this._variableTable.setVariable(Variable.create(varTag.name, varTag.typeString));
+
+            case 'relative_scope':
+                let context = this._classStack.length ? this._classStack[this._classStack.length - 1] : null;
+                let name = context ? context.name : '';
+                this._transformStack.push(new RelativeScopeTransform(name, this.doc.nodeLocation(node)));
+                break;
+
+            case 'property_element':
+                this._transformStack.push(new PropertyElementTransform(this._currentClassName()));
+                break;
+
+            case 'conditional_expression':
+                if (parentTransform) {
+                    this._transformStack.push(new TernaryExpressionTransform());
+                } else {
+                    this._transformStack.push(null);
+                }
+                break;
+
+            case 'comment':
+                {
+                    this._transformStack.push(null);
+                    const phpDoc = PhpDocParser.parse(node.text);
+                    if (phpDoc) {
+                        this._lastVarTypehints = phpDoc.varTags;
+
+                        if (!this._lastVarTypehints) {
+                            break;
+                        }
+
+                        for (const varTag of this._lastVarTypehints) {
+                            varTag.typeString = TypeString.nameResolve(varTag.typeString, this.nameResolver);
+                            this._variableTable.setVariable(Variable.create(varTag.name, varTag.typeString));
+                        }
                     }
+                    break;
                 }
-            } else if ((<Token>node).kind === TokenKind.OpenBrace || (<Token>node).kind === TokenKind.CloseBrace || node.kind === TokenKind.Semicolon) {
-                this._lastVarTypehints = undefined;
-            }
+
+            case '{':
+            case '}':
+            case ';':
+                this._lastVarTypehints = null;
+                this._transformStack.push(null);
+                break;
+
+            default:
+                {
+                    this._transformStack.push(new TokenTransform(node, this.doc));
+                    break;
+                }
         }
 
         return true;
 
     }
 
-    postorder(node: Phrase | Token, spine: (Phrase | Token)[]) {
+    postorder(node: SyntaxNode, spine: SyntaxNode[]) {
 
-        if (!ParsedDocument.isPhrase(node)) {
-            return;
-        }
+        const transform = this._transformStack.pop();
+        const parentTransform = this._transformStack.length ? this._transformStack[this._transformStack.length - 1] : null;
+        const scope = this._scopeStack.length ? this._scopeStack[this._scopeStack.length - 1] : null;
 
-        let transform = this._transformStack.pop();
-        let parentTransform = this._transformStack.length ? this._transformStack[this._transformStack.length - 1] : null;
-        let scope = this._scopeStack.length ? this._scopeStack[this._scopeStack.length - 1] : null;
-
-        if (parentTransform && transform) {
+        if (parentTransform && transform && parentTransform.push) {
             parentTransform.push(transform);
         }
 
-        switch (node.kind) {
+        switch (node.type) {
 
-            case PhraseKind.FullyQualifiedName:
-            case PhraseKind.QualifiedName:
-            case PhraseKind.RelativeQualifiedName:
-            case PhraseKind.SimpleVariable:
-            case PhraseKind.ScopedCallExpression:
-            case PhraseKind.ClassConstantAccessExpression:
-            case PhraseKind.ScopedPropertyAccessExpression:
-            case PhraseKind.PropertyAccessExpression:
-            case PhraseKind.MethodCallExpression:
-            case PhraseKind.NamespaceUseClause:
-            case PhraseKind.NamespaceUseGroupClause:
-            case PhraseKind.ClassDeclarationHeader:
-            case PhraseKind.InterfaceDeclarationHeader:
-            case PhraseKind.TraitDeclarationHeader:
-            case PhraseKind.FunctionDeclarationHeader:
-            case PhraseKind.ConstElement:
-            case PhraseKind.PropertyElement:
-            case PhraseKind.ClassConstElement:
-            case PhraseKind.MethodDeclarationHeader:
-            case PhraseKind.NamespaceDefinition:
-            case PhraseKind.ParameterDeclaration:
-            case PhraseKind.AnonymousFunctionUseVariable:
-            case PhraseKind.RelativeScope:
+            case 'qualified_name':
+            case 'variable_name':
+            case 'scoped_call_expression':
+            case 'member_call_expression':
+            case 'member_access_expression':
+            case 'class_constant_access_expression':
+            case 'scoped_property_access_expression':
+            case 'namespace_use_clause':
+            case 'namespace_use_group_clause_1':
+            case 'namespace_use_group_clause_2':
+            case 'class_declaration':
+            case 'interface_declaration':
+            case 'trait_declaration':
+            case 'function_declaration':
+            case 'const_element':
+            case 'property_element':
+            case 'class_const_declaration':
+            case 'method_declaration':
+            case 'namespace_definition':
+            case 'variadic_parameter':
+            case 'simple_parameter':
+            case 'anonymous_function_use_clause':
+            case 'relative_scope':
                 if (scope && transform) {
                     let ref = (<ReferenceNodeTransform>transform).reference;
 
-                    if (transform instanceof GlobalVariableTransform) {
-                        this._variableTable.setVariable(Variable.create(ref.name, ref.type));
-                    }
-
                     if (ref) {
+                        if (transform instanceof GlobalVariableTransform) {
+                            this._variableTable.setVariable(Variable.create(ref.name, ref.type || ''));
+                        }
+
                         scope.children.push(ref);
                     }
                 }
 
-                if (node.kind === PhraseKind.NamespaceDefinition) {
+                if (node.type === 'namespace_definition') {
                     this._scopeStack.pop();
+                }
+
+
+                switch (node.type) {
+                    case 'class_declaration':
+                    case 'trait_declaration':
+                    case 'interface_declaration':
+                        this.nameResolver.popClass();
+                        this._classStack.pop();
+                        this._scopeStack.pop();
+                        this._variableTable.popScope();
+                        break;
                 }
                 break;
 
-            case PhraseKind.SimpleAssignmentExpression:
-            case PhraseKind.ByRefAssignmentExpression:
+            case 'object_creation_expression':
+                {
+                    const parent = spine.length ? spine[spine.length - 1] : null;
+                    if (SymbolReader.isAnonymousClassDeclaration(node)) {
+                        this.nameResolver.popClass();
+                        this._classStack.pop();
+                        this._scopeStack.pop();
+                        this._variableTable.popScope();
+                    }
+                    break;
+                }
+
+            case 'assignment_expression':
                 this._variableTable.setVariables((<SimpleAssignmentExpressionTransform>transform).variables);
                 break;
 
-            case PhraseKind.InstanceOfExpression:
-                this._variableTable.setVariable((<InstanceOfExpressionTransform>transform).variable);
-                break;
+            case 'binary_expression':
+                {
+                    // Second child is operator
+                    const operator = node.child(1);
 
-            case PhraseKind.ForeachValue:
+                    if (!operator) {
+
+                    } else if (operator.type === 'instanceof') {
+                        const variable = (<InstanceOfExpressionTransform>transform).variable;
+
+                        if (variable) {
+                            this._variableTable.setVariable(variable);
+                        }
+                    }
+                    break;
+                }
+
+            case 'foreach_value':
                 this._variableTable.setVariables((<ForeachStatementTransform>parentTransform).variables);
                 break;
 
-            case PhraseKind.IfStatement:
-            case PhraseKind.SwitchStatement:
+            case 'if_statement':
+            case 'switch_statement':
                 this._variableTable.popBranch();
                 this._variableTable.pruneBranches();
                 break;
 
-            case PhraseKind.ClassDeclaration:
-            case PhraseKind.TraitDeclaration:
-            case PhraseKind.InterfaceDeclaration:
-            case PhraseKind.AnonymousClassDeclaration:
-                this.nameResolver.popClass();
-                this._classStack.pop();
+            case 'function_definition':
+            case 'anonymous_function_creation_expression':
                 this._scopeStack.pop();
                 this._variableTable.popScope();
                 break;
 
-            case PhraseKind.FunctionDeclaration:
-            case PhraseKind.MethodDeclaration:
-            case PhraseKind.AnonymousFunctionCreationExpression:
-                this._scopeStack.pop();
-                this._variableTable.popScope();
-                break;
+            case 'name':
+            case '__construct':
+                {
+                    if (scope && transform && HEADER_TRANSFORM_KIND.has(transform.kind)) {
+                        const ref = (<ReferenceNodeTransform>transform).reference;
+                        if (ref) {
+                            scope.children.push(ref);
+                        }
+                    }
+                    break;
+                }
 
             default:
                 break;
         }
 
-    }
-
-    private _currentClassName() {
-        let c = this._classStack.length ? this._classStack[this._classStack.length - 1] : undefined;
-        return c ? c.name : '';
     }
 
     private _scopeStackPush(scope: Scope) {
@@ -583,29 +664,62 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         this._scopeStack.push(scope);
     }
 
-    private _nameSymbolType(parent: Phrase) {
+    private _isScope(parent: SyntaxNode | null): boolean {
         if (!parent) {
-            return SymbolKind.Class;
+            return false;
         }
 
-        switch (parent.kind) {
-            case PhraseKind.ConstantAccessExpression:
-                return SymbolKind.Constant;
-            case PhraseKind.FunctionCallExpression:
-                return SymbolKind.Function;
-            case PhraseKind.ClassTypeDesignator:
-                return SymbolKind.Constructor;
-            default:
-                return SymbolKind.Class;
-        }
+        return [
+            'class_constant_access_expression',
+            'function_call_expression',
+            'object_creation_expression',
+        ].includes(parent.type);
     }
 
-    private _methodDeclaration(node: Phrase) {
+    private _nameSymbolType(parent: SyntaxNode | null): SymbolKind {
+        if (!parent) {
+            return SymbolKind.Constant;
+        }
+
+        switch (parent.type) {
+            case 'function_call_expression':
+                return SymbolKind.Function;
+            case 'trait_use_clause':
+            case 'class_declaration':
+            case 'class_base_clause':
+            case 'binary_expression':
+            case 'catch_clause':
+            case 'catch_name_list':
+            case 'scoped_call_expression':
+            case 'class_constant_access_expression':
+            case 'scoped_property_access_expression':
+            case 'namespace_use_clause':
+                if (parent.type === 'binary_expression') {
+                    const operator = parent.child(1);
+                    if (operator !== null && operator.type === 'instanceof') {
+                        return SymbolKind.Class;
+                    }
+
+                    break;
+                }
+
+                return SymbolKind.Class;
+            case 'class_interface_clause':
+            case 'interface_base_clause':
+                return SymbolKind.Interface;
+            case 'object_creation_expression':
+                return SymbolKind.Constructor;
+        }
+
+        return SymbolKind.Constant;
+    }
+
+    private _methodDeclaration(node: SyntaxNode) {
 
         let scope = Scope.create(this.doc.nodeLocation(node));
         this._scopeStackPush(scope);
         this._variableTable.pushScope(['$this']);
-        let symbol = this.shiftSymbol();
+        let symbol = this.shiftSymbol(SymbolKind.Method);
 
         if (symbol) {
             let fn = (x: PhpSymbol) => {
@@ -623,8 +737,8 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         }
     }
 
-    private _functionDeclaration(node: Phrase) {
-        let symbol = this.shiftSymbol();
+    private _functionDeclaration(node: SyntaxNode) {
+        let symbol = this.shiftSymbol(SymbolKind.Function);
         this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
         this._variableTable.pushScope();
 
@@ -638,8 +752,8 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
         }
     }
 
-    private _anonymousFunctionCreationExpression(node: Phrase) {
-        let symbol = this.shiftSymbol();
+    private _anonymousFunctionCreationExpression(node: SyntaxNode) {
+        let symbol = this.shiftSymbol(SymbolKind.Function);
         this._scopeStackPush(Scope.create(this.doc.nodeLocation(node)));
         let carry: string[] = ['$this'];
         let children = symbol && symbol.children ? symbol.children : [];
@@ -647,7 +761,7 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
 
         for (let n = 0, l = children.length; n < l; ++n) {
             s = children[n];
-            if (s.kind === SymbolKind.Variable && (s.modifiers & SymbolModifier.Use) > 0) {
+            if (s.kind === SymbolKind.Variable && s.modifiers && (s.modifiers & SymbolModifier.Use) > 0) {
                 carry.push(s.name);
             }
         }
@@ -671,30 +785,29 @@ export class ReferenceReader implements TreeVisitor<Phrase | Token> {
 
 class TokenTransform implements TypeNodeTransform, TextNodeTransform {
 
-    constructor(public token: Token, public doc: ParsedDocument) { }
+    constructor(public node: SyntaxNode, public doc: ParsedDocument) { }
 
-    get tokenKind() {
-        return this.token.kind;
+    get kind() {
+        return this.node.type;
     }
 
     get text() {
-        return this.doc.tokenText(this.token);
+        return this.node.text;
     }
 
     get location() {
-        return this.doc.nodeLocation(this.token);
+        return this.doc.nodeLocation(this.node);
     }
 
     get type() {
-        switch (this.tokenKind) {
-            case TokenKind.FloatingLiteral:
+        switch (this.kind) {
+            case 'float':
                 return 'float';
-            case TokenKind.StringLiteral:
-            case TokenKind.EncapsulatedAndWhitespace:
+            case 'string':
                 return 'string';
-            case TokenKind.IntegerLiteral:
+            case 'integer':
                 return 'int';
-            case TokenKind.Name:
+            case 'name':
                 {
                     let lcName = this.text.toLowerCase();
                     return lcName === 'true' || lcName === 'false' ? 'bool' : '';
@@ -710,10 +823,10 @@ class TokenTransform implements TypeNodeTransform, TextNodeTransform {
 
 class NamespaceNameTransform implements NodeTransform {
 
-    phraseKind = PhraseKind.NamespaceName;
+    kind = 'namespace_name';
     private _parts: string[];
 
-    constructor(public node: Phrase, public document: ParsedDocument) {
+    constructor(public node: SyntaxNode, public document: ParsedDocument) {
         this._parts = [];
     }
 
@@ -722,7 +835,7 @@ class NamespaceNameTransform implements NodeTransform {
     }
 
     push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.Name) {
+        if (transform.kind === 'name') {
             this._parts.push((<TokenTransform>transform).text);
         }
     }
@@ -733,28 +846,68 @@ class NamespaceNameTransform implements NodeTransform {
 
 }
 
-class NamespaceUseClauseListTransform implements NodeTransform {
+class NamespaceNameAsPrefixTransform implements NodeTransform {
+    kind = 'namespace_name_as_prefix';
+    text: string = '';
 
-    references: Reference[];
+    push(transform: NodeTransform) {
+        if (transform.kind === 'namespace_name') {
+            this.text = (<NamespaceNameTransform>transform).text;
+        }
+    }
+}
 
-    constructor(public phraseKind: PhraseKind) {
-        this.references = [];
+class PropertyElementTransform implements ReferenceNodeTransform {
+
+    kind = 'property_element';
+    reference: Reference | undefined;
+    private _scope = '';
+
+    constructor(scope: string) {
+        this._scope = scope;
     }
 
     push(transform: NodeTransform) {
-        if (
-            transform.phraseKind === PhraseKind.NamespaceUseClause ||
-            transform.phraseKind === PhraseKind.NamespaceUseGroupClause
-        ) {
-            this.references.push((<ReferenceNodeTransform>transform).reference);
+        if (transform.kind === 'variable_name') {
+            const ref = (<SimpleVariableTransform>transform).reference;
+            const name = ref.name;
+            const loc = ref.location;
+            this.reference = Reference.create(SymbolKind.Property, name, loc);
+            this.reference.scope = this._scope;
         }
     }
 
 }
 
+class HeaderTransform implements ReferenceNodeTransform {
+
+    kind = 'unknown_name';
+    reference: Reference;
+
+    constructor(
+        public nameResolver: NameResolver, doc: ParsedDocument,
+        node: SyntaxNode, kind: SymbolKind, scope?: string
+    ) {
+        if (HEADER_SYMBOL_KIND_MAPPING.has(kind)) {
+            this.kind = HEADER_SYMBOL_KIND_MAPPING.get(kind)!;
+        }
+
+        const name = node.text;
+        const loc = doc.nodeLocation(node);
+        this.reference = Reference.create(kind, this.nameResolver.resolveRelative(name), loc);
+
+        if (scope !== undefined) {
+            this.reference.scope = scope;
+        }
+    }
+
+    push(transform: NodeTransform) { }
+
+}
+
 class NamespaceUseDeclarationTransform implements NodeTransform {
 
-    phraseKind = PhraseKind.NamespaceUseDeclaration;
+    kind = 'namespace_use_declaration';
     references: Reference[];
     private _kind = SymbolKind.Class;
     private _prefix = '';
@@ -764,30 +917,22 @@ class NamespaceUseDeclarationTransform implements NodeTransform {
     }
 
     push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.Const) {
+        if (transform.kind === 'const') {
             this._kind = SymbolKind.Constant;
-        } else if (transform.tokenKind === TokenKind.Function) {
+        } else if (transform.kind === 'function') {
             this._kind = SymbolKind.Function;
-        } else if (transform.phraseKind === PhraseKind.NamespaceName) {
+        } else if (transform.kind === 'namespace_name') {
             this._prefix = (<NamespaceNameTransform>transform).text;
-        } else if (transform.phraseKind === PhraseKind.NamespaceUseGroupClauseList) {
-            this.references = (<NamespaceUseClauseListTransform>transform).references;
-            let ref: Reference;
-            let prefix = this._prefix ? this._prefix + '\\' : '';
-            for (let n = 0; n < this.references.length; ++n) {
-                ref = this.references[n];
-                ref.name = prefix + ref.name;
-                if (!ref.kind) {
-                    ref.kind = this._kind;
-                }
-            }
-        } else if (transform.phraseKind === PhraseKind.NamespaceUseClauseList) {
-            this.references = (<NamespaceUseClauseListTransform>transform).references;
-            let ref: Reference;
-            for (let n = 0; n < this.references.length; ++n) {
-                ref = this.references[n];
+        } else if (transform.kind === 'namespace_use_clause') {
+            const ref = (<NamespaceUseClauseTransform>transform).reference;
+            const prefix = this._prefix ? this._prefix + '\\' : '';
+
+            ref.name = prefix + ref.name;
+            if (!ref.kind) {
                 ref.kind = this._kind;
             }
+
+            this.references.push(ref);
         }
     }
 
@@ -797,16 +942,19 @@ class NamespaceUseClauseTransform implements ReferenceNodeTransform {
 
     reference: Reference;
 
-    constructor(public phraseKind: PhraseKind) {
-        this.reference = Reference.create(0, '', null);
+    constructor(public kind: string) {
+        this.reference = Reference.create(0, '', lsp.Location.create('', lsp.Range.create(
+            lsp.Position.create(0, 0),
+            lsp.Position.create(0, 0)
+        )));
     }
 
     push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.Function) {
+        if (transform.kind === 'function') {
             this.reference.kind = SymbolKind.Function;
-        } else if (transform.tokenKind === TokenKind.Const) {
+        } else if (transform.kind === 'const') {
             this.reference.kind = SymbolKind.Constant;
-        } else if (transform.phraseKind === PhraseKind.NamespaceName) {
+        } else if (transform.kind === 'namespace_name') {
             this.reference.name = (<NamespaceNameTransform>transform).text;
             this.reference.location = (<NamespaceNameTransform>transform).location;
         }
@@ -818,27 +966,29 @@ type ReferenceSymbolDelegate = (ref: Reference) => Promise<PhpSymbol[]>;
 
 class CatchClauseTransform implements VariableNodeTransform {
 
-    phraseKind = PhraseKind.CatchClause;
+    kind = 'catch_clause';
     private _varType = '';
     private _varName = '';
 
     push(transform: NodeTransform) {
-        if (transform.phraseKind === PhraseKind.CatchNameList) {
+        if (transform.kind === 'catch_name_list') {
             this._varType = (<CatchNameListTransform>transform).type;
-        } else if (transform.tokenKind === TokenKind.VariableName) {
+        } else if (transform.kind === 'variable_name') {
             this._varName = (<TokenTransform>transform).text;
         }
     }
 
     get variable() {
-        return this._varName && this._varType ? Variable.create(this._varName, this._varType) : null;
+        // Syntax error if name and type are missing
+        return this._varName && this._varType ?
+            Variable.create(this._varName, this._varType) : Variable.create('', '');
     }
 
 }
 
 class CatchNameListTransform implements TypeNodeTransform {
 
-    phraseKind = PhraseKind.CatchNameList;
+    kind = 'catch_name_list';
     type = '';
 
     push(transform: NodeTransform) {
@@ -851,11 +1001,11 @@ class CatchNameListTransform implements TypeNodeTransform {
 }
 
 class AnonymousFunctionUseVariableTransform implements ReferenceNodeTransform {
-    phraseKind = PhraseKind.AnonymousFunctionUseVariable;
-    reference: Reference;
+    kind = 'anonymous_function_use_clause';
+    reference: Reference | undefined;
 
     push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.VariableName) {
+        if (transform.kind === 'variable_name') {
             this.reference = Reference.create(SymbolKind.Variable, (<TokenTransform>transform).text, (<TokenTransform>transform).location);
         }
     }
@@ -863,7 +1013,7 @@ class AnonymousFunctionUseVariableTransform implements ReferenceNodeTransform {
 
 class ForeachStatementTransform implements NodeTransform {
 
-    phraseKind = PhraseKind.ForeachStatement;
+    kind = 'foreach_statement';
     variables: Variable[];
     private _type: string | TypeResolvable = '';
 
@@ -872,12 +1022,12 @@ class ForeachStatementTransform implements NodeTransform {
     }
 
     push(transform: NodeTransform) {
-        if (transform.phraseKind === PhraseKind.ForeachCollection) {
+        if (transform.kind === 'foreach_collection') {
             this._type = async (): Promise<string> => {
                 let transformType = await TypeString.resolve((<ForeachCollectionTransform>transform).type);
                 return TypeString.arrayDereference(transformType)
             };
-        } else if (transform.phraseKind === PhraseKind.ForeachValue) {
+        } else if (transform.kind === 'foreach_value') {
             let vars = (<ForeachValueTransform>transform).variables;
 
             for (const variable of vars) {
@@ -892,13 +1042,13 @@ class ForeachStatementTransform implements NodeTransform {
 
 }
 
-interface Variable {
+export interface Variable {
     name: string;
     arrayDereferenced: number;
     type: string | TypeResolvable;
 }
 
-namespace Variable {
+export namespace Variable {
 
     export function create(name: string, type: string | TypeResolvable) {
         return <Variable>{
@@ -925,7 +1075,7 @@ namespace Variable {
 
 class ForeachValueTransform implements NodeTransform {
 
-    phraseKind = PhraseKind.ForeachValue;
+    kind = 'foreach_value';
     variables: Variable[];
 
     constructor() {
@@ -933,10 +1083,10 @@ class ForeachValueTransform implements NodeTransform {
     }
 
     push(transform: NodeTransform) {
-        if (transform.phraseKind === PhraseKind.SimpleVariable) {
+        if (transform.kind === 'variable_name') {
             let ref = (<SimpleVariableTransform>transform).reference;
-            this.variables = [{ name: ref.name, arrayDereferenced: 0, type: ref.type }];
-        } else if (transform.phraseKind === PhraseKind.ListIntrinsic) {
+            this.variables = [{ name: ref.name, arrayDereferenced: 0, type: ref.type || '' }];
+        } else if (transform.kind === 'list_literal') {
             this.variables = (<ListIntrinsicTransform>transform).variables;
         }
     }
@@ -945,7 +1095,7 @@ class ForeachValueTransform implements NodeTransform {
 
 class ForeachCollectionTransform implements TypeNodeTransform {
 
-    phraseKind = PhraseKind.ForeachCollection;
+    kind = 'foreach_collection';
     type: string | TypeResolvable = '';
 
     push(transform: NodeTransform) {
@@ -959,11 +1109,14 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
     type: string | TypeResolvable = '';
     private _pushCount = 0;
 
-    constructor(public phraseKind: PhraseKind, private varTypeOverrides: Tag[]) {
+    constructor(public kind: string, private varTypeOverrides: Tag[] | null) {
         this._variables = [];
     }
 
     push(transform: NodeTransform) {
+        if (['=', '&'].includes(transform.kind)) {
+            return;
+        }
         ++this._pushCount;
 
         //ws and = should be excluded
@@ -975,7 +1128,7 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
 
     }
 
-    private _typeOverride(name: string, tags: Tag[]) {
+    private _typeOverride(name: string, tags: Tag[] | null) {
         if (!tags) {
             return undefined;
         }
@@ -990,16 +1143,16 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
     }
 
     private _lhs(lhs: NodeTransform) {
-        switch (lhs.phraseKind) {
-            case PhraseKind.SimpleVariable:
+        switch (lhs.kind) {
+            case 'variable_name':
                 {
                     let ref = (<SimpleVariableTransform>lhs).reference;
                     if (ref) {
-                        this._variables.push(Variable.create(ref.name, ref.type));
+                        this._variables.push(Variable.create(ref.name, ref.type || ''));
                     }
                     break;
                 }
-            case PhraseKind.SubscriptExpression:
+            case 'subscript_expression':
                 {
                     let variable = (<SubscriptExpressionTransform>lhs).variable;
                     if (variable) {
@@ -1007,7 +1160,7 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
                     }
                     break;
                 }
-            case PhraseKind.ListIntrinsic:
+            case 'list_literal':
                 this._variables = (<ListIntrinsicTransform>lhs).variables;
                 break;
             default:
@@ -1035,7 +1188,7 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
 
 class ListIntrinsicTransform implements NodeTransform {
 
-    phraseKind = PhraseKind.ListIntrinsic;
+    kind = 'list_literal';
     variables: Variable[];
 
     constructor() {
@@ -1044,7 +1197,7 @@ class ListIntrinsicTransform implements NodeTransform {
 
     push(transform: NodeTransform) {
 
-        if (transform.phraseKind !== PhraseKind.ArrayInitialiserList) {
+        if (transform.kind !== 'array_creation_expression') {
             return;
         }
 
@@ -1058,7 +1211,7 @@ class ListIntrinsicTransform implements NodeTransform {
 
 class ArrayInititialiserListTransform implements TypeNodeTransform {
 
-    phraseKind = PhraseKind.ArrayInitialiserList;
+    kind = 'array_creation_expression';
     variables: Variable[];
     private _types: (string | TypeResolvable)[];
 
@@ -1068,9 +1221,9 @@ class ArrayInititialiserListTransform implements TypeNodeTransform {
     }
 
     push(transform: NodeTransform) {
-        if (transform.phraseKind === PhraseKind.ArrayElement) {
-            Array.prototype.push.apply(this.variables, (<ArrayElementTransform>transform).variables);
-            this._types.push((<ArrayElementTransform>transform).type);
+        if (transform.kind === 'array_element_initializer') {
+            Array.prototype.push.apply(this.variables, (<ArrayValueTransform>transform).variables);
+            this._types.push((<ArrayValueTransform>transform).type);
         }
     }
 
@@ -1090,28 +1243,9 @@ class ArrayInititialiserListTransform implements TypeNodeTransform {
 
 }
 
-class ArrayElementTransform implements TypeNodeTransform {
-
-    phraseKind = PhraseKind.ArrayElement;
-    variables: Variable[];
-    type: string | TypeResolvable = '';
-
-    constructor() {
-        this.variables = [];
-    }
-
-    push(transform: NodeTransform) {
-        if (transform.phraseKind === PhraseKind.ArrayValue) {
-            this.variables = (<ArrayValueTransform>transform).variables;
-            this.type = (<ArrayValueTransform>transform).type;
-        }
-    }
-
-}
-
 class ArrayValueTransform implements TypeNodeTransform {
 
-    phraseKind = PhraseKind.ArrayValue;
+    kind = 'array_element_initializer';
     variables: Variable[];
     type: string | TypeResolvable = '';
 
@@ -1120,16 +1254,16 @@ class ArrayValueTransform implements TypeNodeTransform {
     }
 
     push(transform: NodeTransform) {
-        switch (transform.phraseKind) {
-            case PhraseKind.SimpleVariable:
+        switch (transform.kind) {
+            case 'simple_name':
                 {
                     let ref = (<SimpleVariableTransform>transform).reference;
                     this.variables = [{ name: ref.name, arrayDereferenced: 0, type: ref.type || '' }];
-                    this.type = ref.type;
+                    this.type = ref.type || '';
                 }
                 break;
 
-            case PhraseKind.SubscriptExpression:
+            case 'subscript_expression':
                 {
                     let v = (<SubscriptExpressionTransform>transform).variable
                     if (v) {
@@ -1139,14 +1273,12 @@ class ArrayValueTransform implements TypeNodeTransform {
                 }
                 break;
 
-            case PhraseKind.ListIntrinsic:
+            case 'list_literal':
                 this.variables = (<ListIntrinsicTransform>transform).variables;
                 break;
 
-            default:
-                if (transform.tokenKind !== TokenKind.Ampersand) {
-                    this.type = (<TypeNodeTransform>transform).type;
-                }
+            case '&':
+                this.type = (<TypeNodeTransform>transform).type;
                 break;
         }
     }
@@ -1155,7 +1287,7 @@ class ArrayValueTransform implements TypeNodeTransform {
 
 class CoalesceExpressionTransform implements TypeNodeTransform {
 
-    phraseKind = PhraseKind.CoalesceExpression;
+    kind = '??';
     type: string | TypeResolvable = '';
 
     push(transform: NodeTransform) {
@@ -1171,7 +1303,7 @@ class CoalesceExpressionTransform implements TypeNodeTransform {
 
 class TernaryExpressionTransform implements TypeNodeTransform {
 
-    phraseKind = PhraseKind.TernaryExpression;
+    kind = 'conditional_expression';
     private _transforms: NodeTransform[];
 
     constructor() {
@@ -1201,8 +1333,8 @@ class TernaryExpressionTransform implements TypeNodeTransform {
 
 class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTransform {
 
-    phraseKind = PhraseKind.SubscriptExpression;
-    variable: Variable;
+    kind = 'subscript_expression';
+    variable: Variable | undefined;
     type: string | TypeResolvable = '';
     private _pushCount = 0;
 
@@ -1214,20 +1346,20 @@ class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTra
 
         ++this._pushCount;
 
-        switch (transform.phraseKind) {
-            case PhraseKind.SimpleVariable:
+        switch (transform.kind) {
+            case 'simple_name':
                 {
                     let ref = (<SimpleVariableTransform>transform).reference;
                     if (ref) {
                         this.type = async () => {
-                            return TypeString.arrayDereference(await TypeString.resolve(ref.type));
+                            return TypeString.arrayDereference(await TypeString.resolve(ref.type || ''));
                         };
                         this.variable = { name: ref.name, arrayDereferenced: 1, type: this.type };
                     }
                 }
                 break;
 
-            case PhraseKind.SubscriptExpression:
+            case 'subscript_expression':
                 {
                     let v = (<SubscriptExpressionTransform>transform).variable;
                     this.type = async () => {
@@ -1244,17 +1376,16 @@ class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTra
                 }
                 break;
 
-            case PhraseKind.FunctionCallExpression:
-            case PhraseKind.MethodCallExpression:
-            case PhraseKind.PropertyAccessExpression:
-            case PhraseKind.ScopedCallExpression:
-            case PhraseKind.ScopedPropertyAccessExpression:
-            case PhraseKind.ArrayCreationExpression:
+            case 'function_call_expression':
+            case 'scoped_property_access_expression':
+            case 'scoped_call_expression':
+            case 'member_call_expression':
+            case 'array_creation_expression':
                 this.type = async () => {
                     return TypeString.arrayDereference(await TypeString.resolve((<TypeNodeTransform>transform).type));
                 };
                 break;
-                
+
             default:
                 break;
         }
@@ -1264,23 +1395,23 @@ class SubscriptExpressionTransform implements TypeNodeTransform, VariableNodeTra
 
 class InstanceOfExpressionTransform implements TypeNodeTransform, VariableNodeTransform {
 
-    phraseKind = PhraseKind.InstanceOfExpression;
+    kind = 'instanceof';
     type = 'bool';
     private _pushCount = 0;
-    private _varName = '';
-    private _varType: string | TypeResolvable;
+    private _varName: string | undefined;
+    private _varType: string | TypeResolvable | undefined;
 
     push(transform: NodeTransform) {
 
         ++this._pushCount;
         if (this._pushCount === 1) {
-            if (transform.phraseKind === PhraseKind.SimpleVariable) {
+            if (transform.kind === 'variable_name') {
                 let ref = (<SimpleVariableTransform>transform).reference;
                 if (ref) {
                     this._varName = ref.name;
                 }
             }
-        } else if (transform.phraseKind === PhraseKind.InstanceofTypeDesignator) {
+        } else if (transform.kind === 'qualified_name') {
             this._varType = async () => {
                 return TypeString.resolve((<TypeDesignatorTransform>transform).type);
             };
@@ -1291,26 +1422,28 @@ class InstanceOfExpressionTransform implements TypeNodeTransform, VariableNodeTr
     get variable() {
         return this._varName && this._varType ? {
             name: this._varName, arrayDereferenced: 0, type: this._varType
-        } : null;
+        } : Variable.create('', '');
     }
 
 }
 
 class FunctionCallExpressionTransform implements TypeNodeTransform {
 
-    phraseKind = PhraseKind.FunctionCallExpression;
+    kind = 'function_call_expression';
     type: string | TypeResolvable = '';
 
     constructor(public referenceSymbolDelegate: ReferenceSymbolDelegate) { }
 
     push(transform: NodeTransform) {
-        switch (transform.phraseKind) {
-            case PhraseKind.FullyQualifiedName:
-            case PhraseKind.RelativeQualifiedName:
-            case PhraseKind.QualifiedName:
+        switch (transform.kind) {
+            case 'qualified_name':
                 {
                     let ref = (<ReferenceNodeTransform>transform).reference;
                     this.type = async () => {
+                        if (!ref) {
+                            return '';
+                        }
+
                         return (await this.referenceSymbolDelegate(ref))
                             .reduce(symbolsToTypeReduceFn, '');
                     };
@@ -1326,27 +1459,32 @@ class FunctionCallExpressionTransform implements TypeNodeTransform {
 
 class RelativeScopeTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
-    phraseKind = PhraseKind.RelativeScope;
-    reference:Reference;
-    constructor(public type: string, loc:lsp.Location) {
+    private static readonly ALLOWED_KINDS = new Set([
+        'static', 'self',
+    ]);
+    kind = 'relative_scope';
+    reference: Reference;
+    constructor(public type: string, loc: lsp.Location) {
         this.reference = Reference.create(SymbolKind.Class, type, loc);
         this.reference.altName = 'static';
-     }
-    push(transform: NodeTransform) { }
+    }
+    push(transform: NodeTransform) {
+        if (RelativeScopeTransform.ALLOWED_KINDS.has(transform.kind)) {
+            this.reference.altName = transform.kind;
+        }
+    }
 }
 
 class TypeDesignatorTransform implements TypeNodeTransform {
 
     type: string | TypeResolvable = '';
 
-    constructor(public phraseKind: PhraseKind) { }
+    constructor(public kind: string) { }
 
     push(transform: NodeTransform) {
-        switch (transform.phraseKind) {
-            case PhraseKind.RelativeScope:
-            case PhraseKind.FullyQualifiedName:
-            case PhraseKind.RelativeQualifiedName:
-            case PhraseKind.QualifiedName:
+        switch (transform.kind) {
+            case 'relative_scope':
+            case 'qualified_name':
                 this.type = (<TypeNodeTransform>transform).type;
                 break;
 
@@ -1357,23 +1495,13 @@ class TypeDesignatorTransform implements TypeNodeTransform {
 
 }
 
-class AnonymousClassDeclarationTransform implements TypeNodeTransform {
-    phraseKind = PhraseKind.AnonymousClassDeclaration;
-    constructor(public type: string) { }
-    push(transform: NodeTransform) { }
-
-}
-
 class ObjectCreationExpressionTransform implements TypeNodeTransform {
 
-    phraseKind = PhraseKind.ObjectCreationExpression;
+    kind = 'object_creation_expression';
     type: string | TypeResolvable = '';
 
     push(transform: NodeTransform) {
-        if (
-            transform.phraseKind === PhraseKind.ClassTypeDesignator ||
-            transform.phraseKind === PhraseKind.AnonymousClassDeclaration
-        ) {
+        if (transform.kind === '_class_type_designator') {
             this.type = (<TypeNodeTransform>transform).type;
         }
     }
@@ -1382,7 +1510,7 @@ class ObjectCreationExpressionTransform implements TypeNodeTransform {
 
 class SimpleVariableTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
-    phraseKind = PhraseKind.SimpleVariable;
+    kind = 'variable_name';
     reference: Reference;
     private _varTable: VariableTable;
 
@@ -1392,31 +1520,44 @@ class SimpleVariableTransform implements TypeNodeTransform, ReferenceNodeTransfo
     }
 
     push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.VariableName) {
-            this.reference.name = (<TokenTransform>transform).text;
+        if (transform.kind === 'name') {
+            this.reference.name = '$' + (<TokenTransform>transform).text;
             this.reference.type = this._varTable.getType(this.reference.name);
         }
     }
 
     get type() {
-        return this.reference.type;
+        return this.reference.type || '';
+    }
+
+}
+
+class DereferencableExpression implements TypeNodeTransform {
+
+    kind = 'dereferencable_expression';
+    type: TypeResolvable | string = '';
+
+    push(transform: NodeTransform) {
+        if (transform.kind === 'variable_name') {
+            this.type = (<TypeNodeTransform>transform).type;
+        }
     }
 
 }
 
 class GlobalVariableTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
-    phraseKind = PhraseKind.SimpleVariable;
+    kind = 'variable_name';
     reference: Reference;
-    
+
     constructor(loc: lsp.Location, private varTable: VariableTable) {
         this.reference = Reference.create(SymbolKind.GlobalVariable, '', loc);
     }
 
     push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.VariableName) {
-            this.reference.name = (<TokenTransform>transform).text;
-            
+        if (transform.kind === 'name') {
+            this.reference.name = '$' + (<TokenTransform>transform).text;
+
             let topLevelScope = this.varTable.getScope(0);
 
             this.reference.type = this.reference.name in topLevelScope.variables ?
@@ -1425,38 +1566,16 @@ class GlobalVariableTransform implements TypeNodeTransform, ReferenceNodeTransfo
     }
 
     get type() {
-        return this.reference.type;
-    }
-
-}
-
-class FullyQualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransform {
-
-    phraseKind = PhraseKind.FullyQualifiedName;
-    reference: Reference;
-
-    constructor(symbolKind: SymbolKind, loc: lsp.Location) {
-        this.reference = Reference.create(symbolKind, '', loc);
-    }
-
-    push(transform: NodeTransform) {
-
-        if (transform.phraseKind === PhraseKind.NamespaceName) {
-            this.reference.name = (<NamespaceNameTransform>transform).text;
-        }
-
-    }
-
-    get type() {
-        return this.reference.name;
+        return this.reference.type || '';
     }
 
 }
 
 class QualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
-    phraseKind = PhraseKind.QualifiedName;
+    kind = 'qualified_name';
     reference: Reference;
+    private _namespacePrefix = '';
     private _nameResolver: NameResolver;
 
     constructor(symbolKind: SymbolKind, loc: lsp.Location, nameResolver: NameResolver) {
@@ -1466,41 +1585,22 @@ class QualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransfor
 
     push(transform: NodeTransform) {
 
-        if (transform.phraseKind === PhraseKind.NamespaceName) {
-            let name = (<NamespaceNameTransform>transform).text;
-            let lcName = name.toLowerCase();
-            this.reference.name = this._nameResolver.resolveNotFullyQualified(name, this.reference.kind);
-            if (
-                ((this.reference.kind === SymbolKind.Function || this.reference.kind === SymbolKind.Constant) &&
-                name !== this.reference.name && name.indexOf('\\') < 0) || (lcName === 'parent' || lcName === 'self')
-            ) {
-                this.reference.altName = name;
+        if (transform.kind === 'name') {
+            const name = (<NamespaceNameTransform>transform).text;
+            const lcName = name.toLowerCase();
+            if (this._namespacePrefix.length) {
+                this.reference.name = this._namespacePrefix + '\\' + name;
+            } else {
+                this.reference.name = this._nameResolver.resolveNotFullyQualified(name, this.reference.kind);
+                if (
+                    ((this.reference.kind === SymbolKind.Function || this.reference.kind === SymbolKind.Constant) &&
+                        name !== this.reference.name && name.indexOf('\\') < 0) || (lcName === 'parent' || lcName === 'self')
+                ) {
+                    this.reference.altName = name;
+                }
             }
-        }
-
-    }
-
-    get type() {
-        return this.reference.name;
-    }
-
-}
-
-class RelativeQualifiedNameTransform implements TypeNodeTransform, ReferenceNodeTransform {
-
-    phraseKind = PhraseKind.RelativeQualifiedName;
-    reference: Reference;
-    private _nameResolver: NameResolver;
-
-    constructor(symbolKind: SymbolKind, loc: lsp.Location, nameResolver: NameResolver) {
-        this.reference = Reference.create(symbolKind, '', loc);
-        this._nameResolver = nameResolver;
-    }
-
-    push(transform: NodeTransform) {
-
-        if (transform.phraseKind === PhraseKind.NamespaceName) {
-            this.reference.name = this._nameResolver.resolveRelative((<NamespaceNameTransform>transform).text);
+        } else if (transform.kind === 'namespace_name_as_prefix') {
+            this._namespacePrefix = (<NamespaceNameAsPrefixTransform>transform).text;
         }
 
     }
@@ -1513,88 +1613,51 @@ class RelativeQualifiedNameTransform implements TypeNodeTransform, ReferenceNode
 
 class MemberNameTransform implements ReferenceNodeTransform {
 
-    phraseKind = PhraseKind.MemberName;
+    kind = 'member_name';
     reference: Reference;
 
-    constructor(loc: lsp.Location) {
-        this.reference = Reference.create(SymbolKind.None, '', loc);
+    constructor(node: SyntaxNode, loc: lsp.Location) {
+        this.reference = Reference.create(SymbolKind.None, node.text, loc);
     }
 
     push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.Name) {
-            this.reference.name = (<TokenTransform>transform).text;
-        }
     }
 
-}
-
-class ScopedMemberNameTransform implements ReferenceNodeTransform {
-
-    phraseKind = PhraseKind.ScopedMemberName;
-    reference: Reference;
-
-    constructor(loc: lsp.Location) {
-        this.reference = Reference.create(SymbolKind.None, '', loc);
-    }
-
-    push(transform: NodeTransform) {
-        if (
-            transform.tokenKind === TokenKind.VariableName ||
-            transform.phraseKind === PhraseKind.Identifier
-        ) {
-            this.reference.name = (<TextNodeTransform>transform).text;
-        }
-    }
-
-}
-
-class IdentifierTransform implements TextNodeTransform {
-    phraseKind = PhraseKind.Identifier;
-    text = '';
-    location: lsp.Location;
-
-    push(transform: NodeTransform) {
-        this.text = (<TokenTransform>transform).text;
-        this.location = (<TokenTransform>transform).location;
-    }
 }
 
 class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNodeTransform {
 
-    reference: Reference;
+    reference: Reference | undefined;
     private _scope: string | TypeResolvable = '';
 
     constructor(
-        public phraseKind: PhraseKind,
+        public kind: string,
         public symbolKind: SymbolKind,
         public referenceSymbolDelegate: ReferenceSymbolDelegate
     ) { }
 
     push(transform: NodeTransform) {
 
-        switch (transform.phraseKind) {
-            case PhraseKind.ScopedMemberName:
-            case PhraseKind.MemberName:
+        switch (transform.kind) {
+            case 'member_name':
+            case 'variable_name':
                 this.reference = (<ReferenceNodeTransform>transform).reference;
-                this.reference.kind = this.symbolKind;
-                this.reference.scope = this._scope;
-                if (this.symbolKind === SymbolKind.Property && this.reference.name && this.reference.name[0] !== '$') {
-                    this.reference.name = '$' + this.reference.name;
+                if (this.reference) {
+                    this.reference.kind = this.symbolKind;
+                    this.reference.scope = this._scope;
+                    if (this.symbolKind === SymbolKind.Property && this.reference.name && this.reference.name[0] !== '$') {
+                        this.reference.name = '$' + this.reference.name;
+                    }
                 }
                 break;
 
-            case PhraseKind.ScopedCallExpression:
-            case PhraseKind.MethodCallExpression:
-            case PhraseKind.PropertyAccessExpression:
-            case PhraseKind.ScopedPropertyAccessExpression:
-            case PhraseKind.FunctionCallExpression:
-            case PhraseKind.SubscriptExpression:
-            case PhraseKind.SimpleVariable:
-            case PhraseKind.FullyQualifiedName:
-            case PhraseKind.QualifiedName:
-            case PhraseKind.RelativeQualifiedName:
-            case PhraseKind.EncapsulatedExpression:
-            case PhraseKind.RelativeScope:
+            case 'scoped_call_expression':
+            case 'scoped_property_access_expression':
+            case 'function_call_expression':
+            case 'subscript_expression':
+            case 'qualified_name':
+            case 'relative_scope':
+            case 'dereferencable_expression':
                 this._scope = async () => {
                     return await TypeString.resolve((<TypeNodeTransform>transform).type);
                 };
@@ -1608,6 +1671,10 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
 
     get type(): TypeResolvable {
         return async () => {
+            if (!this.reference) {
+                return '';
+            }
+
             return (await this.referenceSymbolDelegate(this.reference))
                 .reduce(symbolsToTypeReduceFn, '');
         };
@@ -1615,74 +1682,18 @@ class MemberAccessExpressionTransform implements TypeNodeTransform, ReferenceNod
 
 }
 
-class HeaderTransform implements ReferenceNodeTransform {
-
-    reference: Reference;
-    private _kind: SymbolKind;
-
-    constructor(public nameResolver: NameResolver, kind: SymbolKind) {
-        this._kind = kind;
-    }
-
-    push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.Name) {
-            let name = (<TokenTransform>transform).text;
-            let loc = (<TokenTransform>transform).location;
-            this.reference = Reference.create(this._kind, this.nameResolver.resolveRelative(name), loc);
-        }
-    }
-
-}
-
-class MemberDeclarationTransform implements ReferenceNodeTransform {
-
-    reference: Reference;
-    private _kind: SymbolKind;
-    private _scope = '';
-
-    constructor(kind: SymbolKind, scope: string) {
-        this._kind = kind;
-        this._scope = scope;
-    }
-
-    push(transform: NodeTransform) {
-        if (transform.phraseKind === PhraseKind.Identifier) {
-            let name = (<IdentifierTransform>transform).text;
-            let loc = (<IdentifierTransform>transform).location;
-            this.reference = Reference.create(this._kind, name, loc);
-            this.reference.scope = this._scope;
-        }
-    }
-
-}
-
-class PropertyElementTransform implements ReferenceNodeTransform {
-
-    reference: Reference;
-    private _scope = '';
-
-    constructor(scope: string) {
-        this._scope = scope;
-    }
-
-    push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.VariableName) {
-            let name = (<IdentifierTransform>transform).text;
-            let loc = (<IdentifierTransform>transform).location;
-            this.reference = Reference.create(SymbolKind.Property, name, loc);
-            this.reference.scope = this._scope;
-        }
-    }
-
-}
-
 class NamespaceDefinitionTransform implements ReferenceNodeTransform {
 
-    reference: Reference;
+    kind = 'namespace_definition';
+    reference: Reference | undefined;
 
     push(transform: NodeTransform) {
-        if (transform.phraseKind === PhraseKind.NamespaceName) {
-            this.reference = Reference.create(SymbolKind.Namespace, (<NamespaceNameTransform>transform).text, (<NamespaceNameTransform>transform).location);
+        if (transform.kind === 'namespace_name') {
+            this.reference = Reference.create(
+                SymbolKind.Namespace,
+                (<NamespaceNameTransform>transform).text,
+                (<NamespaceNameTransform>transform).location
+            );
         }
     }
 
@@ -1690,38 +1701,22 @@ class NamespaceDefinitionTransform implements ReferenceNodeTransform {
 
 class ParameterDeclarationTransform implements ReferenceNodeTransform {
 
-    reference: Reference;
+    kind = 'simple_parameter';
+    reference: Reference | undefined;
 
     push(transform: NodeTransform) {
-        if (transform.tokenKind === TokenKind.VariableName) {
-            this.reference = Reference.create(SymbolKind.Parameter, (<TokenTransform>transform).text, (<TokenTransform>transform).location);
+        if (transform.kind === 'variable_name') {
+            this.reference = Reference.create(
+                SymbolKind.Parameter,
+                (<SimpleVariableTransform>transform).reference.name,
+                (<SimpleVariableTransform>transform).reference.location
+            );
         }
     }
 
 }
 
-class EncapsulatedExpressionTransform implements ReferenceNodeTransform, TypeNodeTransform {
-
-    phraseKind = PhraseKind.EncapsulatedExpression;
-    private _transform: NodeTransform;
-
-    push(transform: NodeTransform) {
-        if (transform.phraseKind || (transform.tokenKind >= TokenKind.DirectoryConstant && transform.tokenKind <= TokenKind.IntegerLiteral)) {
-            this._transform = transform;
-        }
-    }
-
-    get reference() {
-        return this._transform ? (<ReferenceNodeTransform>this._transform).reference : undefined;
-    }
-
-    get type() {
-        return this._transform ? (<TypeNodeTransform>this._transform).type : undefined;
-    }
-
-}
-
-class VariableTable {
+export class VariableTable {
 
     private _typeVariableSetStack: VariableSet[];
 
@@ -1730,9 +1725,6 @@ class VariableTable {
     }
 
     setVariable(v: Variable) {
-        if (!v || !v.name || !v.type) {
-            return;
-        }
         this._typeVariableSetStack[this._typeVariableSetStack.length - 1].variables[v.name] = v;
     }
 
@@ -1870,10 +1862,13 @@ export namespace ReferenceReader {
         if (!symbolTable) {
             symbolTable = await symbolStore.getSymbolTable(doc.uri);
         }
-        const traverser = new TreeTraverser([symbolTable.root]);
-        const symbols = traverser.filter((s: PhpSymbol) => {
-            return SymbolIndex.isNamedSymbol(s);
-        });
+        let symbols: PhpSymbol[] = [];
+        if (symbolTable) {
+            const traverser = new TreeTraverser([symbolTable.root]);
+            symbols = traverser.filter((s: PhpSymbol) => {
+                return SymbolIndex.isNamedSymbol(s);
+            });
+        }
 
         const globalVariables = await symbolStore.getGlobalVariables();
         const visitor = new ReferenceReader(doc, new NameResolver(), symbolStore, symbols, globalVariables);

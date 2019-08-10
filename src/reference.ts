@@ -7,7 +7,7 @@
 import { Predicate, TreeVisitor, TreeTraverser, NameIndex, Traversable, SortedList } from './types';
 import { SymbolIdentifier, SymbolKind } from './symbol';
 import { Range, Location, Position } from 'vscode-languageserver-types';
-import * as util from './util';
+import * as util from './utils';
 import { Log } from './logger';
 import { TypeResolvable } from './typeString';
 
@@ -76,7 +76,7 @@ export class ReferenceTable implements Traversable<Scope | Reference> {
         let visitor = new LocateVisitor(position);
         this.traverse(visitor);
         let ref = visitor.node as Reference;
-        return ref && ref.kind ? ref : undefined;
+        return ref && ref.kind ? ref : null;
 
     }
 
@@ -233,7 +233,10 @@ export class ReferenceStore {
 
             let maxOpenFiles = Math.min(4, summaries.length);
             while (maxOpenFiles--) {
-                fetchTableFn(summaries.pop().uri).then(onSuccess).catch(onFail);
+                const summary = summaries.pop();
+                if (summary) {
+                    fetchTableFn(summary.uri).then(onSuccess).catch(onFail);
+                }
             }
 
         });
@@ -280,13 +283,15 @@ export class ReferenceStore {
 
     }
 
-    private _fetchTable = (uri: string) => {
+    private _fetchTable = (uri: string): Promise<ReferenceTable | null> => {
         let findOpenTableFn = (t) => { return t.uri === uri };
         let table = this.getReferenceTable(uri);
 
         if (table) {
             return Promise.resolve<ReferenceTable>(table);
         }
+
+        return Promise.resolve(null);
     }
 
     private _tablesRemove(uri: string) {
@@ -306,7 +311,7 @@ export class ReferenceStore {
 
 class ReferencesVisitor implements TreeVisitor<Scope | Reference> {
 
-    private _filter: Predicate<Reference>;
+    private _filter: Predicate<Reference> | undefined;
     private _refs: Reference[];
 
     constructor(filter?: Predicate<Reference>) {
@@ -382,7 +387,7 @@ interface Locatable {
 
 class LocateVisitor implements TreeVisitor<Locatable> {
 
-    private _node: Locatable;
+    private _node: Locatable | null = null;
 
     constructor(private position: Position) { }
 
