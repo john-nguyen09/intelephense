@@ -1,21 +1,15 @@
 import { PhpSymbol, SymbolKind, SymbolModifier } from '../src/symbol';
-import { SymbolTable } from '../src/symbolStore';
 import { NameResolver } from '../src/nameResolver';
 import { SymbolReader } from '../src/symbolReader';
 import { ParsedDocument } from '../src/parsedDocument';
-import * as util from '../src/utils';
 import { assert } from 'chai';
 import 'mocha';
 import * as fs from 'fs';
 import * as path from 'path';
-import { inspect } from 'util';
 
 function symbolReaderOutput(src: string) {
 
     let parsedDoc = new ParsedDocument('test', src);
-    // console.log(inspect(util.nodeToObject(parsedDoc.tree), {
-    //     depth: 20,
-    // }));
     let sr = new SymbolReader(parsedDoc, new NameResolver());
     parsedDoc.traverse(sr);
     return sr.symbol;
@@ -132,14 +126,14 @@ describe('SymbolReader', () => {
         let output = symbolReaderOutput(src);
         let expect = <PhpSymbol>{
             kind: 1,
-            name: "#anon#test#36",
+            name: "#anon#test#32",
             modifiers: 512,
             location: {
                 uri: uri,
                 range: {
                     start: {
                         line: 2,
-                        character: 21
+                        character: 17
                     },
                     end: {
                         line: 2,
@@ -150,8 +144,8 @@ describe('SymbolReader', () => {
             associated:[],
             children:[]
         };
-        assert.deepEqual((<any>output).children[1], expect);
         //console.log(JSON.stringify(output, null, 4));
+        assert.deepEqual((<any>output).children[1], expect);
 
     });
 

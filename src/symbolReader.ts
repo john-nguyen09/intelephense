@@ -878,7 +878,6 @@ class ConstElementTransform implements SymbolNodeTransform {
         private _docLocation: Location | null
     ) {
         this.symbol = PhpSymbol.create(SymbolKind.Constant, '', location);
-        this.symbol.scope = this.nameResolver.namespaceName;
     }
 
     push(transform: NodeTransform) {
