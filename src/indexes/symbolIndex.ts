@@ -1,7 +1,7 @@
 import { Predicate, TreeVisitor, TreeTraverser, NameIndex } from "../types";
 import { PhpSymbol, SymbolKind, SymbolModifier } from "../symbol";
 import { LevelUp } from "levelup";
-import { AbstractLevelDOWN, AbstractIteratorOptions } from "abstract-leveldown";
+import { AbstractLevelDOWN, AbstractIteratorOptions, AbstractBatch } from "abstract-leveldown";
 import * as Subleveldown from 'subleveldown';
 import { CodecEncoder } from "level-codec";
 import { CompletionIndex, CompletionValue } from "./completionIndex";
@@ -46,11 +46,12 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     private _belongsToUri: LevelUp<AbstractLevelDOWN<string, PhpSymbolIdentifier[]>>;
     private _belongsToUriIds: PhpSymbolIdentifier[] = [];
     private _namedSymbols: LevelUp<AbstractLevelDOWN<string, PhpSymbol>>;
-    private _namedSymbolJobs: Promise<void>[] = [];
     private _globalVariables: LevelUp<AbstractLevelDOWN<string, PhpSymbol>>;
     private _globalVariableJobs: Promise<void>[] = [];
     private _completion: CompletionIndex;
     private _completionJobs: Promise<void>[] = [];
+
+    private _namedSymbolBatches: AbstractBatch<string, PhpSymbol>[] = [];
 
     constructor(db: LevelUp) {
         this._belongsToUri = Subleveldown(db, 'symbol-belongs-to-uri', {
@@ -72,11 +73,11 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
         traverser.traverse(this);
         
         await Promise.all([
-            ...this._namedSymbolJobs,
+            this._namedSymbols.batch(this._namedSymbolBatches),
             ...this._globalVariableJobs,
             ...this._completionJobs,
         ]);
-        this._namedSymbolJobs = [];
+        this._namedSymbolBatches = [];
         this._globalVariableJobs = [];
         this._completionJobs = [];
 
@@ -92,11 +93,16 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
             symbolIds = await this._belongsToUri.get(uri);
         } catch (e) { }
         const promises: Promise<void>[] = [];
+        const deletedNamedSymbolBatches: AbstractBatch<string, PhpSymbol>[] = [];
 
         for (const symbolId of symbolIds) {
-            promises.push(this._namedSymbols.del(SymbolIndex.getSymbolKey(symbolId)));
+            deletedNamedSymbolBatches.push({
+                type: 'del',
+                key: SymbolIndex.getSymbolKey(symbolId),
+            });
             promises.push(this._completion.del(uri, symbolId[0]));
         }
+        promises.push(this._namedSymbols.batch(deletedNamedSymbolBatches));
         promises.push((async () => {
             await this.deleteSymbols(this._globalVariables, {}, (s: PhpSymbol) => {
                 return typeof s.location !== 'undefined' && s.location.uri === uri;
@@ -176,9 +182,11 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
             const symbolIdentifier = PhpSymbolIdentifier.create(node);
 
             this._belongsToUriIds.push(symbolIdentifier);
-            this._namedSymbolJobs.push(this._namedSymbols.put(SymbolIndex.getSymbolKey(
-                symbolIdentifier
-            ), node));
+            this._namedSymbolBatches.push({
+                type: 'put',
+                key: SymbolIndex.getSymbolKey(symbolIdentifier),
+                value: node,
+            });
 
             if (node.modifiers !== SymbolModifier.Use && node.kind !== SymbolKind.File) {
                 this._completionJobs.push(this._completion.put(node));

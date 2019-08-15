@@ -87,7 +87,7 @@ export class CompletionIndex {
 
         return new Promise<void>((resolve, reject) => {
             const tokens = WordSeparator.getTokens(name);
-            const promises: Promise<void>[] = [];
+            const batches: AbstractBatch<string, CompletionValue>[] = [];
 
             for (const token of tokens) {
                 const indexKey = CompletionIndex.getKey(uri, token);
@@ -97,10 +97,13 @@ export class CompletionIndex {
                     lte: indexKey + '\xFF',
                 })
                 .on('data', (data) => {
-                    promises.push(this.db.del(data));
+                    batches.push({
+                        type: 'del',
+                        key: data,
+                    });
                 })
                 .on('end', () => {
-                    Promise.all(promises).then(() => {
+                    this.db.batch(batches).then(() => {
                         resolve();
                     });
                 })
