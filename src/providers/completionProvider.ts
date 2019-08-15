@@ -290,11 +290,11 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
         }
 
         const uniqueSymbols = new UniqueSymbolSet();
-        const iterator = await this.symbolStore.match(word, pred);
         let limit = this.config.maxItems;
+        const symbols = await this.symbolStore.match(word, pred, limit);
         let isIncomplete = false;
 
-        for await (let s of iterator) {
+        for (let s of symbols) {
             if (importMap[s.name] || uniqueSymbols.has(s)) {
                 continue;
             }
@@ -1388,13 +1388,13 @@ class NamespaceDefinitionCompletion implements CompletionStrategy {
         const items: lsp.CompletionItem[] = [];
         const uniqueSymbols = new UniqueSymbolSet();
         //namespaces always match on fqn
-        const matches = await this.symbolStore.match(word, this._symbolFilter);
+        const matches = await this.symbolStore.match(word, this._symbolFilter, this.config.maxItems);
         let isIncomplete = false;
         let n = this.config.maxItems;
         //replace from the last \
         const fqnOffset = word.lastIndexOf('\\') + 1;
 
-        for await (let s of matches) {
+        for (let s of matches) {
 
             if (uniqueSymbols.has(s)) {
                 continue;
@@ -1476,7 +1476,7 @@ class NamespaceUseClauseCompletion implements CompletionStrategy {
             return (x.kind & kindMask) > 0 && x.modifiers !== undefined && !(x.modifiers & SymbolModifier.Use);
         }
 
-        const matches = await this.symbolStore.match(word, pred);
+        const matches = await this.symbolStore.match(word, pred, this.config.maxItems);
         const uniqueSymbols = new UniqueSymbolSet();
         let n = this.config.maxItems;
         let isIncomplete = false;
@@ -1609,7 +1609,7 @@ class NamespaceUseGroupClauseCompletion implements CompletionStrategy {
             return (x.kind & kindMask) > 0 && (x.modifiers === undefined || !(x.modifiers & SymbolModifier.Use));
         };
 
-        let matches = await this.symbolStore.match(word, pred);
+        let matches = await this.symbolStore.match(word, pred, this.config.maxItems);
         let uniqueSymbols = new UniqueSymbolSet();
         let isIncomplete = false;
         let n = this.config.maxItems;

@@ -2,11 +2,10 @@ import { LevelUp } from "levelup";
 import LevelUpConstructor from "levelup";
 import { ParsedDocumentStore, ParsedDocument } from "./parsedDocument";
 import { SymbolStore, SymbolTable } from "./symbolStore";
-import { InitializeParams, CodeLensParams, CodeLens, Command, InitializeResult, createConnection } from "vscode-languageserver";
+import { InitializeParams, CodeLensParams, CodeLens, Command, InitializeResult, createConnection, TextDocumentSyncKind, DidOpenTextDocumentParams, DidChangeTextDocumentParams } from "vscode-languageserver";
 import MemDown from "memdown";
 import { promisify } from "util";
 import * as fs from "fs";
-import { pathToUri } from "./utils";
 import { SymbolReader } from "./symbolReader";
 import { NameResolver } from "./nameResolver";
 import { ReferenceReader } from "./referenceReader";
@@ -16,6 +15,8 @@ import { symbolKindToString } from "./symbol";
 import { TypeString } from "./typeString";
 import * as path from "path";
 import * as os from "os";
+import { SyntaxNode } from "tree-sitter";
+import { uriToFilePath } from "vscode-languageserver/lib/files";
 
 const readFileAsync = promisify(fs.readFile);
 
@@ -28,28 +29,77 @@ export namespace MockServer {
         level = LevelUpConstructor(MemDown());
         documentStore = new ParsedDocumentStore();
         symbolStore = new SymbolStore(level, documentStore);
+        console.log('Mock server is initialised');
 
         return {
             capabilities: {
                 codeLensProvider: {
                     resolveProvider: false,
-                }
+                },
+                textDocumentSync: TextDocumentSyncKind.Incremental,
             }
         };
     }
 
-    export async function codeLens(params: CodeLensParams): Promise<CodeLens[] | null> {
-        const fileContent = (await readFileAsync(pathToUri(params.textDocument.uri))).toString('utf-8');
+    export async function didOpenTextDocument(params: DidOpenTextDocumentParams) {
+        const fileContent = (await readFileAsync(uriToFilePath(params.textDocument.uri))).toString('utf-8');
         const parsedDocument = new ParsedDocument(params.textDocument.uri, fileContent);
-        const symbolReader = new SymbolReader(parsedDocument, new NameResolver());
+        documentStore.add(parsedDocument);
+    }
 
-        try {
-            parsedDocument.traverse(symbolReader);
-        } catch (e) {
-            console.error(e);
+    export async function changeTextDocument(params: DidChangeTextDocumentParams) {
+        const parsedDocument = documentStore.find(params.textDocument.uri);
+        if (!parsedDocument) {
+            return;
         }
 
-        documentStore.add(parsedDocument);
+        parsedDocument.applyChanges(params.contentChanges);
+    }
+
+    export async function codeLens(params: CodeLensParams): Promise<CodeLens[] | null> {
+        return astCodeLens(params);
+    }
+
+    export function astCodeLens(params: CodeLensParams): CodeLens[] | null {
+        const parsedDocument = documentStore.find(params.textDocument.uri);
+        if (!parsedDocument) {
+            console.error('No opened document');
+            return null;
+        }
+        
+        const codeLens: CodeLens[] = [];
+
+        parsedDocument.traverse(new class implements TreeVisitor<SyntaxNode> {
+            preorder(node: SyntaxNode, spine: SyntaxNode[]): boolean {
+                if (node.childCount === 0) {
+                    return true;
+                }
+
+                codeLens.push({
+                    range: parsedDocument.nodeRange(node),
+                    command: Command.create(JSON.stringify({
+                        type: node.type,
+                        hasChanges: node.hasChanges(),
+                    }), ''),
+                });
+
+                return true;
+            }
+        });
+
+        return codeLens;
+    }
+
+    export async function referenceCodeLens(params: CodeLensParams): Promise<CodeLens[] | null> {
+        const parsedDocument = documentStore.find(params.textDocument.uri);
+
+        if (!parsedDocument) {
+            return null;
+        }
+
+        const symbolReader = new SymbolReader(parsedDocument, new NameResolver());
+
+        parsedDocument.traverse(symbolReader);
         await symbolStore.add(new SymbolTable(parsedDocument.uri, symbolReader.symbol, 0));
         const refTable = await ReferenceReader.discoverReferences(parsedDocument, symbolStore);
         const promises: Promise<CodeLens>[] = [];
@@ -95,3 +145,6 @@ const connection = createConnection();
 
 connection.onInitialize(MockServer.initialise);
 connection.onCodeLens(MockServer.codeLens);
+connection.onDidOpenTextDocument(MockServer.didOpenTextDocument);
+connection.onDidChangeTextDocument(MockServer.changeTextDocument);
+connection.listen();

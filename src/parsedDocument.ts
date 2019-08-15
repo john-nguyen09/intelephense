@@ -91,6 +91,10 @@ export class ParsedDocument implements Traversable<SyntaxNode>{
 
     applyChanges(contentChanges: lsp.TextDocumentContentChangeEvent[]) {
 
+        if (contentChanges.length === 0) {
+            return;
+        }
+
         let change: lsp.TextDocumentContentChangeEvent;
 
         for (let n = 0, l = contentChanges.length; n < l; ++n) {
@@ -152,7 +156,7 @@ export class ParsedDocument implements Traversable<SyntaxNode>{
     }
 
     private _toTreeSitterDelta(e: lsp.TextDocumentContentChangeEvent): Edit | null {
-        if (!e.range || !e.rangeLength) {
+        if (e.range === undefined || e.rangeLength === undefined) {
             return null;
         }
 

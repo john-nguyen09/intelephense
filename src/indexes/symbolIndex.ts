@@ -120,12 +120,51 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
             .filter(filter);
     }
 
-    async *match(text: string): AsyncIterableIterator<PhpSymbol> {
-        const completionValues = await this._completion.match(text);
-
-        for await (const completionValue of completionValues) {
-            yield this._namedSymbols.get(SymbolIndex.getSymbolKey(completionValue.identifier));
+    match(text: string, filter?: Predicate<PhpSymbol>, limit: number = -1): Promise<PhpSymbol[]> {
+        if (limit !== undefined) {
+            limit++;
         }
+
+        return new Promise<PhpSymbol[]>((resolve, reject) => {
+            const iterator = this._completion.match(text);
+            const results: PhpSymbol[] = [];
+
+            const finishFinding = () => {
+                iterator.end(() => {});
+                resolve(results);
+            };
+    
+            const findMatch = (err: Error | null, key?: any, value?: CompletionValue) => {
+                if (err) {
+                    iterator.end(() => {
+                        reject(err);
+                    });
+                    return;
+                }
+    
+                if (key === undefined && value === undefined) {
+                    finishFinding();
+                    return;
+                }
+
+                this._namedSymbols.get(SymbolIndex.getSymbolKey(value.identifier))
+                    .then(symbol => {
+                        if (filter === undefined || filter(symbol)) {
+                            results.push(symbol);
+                            if (limit !== undefined && results.length >= limit) {
+                                finishFinding();
+                                return;
+                            }
+                        }
+                        iterator.next(findMatch);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                    });
+            };
+
+            iterator.next(findMatch);
+        });
     }
 
     async getGlobalVariables() {
@@ -141,7 +180,7 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
                 symbolIdentifier
             ), node));
 
-            if (node.modifiers !== SymbolModifier.Use) {
+            if (node.modifiers !== SymbolModifier.Use && node.kind !== SymbolKind.File) {
                 this._completionJobs.push(this._completion.put(node));
             }
         }

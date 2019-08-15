@@ -55,10 +55,10 @@ export class SymbolProvider {
      * @param query 
      */
     async provideWorkspaceSymbols(query: string) {
-        const matches = this.symbolStore.match(query);
+        const matches = await this.symbolStore.match(query);
         let symbolInformationList: SymbolInformation[] = [];
 
-        for await (const s of matches) {
+        for (const s of matches) {
             if (this.workspaceSymbolFilter(s)) {
                 symbolInformationList.push(await this.toSymbolInformation(s));
             }
