@@ -936,7 +936,7 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
 
             switch (node.type) {
                 case 'dereferencable_expression':
-                    if (traverser.child(this._isTypedNode)) {
+                    if (traverser.child(this._isDerefExpr)) {
                         continue;
                     }
                     break;
@@ -1123,12 +1123,18 @@ abstract class MemberAccessCompletion implements CompletionStrategy {
         return node.type === 'member_name';
     }
 
-    private _isTypedNode(node: SyntaxNode) {
+    private _isDerefExpr(node: SyntaxNode) {
         return [
             'member_call_expression',
             'variable_name',
             'object_creation_expression',
             'subscript_expression',
+        ].includes(node.type) || [
+            'scoped_call_expression',
+            'member_access_expression',
+            'scoped_property_access_expression',
+            'class_constant_access_expression',
+            'member_call_expression',
         ].includes(node.type);
     }
 
