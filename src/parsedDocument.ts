@@ -33,7 +33,6 @@ export class ParsedDocument implements Traversable<SyntaxNode>{
     private _changeEvent: Event<ParsedDocumentChangeEventArgs>;
     private _debounce: Debounce<null>;
     private _reparse = (x) => {
-        this._tree = Parser.parse(this._textDocument.text, this._tree);
         this._changeEvent.trigger({ parsedDocument: this });
     };
 
@@ -112,6 +111,7 @@ export class ParsedDocument implements Traversable<SyntaxNode>{
         }
 
         this._debounce.handle(null);
+        this._tree = Parser.parse(this._textDocument.text, this._tree);
 
     }
 
