@@ -648,6 +648,9 @@ export class ReferenceReader implements TreeVisitor<SyntaxNode> {
                             scope.children.push(ref);
                         }
                     }
+                    if (node.type == '__construct') {
+                        this._scopeStack.pop();
+                    }
                     break;
                 }
 
