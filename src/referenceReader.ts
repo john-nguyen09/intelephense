@@ -1543,6 +1543,13 @@ class DereferencableExpression implements TypeNodeTransform {
     push(transform: NodeTransform) {
         if (transform.kind === 'variable_name') {
             this.type = (<TypeNodeTransform>transform).type;
+        } else if ([
+            'member_call_expression',
+            'member_access_expression',
+        ].includes(transform.kind)) {
+            this.type = async (): Promise<string> => {
+                return await TypeString.resolve((<MemberAccessExpressionTransform>transform).type);
+            };
         }
     }
 
