@@ -1055,7 +1055,10 @@ class ScopedAccessCompletion extends MemberAccessCompletion {
         ];
 
         if (ParsedDocument.isToken(traverser.node, [TokenKind.ColonColon])) {
-            return ParsedDocument.isPhrase(traverser.parent(), scopedAccessPhrases);
+            const parent = traverser.parent();
+            const parentOfParent = traverser.parent();
+            return ParsedDocument.isPhrase(parent, scopedAccessPhrases) ||
+                (parentOfParent.kind == PhraseKind.Error);
         }
 
         if (ParsedDocument.isToken(traverser.node, [TokenKind.VariableName])) {
