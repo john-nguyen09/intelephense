@@ -13,7 +13,6 @@ export interface CompletionValue {
 
 export class CompletionIndex {
     public static readonly INFO_SEP = '#';
-    public static LIMIT = 1000;
 
     private db: LevelUp<AbstractLevelDOWN<string, CompletionValue>>;
 
@@ -66,20 +65,15 @@ export class CompletionIndex {
         });
     }
 
-    async *match(keyword: string): AsyncIterableIterator<CompletionValue> {
+    match(keyword: string) {
         const options: AbstractIteratorOptions<string> = {};
 
         if (keyword.length !== 0) {
             options.gte = keyword;
             options.lte = keyword + '\xFF';
         }
-        const readStream: NodeJS.ReadableStream = this.db.createValueStream(options);
 
-        for await (const data of readStream) {
-            const value: CompletionValue = <any>data;
-
-            yield value;
-        }
+        return this.db.iterator(options);
     }
 
     async del(uri: string, name: string) {

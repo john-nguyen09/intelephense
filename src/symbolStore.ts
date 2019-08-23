@@ -292,17 +292,13 @@ export class SymbolStore {
      * matches indexed symbols where symbol keys begin with text.
      * Case insensitive
      */
-    async *match(text: string, filter?: Predicate<PhpSymbol>): AsyncIterableIterator<PhpSymbol> {
+    async match(text: string, filter?: Predicate<PhpSymbol>, limit: number = -1): Promise<PhpSymbol[]> {
 
         if (!text) {
             return [];
         }
 
-        for await (const symbol of this._symbolIndex.match(text)) {
-            if (!filter || filter(symbol)) {
-                yield symbol;
-            }
-        }
+        return await this._symbolIndex.match(text, filter, limit);
     }
 
     async findSymbolsByReference(ref: Reference, memberMergeStrategy?: MemberMergeStrategy): Promise<PhpSymbol[]> {
