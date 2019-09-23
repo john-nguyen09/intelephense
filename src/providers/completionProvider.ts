@@ -615,7 +615,7 @@ class SimpleVariableCompletion implements CompletionStrategy {
             return (x.kind & symbolMask) > 0 && x.name.indexOf(word) === 0;
         });
         //also suggest built in globals vars
-        Array.prototype.push.apply(varSymbols, this.symbolStore.match(word, this._isBuiltInGlobalVar));
+        Array.prototype.push.apply(varSymbols, await this.symbolStore.match(word, this._isBuiltInGlobalVar));
 
         let limit = Math.min(varSymbols.length, this.config.maxItems);
         let isIncomplete = varSymbols.length > this.config.maxItems;

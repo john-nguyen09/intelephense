@@ -50,7 +50,7 @@ export class DefinitionProvider {
 
         for (let n = 0; n < symbols.length; ++n) {
             s = symbols[n];
-            if (s.location && (loc = await this.symbolStore.symbolLocation(s))) {
+            if (s.location && (loc = this.symbolStore.symbolLocation(s))) {
                 locations.push(loc);
             }
         }

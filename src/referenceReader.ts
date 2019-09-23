@@ -1020,10 +1020,14 @@ class SimpleAssignmentExpressionTransform implements TypeNodeTransform {
         let typeOverrideFn = this._typeOverride;
 
         let fn = (x: Variable) => {
+            let type: string | null = null;
+
             return Variable.create(
                 x.name,
                 async () => {
-                    let type = await TypeString.resolve(this.type);
+                    if (type === null) {
+                        type = await TypeString.resolve(this.type);
+                    }
                     return Variable.resolveBaseVariable(x, typeOverrideFn(x.name, tags) || type);
                 }
             );

@@ -471,9 +471,8 @@ export class SymbolStore {
     }
     */
 
-    async symbolLocation(symbol: PhpSymbol): Promise<Location> {
-        let table = await this._tableIndex.findBySymbol(symbol);
-        return table ? Location.create(table.uri, symbol.location.range) : undefined;
+    symbolLocation(symbol: PhpSymbol): Location {
+        return symbol.location;
     }
 
     async referenceToTypeString(ref: Reference) {

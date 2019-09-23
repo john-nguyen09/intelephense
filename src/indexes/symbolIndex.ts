@@ -120,6 +120,10 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
     }
 
     match(text: string, filter?: Predicate<PhpSymbol>, limit: number = -1): Promise<PhpSymbol[]> {
+        if (text == '') {
+            return this.find(text);
+        }
+
         if (limit !== undefined) {
             limit++;
         }

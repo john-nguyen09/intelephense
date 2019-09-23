@@ -75,12 +75,12 @@ export class SymbolProvider {
 
     }
 
-    async toSymbolInformation(s: PhpSymbol, uri?:string) {
+    async toSymbolInformation(s: PhpSymbol) {
 
         let si: SymbolInformation = {
             kind: Kind.File,
             name: s.name,
-            location: uri ? Location.create(uri, s.location.range) : await this.symbolStore.symbolLocation(s),
+            location: this.symbolStore.symbolLocation(s),
             containerName: s.scope
         };
 
