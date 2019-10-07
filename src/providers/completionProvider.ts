@@ -280,15 +280,18 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
 
         const uniqueSymbols = new UniqueSymbolSet();
         let limit = this.config.maxItems;
-        const symbols = await this.symbolStore.match(word, pred, limit);
-        let isIncomplete = false;
+        const symbols = await this.symbolStore.match(word, (s: PhpSymbol) => {
+            if  (importMap[s.name] || uniqueSymbols.has(s)) {
+                return false;
+            }
+            if (!pred(s)) {
+                return false;
+            }
+            uniqueSymbols.add(s);
+            return true;
+        }, limit);
 
         for (let s of symbols) {
-            if (importMap[s.name] || uniqueSymbols.has(s)) {
-                continue;
-            }
-
-            uniqueSymbols.add(s);
             items.push(await this._toCompletionItem(
                 s,
                 useDeclarationHelper,
@@ -297,16 +300,11 @@ abstract class AbstractNameCompletion implements CompletionStrategy {
                 fqnOffset,
                 qualifiedNameRule
             ));
-
-            if (items.length >= limit) {
-                isIncomplete = true;
-                break;
-            }
         }
 
         return <lsp.CompletionList>{
             items: items,
-            isIncomplete: isIncomplete
+            isIncomplete: items.length >= limit,
         }
 
     }

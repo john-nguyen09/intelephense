@@ -8,6 +8,7 @@ import { CompletionIndex, CompletionValue } from "./completionIndex";
 import { Position } from "vscode-languageserver";
 import { elapsed } from "../util";
 import { TypeString } from "../typeString";
+import { Log } from "../logger";
 
 export type PhpSymbolIdentifier = [string, string, number, number, number, number];
 
@@ -154,15 +155,24 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
                     .then(symbol => {
                         if (filter === undefined || filter(symbol)) {
                             results.push(symbol);
-                            if (limit !== undefined && results.length >= limit) {
+                            if (results.length >= limit) {
                                 finishFinding();
                                 return;
                             }
                         }
-                        iterator.next(findMatch);
                     })
                     .catch(err => {
-                        console.error(err);
+                        Log.error(err);
+                        this._namedSymbols.createReadStream()
+                            .on('data', (data: {key: string, value: PhpSymbol}) => {
+                                Log.info(data.key);
+                                if (data.value.location.uri == 'file:///c:/Users/john/Documents/MindAtlas/Development/LMS/mmsg/question/format/gift/format.php') {
+                                    Log.info(data.key);
+                                }
+                            });
+                    })
+                    .finally(() => {
+                        iterator.next(findMatch);
                     });
             };
 

@@ -18,6 +18,7 @@ const namespacedSymbolMask =
 
 const symbolsDisplayMask = 
     SymbolKind.Interface |
+    SymbolKind.Property |
     SymbolKind.Class |
     SymbolKind.Trait |
     SymbolKind.Constant |

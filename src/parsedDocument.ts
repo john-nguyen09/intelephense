@@ -14,6 +14,7 @@ import {
     Predicate, Traversable
 } from './types';
 import * as AsyncLock from 'async-lock';
+import { Log } from './logger';
 
 const textDocumentChangeDebounceWait = 250;
 
@@ -364,7 +365,11 @@ export class ParsedDocumentStore {
     }
 
     async acquireLock(uri: string, action: () => void | PromiseLike<void>) {
-        return this._lock.acquire(uri, action);
+        try {
+            await this._lock.acquire(uri, action);
+        } catch (err) {
+            Log.error(err);
+        }
     }
 
     has(uri: string) {
