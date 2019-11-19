@@ -329,15 +329,14 @@ export namespace Intelephense {
         for (let file of files) {
             let filePath = path.join(directory, file);
 
-            if (file.endsWith('.php')) {
-                phpFiles.push(filePath);
-
-                continue;
-            }
-
             const stats = fs.lstatSync(filePath);
             if (stats.isDirectory()) {
                 Array.prototype.push.apply(phpFiles, scanPhpFiles(filePath));
+                continue;
+            }
+
+            if (file.endsWith('.php')) {
+                phpFiles.push(filePath);
             }
         }
 
