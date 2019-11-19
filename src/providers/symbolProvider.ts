@@ -26,6 +26,9 @@ const symbolsDisplayMask =
     SymbolKind.Function |
     SymbolKind.Method;
 
+const excludeModifiers =
+    SymbolModifier.Use;
+
 export class SymbolProvider {
 
     constructor(public symbolStore: SymbolStore, public documentStore: ParsedDocumentStore) { }
@@ -43,6 +46,9 @@ export class SymbolProvider {
             for (let n = 0, l = symbols.length; n < l; ++n) {
     
                 if (symbols[n].location && (symbols[n].kind & symbolsDisplayMask)) {
+                    if (typeof symbols[n].modifiers !== 'undefined' && (symbols[n].modifiers & excludeModifiers)) {
+                        continue;
+                    }
                     symbolInformationList.push(await this.toSymbolInformation(symbols[n]));
                 }
             }
