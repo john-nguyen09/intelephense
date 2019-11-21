@@ -162,14 +162,6 @@ export class SymbolIndex implements TreeVisitor<PhpSymbol> {
                         }
                     })
                     .catch(err => {
-                        Log.error(err);
-                        this._namedSymbols.createReadStream()
-                            .on('data', (data: {key: string, value: PhpSymbol}) => {
-                                Log.info(data.key);
-                                if (data.value.location.uri == 'file:///c:/Users/john/Documents/MindAtlas/Development/LMS/mmsg/question/format/gift/format.php') {
-                                    Log.info(data.key);
-                                }
-                            });
                     })
                     .finally(() => {
                         iterator.next(findMatch);

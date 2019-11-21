@@ -13,17 +13,14 @@ import {
 import { Intelephense, IntelephenseConfig } from './intelephense';
 import { Log } from './logger';
 import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection = createConnection();
 Log.console = connection.console;
-const logPath = path.join(os.homedir(), '.intelephense', 'error.log');
 
 process.on('uncaughtException', function (err) {
-	fs.appendFileSync(logPath, (new Date).toUTCString() + ' uncaughtException:' + err.message);
-	fs.appendFileSync(logPath, err.stack);
+	Log.writeLog((new Date).toISOString() + ' uncaughtException:' + err.message);
+	Log.writeLog(err.stack);
 	process.exit(1);
 });
 

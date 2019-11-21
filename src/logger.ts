@@ -4,6 +4,10 @@
 
 'use strict';
 
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
+
 export interface LogWriter {
     error(msg: string);
     warn(msg: string);
@@ -12,6 +16,7 @@ export interface LogWriter {
 
 export namespace Log {
     export var console: any = global.console;
+    const logPath = path.join(os.homedir(), '.intelephense', 'error.log');
 
     export function error(err: any) {
         if (err) {
@@ -36,5 +41,9 @@ export namespace Log {
         if (msg) {
             console.info(msg);
         }
+    }
+
+    export function writeLog(msg: string) {
+        fs.appendFileSync(logPath, msg);
     }
 }
